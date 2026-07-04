@@ -20,6 +20,7 @@ Draft
 - [Fabric Management Business Analysis](business/fabric-management.md)
 - [Purchasing Management Business Analysis](business/purchasing-management.md)
 - [Product Development Business Analysis](business/product-development.md)
+- [Database Blueprint](database/database-blueprint.md)
 - [Database](database/er-diagram.md)
 - [API](api/api-standards.md)
 - [UI](ui/ui-standards.md)
