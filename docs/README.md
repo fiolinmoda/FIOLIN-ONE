@@ -17,6 +17,7 @@ Draft
 - [Architecture](architecture/system-overview.md)
 - [Business](business/product-lifecycle.md)
 - [Fabric Management Business Analysis](business/fabric-management.md)
+- [Purchasing Management Business Analysis](business/purchasing-management.md)
 - [Database](database/er-diagram.md)
 - [API](api/api-standards.md)
 - [UI](ui/ui-standards.md)
