@@ -1,5 +1,6 @@
 using FiolinOne.Domain.Products;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace FiolinOne.Application.Common.Interfaces;
 
