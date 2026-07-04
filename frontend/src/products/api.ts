@@ -1,4 +1,4 @@
-import type { Product, ProductInput } from './types'
+import type { Product, ProductInput, ProductVariant, ProductVariantInput } from './types'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000'
 
@@ -52,6 +52,37 @@ export async function updateProduct(id: string, product: ProductInput): Promise<
 
 export async function deleteProduct(id: string): Promise<void> {
   await request<void>(`/api/products/${id}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function getProductVariants(productId: string): Promise<ProductVariant[]> {
+  return request<ProductVariant[]>(`/api/products/${productId}/variants`)
+}
+
+export async function createProductVariant(
+  productId: string,
+  variant: ProductVariantInput,
+): Promise<ProductVariant> {
+  return request<ProductVariant>(`/api/products/${productId}/variants`, {
+    method: 'POST',
+    body: JSON.stringify(variant),
+  })
+}
+
+export async function updateProductVariant(
+  productId: string,
+  variantId: string,
+  variant: ProductVariantInput,
+): Promise<ProductVariant> {
+  return request<ProductVariant>(`/api/products/${productId}/variants/${variantId}`, {
+    method: 'PUT',
+    body: JSON.stringify(variant),
+  })
+}
+
+export async function deleteProductVariant(productId: string, variantId: string): Promise<void> {
+  await request<void>(`/api/products/${productId}/variants/${variantId}`, {
     method: 'DELETE',
   })
 }

@@ -8,6 +8,7 @@ build/
 .env
 appsettings.Development.json
 .dotnet-sdk/
+.tools/
 
 # IDE
 .vs/

@@ -7,6 +7,9 @@ namespace FiolinOne.Application.Common.Interfaces;
 public interface IApplicationDbContext
 {
     DbSet<Product> Products { get; }
+    DbSet<ProductColor> ProductColors { get; }
+    DbSet<ProductSize> ProductSizes { get; }
+    DbSet<ProductVariant> ProductVariants { get; }
 
     DatabaseFacade Database { get; }
 

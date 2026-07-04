@@ -18,3 +18,27 @@ export type ProductInput = {
   season: string
   status: string
 }
+
+export type ProductVariant = {
+  id: string
+  productId: string
+  colorId: string
+  color: string
+  sizeId: string
+  size: string
+  barcode: string
+  trendyolSku: string | null
+  stock: number
+  status: string
+  createdAt: string
+  updatedAt: string | null
+}
+
+export type ProductVariantInput = {
+  color: string
+  size: string
+  barcode: string
+  trendyolSku: string
+  stock: number
+  status: string
+}

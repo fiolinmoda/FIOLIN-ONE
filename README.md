@@ -44,6 +44,14 @@ FIOLIN-ONE
 - React Product List and Product Detail pages
 - Material UI DataGrid with search, add, edit, and delete actions
 
+## Product Variants
+
+- ProductColor, ProductSize, and ProductVariant entities
+- Unique database rules for Product + Color + Size, Barcode, and Trendyol SKU
+- Nested CRUD API under `/api/products/{productId}/variants`
+- EF Core migration for product and variant tables
+- Product Detail Variants tab with Material UI DataGrid and add/edit dialogs
+
 ## Frontend Foundation
 
 - React

@@ -9,12 +9,15 @@ import {
   MenuItem,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import { createProduct, getProduct, updateProduct } from './api'
+import { ProductVariantsTab } from './ProductVariantsTab'
 import type { ProductInput } from './types'
 
 const emptyProduct: ProductInput = {
@@ -36,6 +39,7 @@ export function ProductDetailPage() {
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState(0)
 
   useEffect(() => {
     if (isNew || !id) {
@@ -108,83 +112,104 @@ export function ProductDetailPage() {
 
       {error && <Alert severity="error">{error}</Alert>}
 
-      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 1 }}>
+      <Paper variant="outlined" sx={{ borderRadius: 1 }}>
         {loading ? (
           <Stack sx={{ minHeight: 280, alignItems: 'center', justifyContent: 'center' }}>
             <CircularProgress />
           </Stack>
         ) : (
-          <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-            <Stack spacing={3}>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="Product Code"
-                  value={product.productCode}
-                  onChange={(event) => updateField('productCode', event.target.value)}
-                  required
-                  fullWidth
-                />
-                <TextField
-                  label="Product Name"
-                  value={product.productName}
-                  onChange={(event) => updateField('productName', event.target.value)}
-                  required
-                  fullWidth
-                />
-              </Stack>
+          <>
+            <Tabs
+              value={activeTab}
+              onChange={(_, value: number) => setActiveTab(value)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ borderBottom: 1, borderColor: 'divider', px: { xs: 1, md: 2 } }}
+            >
+              <Tab label="Product Info" />
+              <Tab label="Variants" disabled={isNew} />
+            </Tabs>
 
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="Brand"
-                  value={product.brand}
-                  onChange={(event) => updateField('brand', event.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  label="Category"
-                  value={product.category}
-                  onChange={(event) => updateField('category', event.target.value)}
-                  required
-                  fullWidth
-                />
-              </Stack>
+            {activeTab === 0 && (
+              <Box component="form" onSubmit={(event) => void handleSubmit(event)} sx={{ p: { xs: 2, md: 3 } }}>
+                <Stack spacing={3}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <TextField
+                      label="Product Code"
+                      value={product.productCode}
+                      onChange={(event) => updateField('productCode', event.target.value)}
+                      required
+                      fullWidth
+                    />
+                    <TextField
+                      label="Product Name"
+                      value={product.productName}
+                      onChange={(event) => updateField('productName', event.target.value)}
+                      required
+                      fullWidth
+                    />
+                  </Stack>
 
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  label="Season"
-                  value={product.season}
-                  onChange={(event) => updateField('season', event.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  select
-                  label="Status"
-                  value={product.status}
-                  onChange={(event) => updateField('status', event.target.value)}
-                  required
-                  fullWidth
-                >
-                  {statuses.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Stack>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <TextField
+                      label="Brand"
+                      value={product.brand}
+                      onChange={(event) => updateField('brand', event.target.value)}
+                      fullWidth
+                    />
+                    <TextField
+                      label="Category"
+                      value={product.category}
+                      onChange={(event) => updateField('category', event.target.value)}
+                      required
+                      fullWidth
+                    />
+                  </Stack>
 
-              <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-                <Button onClick={() => navigate('/products')}>Cancel</Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  startIcon={<SaveOutlinedIcon />}
-                  disabled={saving}
-                >
-                  Save
-                </Button>
-              </Stack>
-            </Stack>
-          </Box>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <TextField
+                      label="Season"
+                      value={product.season}
+                      onChange={(event) => updateField('season', event.target.value)}
+                      fullWidth
+                    />
+                    <TextField
+                      select
+                      label="Status"
+                      value={product.status}
+                      onChange={(event) => updateField('status', event.target.value)}
+                      required
+                      fullWidth
+                    >
+                      {statuses.map((status) => (
+                        <MenuItem key={status} value={status}>
+                          {status}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Stack>
+
+                  <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
+                    <Button onClick={() => navigate('/products')}>Cancel</Button>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      startIcon={<SaveOutlinedIcon />}
+                      disabled={saving}
+                    >
+                      Save
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            )}
+
+            {activeTab === 1 && id && !isNew && (
+              <Box sx={{ p: { xs: 2, md: 3 } }}>
+                <ProductVariantsTab productId={id} />
+              </Box>
+            )}
+          </>
         )}
       </Paper>
     </Stack>
