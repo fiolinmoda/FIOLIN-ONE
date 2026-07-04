@@ -1,5 +1,7 @@
 using FiolinOne.Application.Common.Interfaces;
+using FiolinOne.Application.Products;
 using FiolinOne.Infrastructure.Persistence;
+using FiolinOne.Infrastructure.Products;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +19,7 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IProductRepository, ProductRepository>();
 
         return services;
     }

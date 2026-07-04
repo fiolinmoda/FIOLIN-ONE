@@ -2,7 +2,7 @@
 
 FIOLIN ONE is the ERP platform foundation for a clothing manufacturer and wholesaler.
 
-This repository currently contains only the project architecture. Business modules such as Product Cards, Fabric Management, Production Orders, Cutting, Sewing, Warehouse, Barcode System, Dealer B2B, Trendyol Orders, Finance, and Reports are intentionally not implemented yet.
+This repository contains the project architecture and the first Product Management module. Future modules such as Fabric Management, Production Orders, Cutting, Sewing, Warehouse, Barcode System, Dealer B2B, Trendyol Orders, Finance, and Reports are intentionally not implemented yet.
 
 ## Architecture
 
@@ -33,6 +33,16 @@ FIOLIN-ONE
 - Serilog request logging
 - FluentValidation registration
 - Architecture test project for dependency direction checks
+
+## Product Management
+
+- Product entity and EF Core configuration
+- Repository and application service
+- CRUD API under `/api/products`
+- Request validation
+- Swagger response metadata and XML documentation comments
+- React Product List and Product Detail pages
+- Material UI DataGrid with search, add, edit, and delete actions
 
 ## Frontend Foundation
 

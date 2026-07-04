@@ -3,16 +3,18 @@ import {
   Box,
   Chip,
   Container,
-  Divider,
   Drawer,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Stack,
   Toolbar,
   Typography,
+  useMediaQuery,
 } from '@mui/material'
+import { Link as RouterLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
@@ -20,11 +22,13 @@ import FactoryOutlinedIcon from '@mui/icons-material/FactoryOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import PriceCheckOutlinedIcon from '@mui/icons-material/PriceCheckOutlined'
+import { ProductDetailPage } from './products/ProductDetailPage'
+import { ProductListPage } from './products/ProductListPage'
 
 const drawerWidth = 280
 
-const futureModules = [
-  { name: 'Product Cards', icon: <CategoryOutlinedIcon /> },
+const modules = [
+  { name: 'Product Cards', path: '/products', icon: <CategoryOutlinedIcon />, active: true },
   { name: 'Fabric Management', icon: <Inventory2OutlinedIcon /> },
   { name: 'Pattern Management', icon: <AssignmentOutlinedIcon /> },
   { name: 'Production Orders', icon: <FactoryOutlinedIcon /> },
@@ -33,6 +37,9 @@ const futureModules = [
 ]
 
 function App() {
+  const location = useLocation()
+  const isDesktop = useMediaQuery('(min-width:900px)')
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar
@@ -46,7 +53,7 @@ function App() {
             <Typography variant="h6" component="div" sx={{ fontWeight: 700 }}>
               FIOLIN ONE
             </Typography>
-            <Chip label="Foundation" size="small" color="primary" variant="outlined" />
+            <Chip label="Product Management" size="small" color="primary" variant="outlined" />
           </Stack>
         </Toolbar>
       </AppBar>
@@ -56,6 +63,7 @@ function App() {
         sx={{
           width: drawerWidth,
           flexShrink: 0,
+          display: { xs: 'none', md: 'block' },
           [`& .MuiDrawer-paper`]: {
             width: drawerWidth,
             boxSizing: 'border-box',
@@ -66,10 +74,17 @@ function App() {
         <Toolbar />
         <Box sx={{ overflow: 'auto', py: 2 }}>
           <List dense>
-            {futureModules.map((item) => (
-              <ListItem key={item.name}>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.name} secondary="Planned module" />
+            {modules.map((item) => (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton
+                  component={item.path ? RouterLink : 'div'}
+                  to={item.path}
+                  selected={item.path ? location.pathname.startsWith(item.path) : false}
+                  disabled={!item.active}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.name} secondary={item.active ? 'Active module' : 'Planned module'} />
+                </ListItemButton>
               </ListItem>
             ))}
           </List>
@@ -78,47 +93,17 @@ function App() {
 
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Toolbar />
-        <Container maxWidth="lg" sx={{ py: 5 }}>
-          <Stack spacing={4}>
-            <Box>
-              <Typography variant="overline" color="primary">
-                Clothing manufacturing and wholesale ERP
-              </Typography>
-              <Typography variant="h3" component="h1" sx={{ mt: 1, fontWeight: 800 }}>
-                Project architecture is ready for FIOLIN ONE.
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 2, maxWidth: 760 }}>
-                This application shell intentionally contains no business module implementation yet.
-                It establishes the frontend foundation that future production, warehouse, dealer,
-                barcode, finance, and reporting features can build on.
-              </Typography>
-            </Box>
-
-            <Divider />
-
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-              {['React', 'TypeScript', 'Vite', 'Material UI'].map((item) => (
-                <Box
-                  key={item}
-                  sx={{
-                    flex: 1,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    p: 3,
-                    bgcolor: 'background.paper',
-                  }}
-                >
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                    {item}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Frontend foundation
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </Stack>
+        {!isDesktop && (
+          <Box sx={{ px: 2, pt: 2 }}>
+            <Chip icon={<CategoryOutlinedIcon />} label="Product Cards" color="primary" variant="outlined" />
+          </Box>
+        )}
+        <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/products" replace />} />
+            <Route path="/products" element={<ProductListPage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
+          </Routes>
         </Container>
       </Box>
     </Box>

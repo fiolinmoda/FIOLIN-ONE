@@ -1,4 +1,5 @@
 using FluentValidation;
+using FiolinOne.Application.Products;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FiolinOne.Application;
@@ -11,6 +12,7 @@ public static class DependencyInjection
 
         services.AddMediatR(configuration => configuration.RegisterServicesFromAssembly(assembly));
         services.AddValidatorsFromAssembly(assembly);
+        services.AddScoped<IProductService, ProductService>();
 
         return services;
     }
