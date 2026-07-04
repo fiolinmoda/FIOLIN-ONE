@@ -20,6 +20,8 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import { getMasterDataItems } from '../masterData/api'
+import type { MasterDataItem } from '../masterData/types'
 import {
   createProductVariant,
   deleteProductVariant,
@@ -33,8 +35,8 @@ type ProductVariantsTabProps = {
 }
 
 const emptyVariant: ProductVariantInput = {
-  color: '',
-  size: '',
+  colorId: '',
+  sizeId: '',
   barcode: '',
   trendyolSku: '',
   stock: 0,
@@ -51,6 +53,22 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingVariant, setEditingVariant] = useState<ProductVariant | null>(null)
   const [variantInput, setVariantInput] = useState<ProductVariantInput>(emptyVariant)
+  const [colors, setColors] = useState<MasterDataItem[]>([])
+  const [sizes, setSizes] = useState<MasterDataItem[]>([])
+
+  useEffect(() => {
+    async function loadMasterData() {
+      const [colorItems, sizeItems] = await Promise.all([
+        getMasterDataItems('colors'),
+        getMasterDataItems('sizes'),
+      ])
+
+      setColors(colorItems.filter((item) => item.isActive))
+      setSizes(sizeItems.filter((item) => item.isActive))
+    }
+
+    void loadMasterData().catch(() => setError('Variant master data could not be loaded.'))
+  }, [])
 
   const loadVariants = useCallback(async () => {
     setLoading(true)
@@ -79,8 +97,8 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
   function openEditDialog(variant: ProductVariant) {
     setEditingVariant(variant)
     setVariantInput({
-      color: variant.color,
-      size: variant.size,
+      colorId: variant.colorId,
+      sizeId: variant.sizeId,
       barcode: variant.barcode,
       trendyolSku: variant.trendyolSku ?? '',
       stock: variant.stock,
@@ -220,19 +238,33 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
+                  select
                   label="Color"
-                  value={variantInput.color}
-                  onChange={(event) => updateField('color', event.target.value)}
+                  value={variantInput.colorId}
+                  onChange={(event) => updateField('colorId', event.target.value)}
                   required
                   fullWidth
-                />
+                >
+                  {colors.map((color) => (
+                    <MenuItem key={color.id} value={color.id}>
+                      {color.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <TextField
+                  select
                   label="Size"
-                  value={variantInput.size}
-                  onChange={(event) => updateField('size', event.target.value)}
+                  value={variantInput.sizeId}
+                  onChange={(event) => updateField('sizeId', event.target.value)}
                   required
                   fullWidth
-                />
+                >
+                  {sizes.map((size) => (
+                    <MenuItem key={size.id} value={size.id}>
+                      {size.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Stack>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

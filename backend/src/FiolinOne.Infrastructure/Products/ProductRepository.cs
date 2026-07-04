@@ -9,7 +9,11 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
 {
     public async Task<IReadOnlyList<Product>> GetAllAsync(string? search, CancellationToken cancellationToken)
     {
-        var query = dbContext.Products.AsNoTracking();
+        IQueryable<Product> query = dbContext.Products
+            .AsNoTracking()
+            .Include(product => product.Brand)
+            .Include(product => product.Category)
+            .Include(product => product.Season);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -18,9 +22,9 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
             query = query.Where(product =>
                 product.ProductCode.ToLower().Contains(term) ||
                 product.ProductName.ToLower().Contains(term) ||
-                (product.Brand != null && product.Brand.ToLower().Contains(term)) ||
-                product.Category.ToLower().Contains(term) ||
-                (product.Season != null && product.Season.ToLower().Contains(term)) ||
+                (product.Brand != null && product.Brand.Name.ToLower().Contains(term)) ||
+                (product.Category != null && product.Category.Name.ToLower().Contains(term)) ||
+                (product.Season != null && product.Season.Name.ToLower().Contains(term)) ||
                 product.Status.ToLower().Contains(term));
         }
 
@@ -31,7 +35,11 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
 
     public Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        return dbContext.Products.FirstOrDefaultAsync(product => product.Id == id, cancellationToken);
+        return dbContext.Products
+            .Include(product => product.Brand)
+            .Include(product => product.Category)
+            .Include(product => product.Season)
+            .FirstOrDefaultAsync(product => product.Id == id, cancellationToken);
     }
 
     public Task<bool> ExistsByCodeAsync(string productCode, Guid? excludedId, CancellationToken cancellationToken)

@@ -8,6 +8,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemIcon,
+  ListSubheader,
   ListItemText,
   Stack,
   Toolbar,
@@ -18,10 +19,12 @@ import { Link as RouterLink, Navigate, Route, Routes, useLocation } from 'react-
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
+import DatasetOutlinedIcon from '@mui/icons-material/DatasetOutlined'
 import FactoryOutlinedIcon from '@mui/icons-material/FactoryOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import PriceCheckOutlinedIcon from '@mui/icons-material/PriceCheckOutlined'
+import { MasterDataPage } from './masterData/MasterDataPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
 import { ProductListPage } from './products/ProductListPage'
 
@@ -29,6 +32,18 @@ const drawerWidth = 280
 
 const modules = [
   { name: 'Product Cards', path: '/products', icon: <CategoryOutlinedIcon />, active: true },
+]
+
+const masterDataModules = [
+  { name: 'Brands', path: '/master-data/brands', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Categories', path: '/master-data/categories', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Seasons', path: '/master-data/seasons', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Colors', path: '/master-data/colors', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Sizes', path: '/master-data/sizes', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Fabric Types', path: '/master-data/fabric-types', icon: <DatasetOutlinedIcon />, active: true },
+]
+
+const plannedModules = [
   { name: 'Fabric Management', icon: <Inventory2OutlinedIcon /> },
   { name: 'Pattern Management', icon: <AssignmentOutlinedIcon /> },
   { name: 'Production Orders', icon: <FactoryOutlinedIcon /> },
@@ -87,6 +102,28 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Master Data</ListSubheader>
+            {masterDataModules.map((item) => (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton
+                  component={RouterLink}
+                  to={item.path}
+                  selected={location.pathname.startsWith(item.path)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.name} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planned</ListSubheader>
+            {plannedModules.map((item) => (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton component="div" disabled>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.name} secondary="Planned module" />
+                </ListItemButton>
+              </ListItem>
+            ))}
           </List>
         </Box>
       </Drawer>
@@ -103,6 +140,7 @@ function App() {
             <Route path="/" element={<Navigate to="/products" replace />} />
             <Route path="/products" element={<ProductListPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
+            <Route path="/master-data/:type" element={<MasterDataPage />} />
           </Routes>
         </Container>
       </Box>

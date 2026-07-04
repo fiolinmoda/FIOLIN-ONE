@@ -1,8 +1,11 @@
+using FiolinOne.Application.MasterData;
 using FiolinOne.Domain.Products;
 
 namespace FiolinOne.Application.Products.Variants;
 
-public sealed class ProductVariantService(IProductVariantRepository productVariantRepository) : IProductVariantService
+public sealed class ProductVariantService(
+    IProductVariantRepository productVariantRepository,
+    IMasterDataRepository masterDataRepository) : IProductVariantService
 {
     public async Task<IReadOnlyList<ProductVariantDto>> GetVariantsAsync(Guid productId, CancellationToken cancellationToken)
     {
@@ -28,13 +31,13 @@ public sealed class ProductVariantService(IProductVariantRepository productVaria
             return null;
         }
 
-        var color = await productVariantRepository.GetOrCreateColorAsync(request.Color.Trim(), cancellationToken);
-        var size = await productVariantRepository.GetOrCreateSizeAsync(request.Size.Trim(), cancellationToken);
+        await EnsureMasterDataExistsAsync(request.ColorId, "colors", cancellationToken);
+        await EnsureMasterDataExistsAsync(request.SizeId, "sizes", cancellationToken);
 
         await EnsureUniqueAsync(
             productId,
-            color.Id,
-            size.Id,
+            request.ColorId,
+            request.SizeId,
             request.Barcode,
             request.TrendyolSku,
             null,
@@ -42,8 +45,8 @@ public sealed class ProductVariantService(IProductVariantRepository productVaria
 
         var variant = new ProductVariant(
             productId,
-            color.Id,
-            size.Id,
+            request.ColorId,
+            request.SizeId,
             request.Barcode.Trim(),
             NormalizeOptional(request.TrendyolSku),
             request.Stock,
@@ -70,21 +73,21 @@ public sealed class ProductVariantService(IProductVariantRepository productVaria
             return null;
         }
 
-        var color = await productVariantRepository.GetOrCreateColorAsync(request.Color.Trim(), cancellationToken);
-        var size = await productVariantRepository.GetOrCreateSizeAsync(request.Size.Trim(), cancellationToken);
+        await EnsureMasterDataExistsAsync(request.ColorId, "colors", cancellationToken);
+        await EnsureMasterDataExistsAsync(request.SizeId, "sizes", cancellationToken);
 
         await EnsureUniqueAsync(
             productId,
-            color.Id,
-            size.Id,
+            request.ColorId,
+            request.SizeId,
             request.Barcode,
             request.TrendyolSku,
             variantId,
             cancellationToken);
 
         variant.Update(
-            color.Id,
-            size.Id,
+            request.ColorId,
+            request.SizeId,
             request.Barcode.Trim(),
             NormalizeOptional(request.TrendyolSku),
             request.Stock,
@@ -137,6 +140,14 @@ public sealed class ProductVariantService(IProductVariantRepository productVaria
             await productVariantRepository.TrendyolSkuExistsAsync(normalizedTrendyolSku, excludedId, cancellationToken))
         {
             throw new InvalidOperationException("Trendyol SKU already exists.");
+        }
+    }
+
+    private async Task EnsureMasterDataExistsAsync(Guid id, string type, CancellationToken cancellationToken)
+    {
+        if (!await masterDataRepository.ExistsAsync(type, id, cancellationToken))
+        {
+            throw new InvalidOperationException("Selected master data item does not exist.");
         }
     }
 

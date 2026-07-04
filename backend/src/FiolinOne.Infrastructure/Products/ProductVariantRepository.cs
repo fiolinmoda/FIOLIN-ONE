@@ -34,40 +34,6 @@ public sealed class ProductVariantRepository(ApplicationDbContext dbContext) : I
                 cancellationToken);
     }
 
-    public async Task<ProductColor> GetOrCreateColorAsync(string color, CancellationToken cancellationToken)
-    {
-        var existingColor = await dbContext.ProductColors
-            .FirstOrDefaultAsync(item => item.Name.ToLower() == color.ToLower(), cancellationToken);
-
-        if (existingColor is not null)
-        {
-            return existingColor;
-        }
-
-        var productColor = new ProductColor(color);
-
-        await dbContext.ProductColors.AddAsync(productColor, cancellationToken);
-
-        return productColor;
-    }
-
-    public async Task<ProductSize> GetOrCreateSizeAsync(string size, CancellationToken cancellationToken)
-    {
-        var existingSize = await dbContext.ProductSizes
-            .FirstOrDefaultAsync(item => item.Name.ToLower() == size.ToLower(), cancellationToken);
-
-        if (existingSize is not null)
-        {
-            return existingSize;
-        }
-
-        var productSize = new ProductSize(size);
-
-        await dbContext.ProductSizes.AddAsync(productSize, cancellationToken);
-
-        return productSize;
-    }
-
     public Task<bool> VariantCombinationExistsAsync(
         Guid productId,
         Guid colorId,

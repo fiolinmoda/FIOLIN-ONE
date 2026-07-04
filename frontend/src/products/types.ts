@@ -2,8 +2,11 @@ export type Product = {
   id: string
   productCode: string
   productName: string
+  brandId: string | null
   brand: string | null
-  category: string
+  categoryId: string | null
+  category: string | null
+  seasonId: string | null
   season: string | null
   status: string
   createdAt: string
@@ -13,9 +16,9 @@ export type Product = {
 export type ProductInput = {
   productCode: string
   productName: string
-  brand: string
-  category: string
-  season: string
+  brandId: string | null
+  categoryId: string | null
+  seasonId: string | null
   status: string
 }
 
@@ -35,8 +38,8 @@ export type ProductVariant = {
 }
 
 export type ProductVariantInput = {
-  color: string
-  size: string
+  colorId: string
+  sizeId: string
   barcode: string
   trendyolSku: string
   stock: number

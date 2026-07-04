@@ -28,18 +28,14 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasMaxLength(200)
             .IsRequired();
 
-        builder.Property(product => product.Brand)
-            .HasColumnName("brand")
-            .HasMaxLength(100);
+        builder.Property(product => product.BrandId)
+            .HasColumnName("brand_id");
 
-        builder.Property(product => product.Category)
-            .HasColumnName("category")
-            .HasMaxLength(100)
-            .IsRequired();
+        builder.Property(product => product.CategoryId)
+            .HasColumnName("category_id");
 
-        builder.Property(product => product.Season)
-            .HasColumnName("season")
-            .HasMaxLength(50);
+        builder.Property(product => product.SeasonId)
+            .HasColumnName("season_id");
 
         builder.Property(product => product.Status)
             .HasColumnName("status")
@@ -52,6 +48,21 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(product => product.UpdatedAtUtc)
             .HasColumnName("updated_at");
+
+        builder.HasOne(product => product.Brand)
+            .WithMany()
+            .HasForeignKey(product => product.BrandId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(product => product.Category)
+            .WithMany()
+            .HasForeignKey(product => product.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(product => product.Season)
+            .WithMany()
+            .HasForeignKey(product => product.SeasonId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Ignore(product => product.CreatedAt);
         builder.Ignore(product => product.UpdatedAt);

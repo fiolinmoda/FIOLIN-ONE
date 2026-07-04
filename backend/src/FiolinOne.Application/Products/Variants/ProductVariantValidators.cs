@@ -6,13 +6,8 @@ public sealed class CreateProductVariantRequestValidator : AbstractValidator<Cre
 {
     public CreateProductVariantRequestValidator()
     {
-        RuleFor(request => request.Color)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(request => request.Size)
-            .NotEmpty()
-            .MaximumLength(50);
+        RuleFor(request => request.ColorId).NotEmpty();
+        RuleFor(request => request.SizeId).NotEmpty();
 
         RuleFor(request => request.Barcode)
             .NotEmpty()
@@ -34,13 +29,8 @@ public sealed class UpdateProductVariantRequestValidator : AbstractValidator<Upd
 {
     public UpdateProductVariantRequestValidator()
     {
-        RuleFor(request => request.Color)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(request => request.Size)
-            .NotEmpty()
-            .MaximumLength(50);
+        RuleFor(request => request.ColorId).NotEmpty();
+        RuleFor(request => request.SizeId).NotEmpty();
 
         RuleFor(request => request.Barcode)
             .NotEmpty()

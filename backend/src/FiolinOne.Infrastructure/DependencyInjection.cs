@@ -1,6 +1,8 @@
 using FiolinOne.Application.Common.Interfaces;
+using FiolinOne.Application.MasterData;
 using FiolinOne.Application.Products;
 using FiolinOne.Application.Products.Variants;
+using FiolinOne.Infrastructure.MasterData;
 using FiolinOne.Infrastructure.Persistence;
 using FiolinOne.Infrastructure.Products;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,7 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IMasterDataRepository, MasterDataRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
 

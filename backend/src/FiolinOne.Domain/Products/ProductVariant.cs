@@ -1,4 +1,5 @@
 using FiolinOne.Domain.Common;
+using FiolinOne.Domain.MasterData;
 
 namespace FiolinOne.Domain.Products;
 
@@ -34,8 +35,8 @@ public sealed class ProductVariant : Entity
     public int Stock { get; private set; }
     public string Status { get; private set; } = string.Empty;
     public Product? Product { get; private set; }
-    public ProductColor? Color { get; private set; }
-    public ProductSize? Size { get; private set; }
+    public Color? Color { get; private set; }
+    public Size? Size { get; private set; }
     public DateTime CreatedAt => CreatedAtUtc;
     public DateTime? UpdatedAt => UpdatedAtUtc;
 

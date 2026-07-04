@@ -1,8 +1,11 @@
+using FiolinOne.Application.MasterData;
 using FiolinOne.Domain.Products;
 
 namespace FiolinOne.Application.Products;
 
-public sealed class ProductService(IProductRepository productRepository) : IProductService
+public sealed class ProductService(
+    IProductRepository productRepository,
+    IMasterDataRepository masterDataRepository) : IProductService
 {
     public async Task<IReadOnlyList<ProductDto>> GetProductsAsync(string? search, CancellationToken cancellationToken)
     {
@@ -21,13 +24,16 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
     public async Task<ProductDto> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
     {
         await EnsureProductCodeIsUniqueAsync(request.ProductCode, null, cancellationToken);
+        await EnsureMasterDataExistsAsync(request.BrandId, "brands", cancellationToken);
+        await EnsureMasterDataExistsAsync(request.CategoryId, "categories", cancellationToken);
+        await EnsureMasterDataExistsAsync(request.SeasonId, "seasons", cancellationToken);
 
         var product = new Product(
             request.ProductCode.Trim(),
             request.ProductName.Trim(),
-            NormalizeOptional(request.Brand),
-            request.Category.Trim(),
-            NormalizeOptional(request.Season),
+            request.BrandId,
+            request.CategoryId,
+            request.SeasonId,
             request.Status.Trim());
 
         await productRepository.AddAsync(product, cancellationToken);
@@ -46,13 +52,16 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
         }
 
         await EnsureProductCodeIsUniqueAsync(request.ProductCode, id, cancellationToken);
+        await EnsureMasterDataExistsAsync(request.BrandId, "brands", cancellationToken);
+        await EnsureMasterDataExistsAsync(request.CategoryId, "categories", cancellationToken);
+        await EnsureMasterDataExistsAsync(request.SeasonId, "seasons", cancellationToken);
 
         product.Update(
             request.ProductCode.Trim(),
             request.ProductName.Trim(),
-            NormalizeOptional(request.Brand),
-            request.Category.Trim(),
-            NormalizeOptional(request.Season),
+            request.BrandId,
+            request.CategoryId,
+            request.SeasonId,
             request.Status.Trim());
 
         await productRepository.SaveChangesAsync(cancellationToken);
@@ -88,9 +97,17 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
         }
     }
 
-    private static string? NormalizeOptional(string? value)
+    private async Task EnsureMasterDataExistsAsync(Guid? id, string type, CancellationToken cancellationToken)
     {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        if (!id.HasValue)
+        {
+            return;
+        }
+
+        if (!await masterDataRepository.ExistsAsync(type, id.Value, cancellationToken))
+        {
+            throw new InvalidOperationException("Selected master data item does not exist.");
+        }
     }
 
     private static ProductDto ToDto(Product product)
@@ -99,9 +116,12 @@ public sealed class ProductService(IProductRepository productRepository) : IProd
             product.Id,
             product.ProductCode,
             product.ProductName,
-            product.Brand,
-            product.Category,
-            product.Season,
+            product.BrandId,
+            product.Brand?.Name,
+            product.CategoryId,
+            product.Category?.Name,
+            product.SeasonId,
+            product.Season?.Name,
             product.Status,
             product.CreatedAt,
             product.UpdatedAt);

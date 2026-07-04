@@ -14,16 +14,6 @@ public sealed class CreateProductRequestValidator : AbstractValidator<CreateProd
             .NotEmpty()
             .MaximumLength(200);
 
-        RuleFor(request => request.Brand)
-            .MaximumLength(100);
-
-        RuleFor(request => request.Category)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(request => request.Season)
-            .MaximumLength(50);
-
         RuleFor(request => request.Status)
             .NotEmpty()
             .MaximumLength(50);
@@ -41,16 +31,6 @@ public sealed class UpdateProductRequestValidator : AbstractValidator<UpdateProd
         RuleFor(request => request.ProductName)
             .NotEmpty()
             .MaximumLength(200);
-
-        RuleFor(request => request.Brand)
-            .MaximumLength(100);
-
-        RuleFor(request => request.Category)
-            .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(request => request.Season)
-            .MaximumLength(50);
 
         RuleFor(request => request.Status)
             .NotEmpty()

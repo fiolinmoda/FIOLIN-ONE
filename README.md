@@ -46,11 +46,19 @@ FIOLIN-ONE
 
 ## Product Variants
 
-- ProductColor, ProductSize, and ProductVariant entities
+- ProductVariant entity linked to master Color and Size records
 - Unique database rules for Product + Color + Size, Barcode, and Trendyol SKU
 - Nested CRUD API under `/api/products/{productId}/variants`
 - EF Core migration for product and variant tables
 - Product Detail Variants tab with Material UI DataGrid and add/edit dialogs
+
+## Master Data
+
+- Brand, Category, Season, Color, Size, and FabricType entities
+- Generic CRUD API under `/api/master-data/{type}`
+- Normalized product Brand, Category, and Season references
+- Normalized variant Color and Size references
+- Master Data navigation section with DataGrid pages for each list
 
 ## Frontend Foundation
 

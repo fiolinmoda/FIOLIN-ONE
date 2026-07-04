@@ -16,6 +16,8 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
+import { getMasterDataItems } from '../masterData/api'
+import type { MasterDataItem } from '../masterData/types'
 import { createProduct, getProduct, updateProduct } from './api'
 import { ProductVariantsTab } from './ProductVariantsTab'
 import type { ProductInput } from './types'
@@ -23,9 +25,9 @@ import type { ProductInput } from './types'
 const emptyProduct: ProductInput = {
   productCode: '',
   productName: '',
-  brand: '',
-  category: '',
-  season: '',
+  brandId: null,
+  categoryId: null,
+  seasonId: null,
   status: 'Active',
 }
 
@@ -40,6 +42,25 @@ export function ProductDetailPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState(0)
+  const [brands, setBrands] = useState<MasterDataItem[]>([])
+  const [categories, setCategories] = useState<MasterDataItem[]>([])
+  const [seasons, setSeasons] = useState<MasterDataItem[]>([])
+
+  useEffect(() => {
+    async function loadMasterData() {
+      const [brandItems, categoryItems, seasonItems] = await Promise.all([
+        getMasterDataItems('brands'),
+        getMasterDataItems('categories'),
+        getMasterDataItems('seasons'),
+      ])
+
+      setBrands(brandItems.filter((item) => item.isActive))
+      setCategories(categoryItems.filter((item) => item.isActive))
+      setSeasons(seasonItems.filter((item) => item.isActive))
+    }
+
+    void loadMasterData().catch(() => setError('Master data could not be loaded.'))
+  }, [])
 
   useEffect(() => {
     if (isNew || !id) {
@@ -55,9 +76,9 @@ export function ProductDetailPage() {
         setProduct({
           productCode: data.productCode,
           productName: data.productName,
-          brand: data.brand ?? '',
-          category: data.category,
-          season: data.season ?? '',
+          brandId: data.brandId,
+          categoryId: data.categoryId,
+          seasonId: data.seasonId,
           status: data.status,
         })
       } catch (exception) {
@@ -72,7 +93,7 @@ export function ProductDetailPage() {
 
   const title = useMemo(() => (isNew ? 'Add Product' : 'Edit Product'), [isNew])
 
-  function updateField(field: keyof ProductInput, value: string) {
+  function updateField(field: keyof ProductInput, value: string | null) {
     setProduct((current) => ({ ...current, [field]: value }))
   }
 
@@ -152,27 +173,50 @@ export function ProductDetailPage() {
 
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <TextField
+                      select
                       label="Brand"
-                      value={product.brand}
-                      onChange={(event) => updateField('brand', event.target.value)}
+                      value={product.brandId ?? ''}
+                      onChange={(event) => updateField('brandId', event.target.value || null)}
                       fullWidth
-                    />
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {brands.map((brand) => (
+                        <MenuItem key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
+                      select
                       label="Category"
-                      value={product.category}
-                      onChange={(event) => updateField('category', event.target.value)}
-                      required
+                      value={product.categoryId ?? ''}
+                      onChange={(event) => updateField('categoryId', event.target.value || null)}
                       fullWidth
-                    />
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {categories.map((category) => (
+                        <MenuItem key={category.id} value={category.id}>
+                          {category.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                   </Stack>
 
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <TextField
+                      select
                       label="Season"
-                      value={product.season}
-                      onChange={(event) => updateField('season', event.target.value)}
+                      value={product.seasonId ?? ''}
+                      onChange={(event) => updateField('seasonId', event.target.value || null)}
                       fullWidth
-                    />
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {seasons.map((season) => (
+                        <MenuItem key={season.id} value={season.id}>
+                          {season.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
                       select
                       label="Status"
