@@ -60,6 +60,10 @@ FIOLIN-ONE
 - Normalized variant Color and Size references
 - Master Data navigation section with DataGrid pages for each list
 
+## Documentation
+
+Project documentation starts at [docs/README.md](docs/README.md).
+
 ## Frontend Foundation
 
 - React
