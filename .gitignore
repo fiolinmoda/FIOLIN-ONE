@@ -1,0 +1,29 @@
+# Build output
+bin/
+obj/
+dist/
+build/
+
+# Local configuration
+.env
+appsettings.Development.json
+.dotnet-sdk/
+.tools/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Docker / OS
+*.pid
+.DS_Store
+Thumbs.db

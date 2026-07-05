@@ -1,0 +1,59 @@
+using FiolinOne.Domain.Common;
+using FiolinOne.Domain.MasterData;
+
+namespace FiolinOne.Domain.Products;
+
+public sealed class ProductVariant : Entity
+{
+    private ProductVariant()
+    {
+    }
+
+    public ProductVariant(
+        Guid productId,
+        Guid colorId,
+        Guid sizeId,
+        string barcode,
+        string? trendyolSku,
+        int stock,
+        string status)
+    {
+        ProductId = productId;
+        ColorId = colorId;
+        SizeId = sizeId;
+        Barcode = barcode;
+        TrendyolSku = trendyolSku;
+        Stock = stock;
+        Status = status;
+    }
+
+    public Guid ProductId { get; private set; }
+    public Guid ColorId { get; private set; }
+    public Guid SizeId { get; private set; }
+    public string Barcode { get; private set; } = string.Empty;
+    public string? TrendyolSku { get; private set; }
+    public int Stock { get; private set; }
+    public string Status { get; private set; } = string.Empty;
+    public Product? Product { get; private set; }
+    public Color? Color { get; private set; }
+    public Size? Size { get; private set; }
+    public DateTime CreatedAt => CreatedAtUtc;
+    public DateTime? UpdatedAt => UpdatedAtUtc;
+
+    public void Update(
+        Guid colorId,
+        Guid sizeId,
+        string barcode,
+        string? trendyolSku,
+        int stock,
+        string status)
+    {
+        ColorId = colorId;
+        SizeId = sizeId;
+        Barcode = barcode;
+        TrendyolSku = trendyolSku;
+        Stock = stock;
+        Status = status;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+}
