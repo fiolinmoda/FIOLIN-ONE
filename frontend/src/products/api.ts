@@ -1,29 +1,7 @@
 import type { Product, ProductInput, ProductVariant, ProductVariantInput } from './types'
+import { apiRequest } from '../common/apiClient'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000'
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
-    ...init,
-  })
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => null)
-    const message = body?.message ?? 'Request failed.'
-
-    throw new Error(message)
-  }
-
-  if (response.status === 204) {
-    return undefined as T
-  }
-
-  return response.json()
-}
+const request = apiRequest
 
 export async function getProducts(search: string): Promise<Product[]> {
   const query = search.trim()

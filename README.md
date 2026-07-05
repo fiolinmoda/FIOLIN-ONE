@@ -102,7 +102,7 @@ Project documentation starts at [docs/README.md](docs/README.md).
 
 1. Copy `.env.example` to `.env`.
 2. Update secrets and database credentials in `.env`.
-3. Start the stack:
+3. Start the full Docker stack:
 
 ```bash
 docker compose up --build
@@ -116,6 +116,31 @@ Default local endpoints:
 - Health: `http://localhost:5000/health`
 
 ## Local Development
+
+For day-to-day development on Windows, use the one-command launcher:
+
+```powershell
+.\start-dev.ps1
+```
+
+or:
+
+```cmd
+start-dev.cmd
+```
+
+The launcher starts PostgreSQL with Docker Compose, then starts the backend and frontend locally:
+
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:5000`
+- Swagger: `http://localhost:5000/swagger`
+- Health: `http://localhost:5000/health`
+
+If PowerShell script execution is restricted, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-dev.ps1
+```
 
 Backend:
 

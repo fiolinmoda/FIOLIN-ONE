@@ -20,6 +20,8 @@ import { getSuppliers } from '../purchasing/api'
 import type { Supplier } from '../purchasing/types'
 import { createFabric, getFabric, updateFabric } from './api'
 import type { FabricInput } from './types'
+import { commonText, requiredMessage, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const statuses = ['Active', 'OUT OF STOCK']
 
@@ -57,7 +59,7 @@ export function FabricDetailPage() {
       setColors(colorItems.filter((item) => item.isActive))
     }
 
-    void loadLookups().catch(() => setError('Fabric lookups could not be loaded.'))
+    void loadLookups().catch(() => setError('Kumaş seçim listeleri yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -87,7 +89,7 @@ export function FabricDetailPage() {
           notes: data.notes ?? '',
         })
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Fabric could not be loaded.')
+        setError(toUserMessage(exception, 'Kumaş kartı yüklenemedi.'))
       } finally {
         setLoading(false)
       }
@@ -96,7 +98,7 @@ export function FabricDetailPage() {
     void loadFabric()
   }, [id, isNew])
 
-  const title = useMemo(() => (isNew ? 'Add Fabric' : 'Edit Fabric'), [isNew])
+  const title = useMemo(() => (isNew ? 'Kumaş Ekle' : 'Kumaş Düzenle'), [isNew])
 
   function updateField(field: keyof FabricInput, value: string | number) {
     setFabric((current) => ({ ...current, [field]: value }))
@@ -117,7 +119,7 @@ export function FabricDetailPage() {
 
       navigate('/fabric/fabrics')
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Fabric could not be saved.')
+      setError(toUserMessage(exception, 'Kumaş kartı kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -126,10 +128,10 @@ export function FabricDetailPage() {
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/fabric/fabrics')}>Back</Button>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/fabric/fabrics')}>{commonText.back}</Button>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>{title}</Typography>
-          <Typography color="text.secondary">Fabric card and stock thresholds.</Typography>
+          <Typography color="text.secondary">Kumaş kartı, stok ve minimum seviye bilgileri.</Typography>
         </Box>
       </Stack>
 
@@ -142,37 +144,37 @@ export function FabricDetailPage() {
           <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Fabric Code" value={fabric.fabricCode} onChange={(event) => updateField('fabricCode', event.target.value)} required fullWidth />
-                <TextField label="Fabric Name" value={fabric.fabricName} onChange={(event) => updateField('fabricName', event.target.value)} required fullWidth />
+                <TextField label="Kumaş Kodu" value={fabric.fabricCode} onChange={(event) => updateField('fabricCode', event.target.value)} required helperText={!fabric.fabricCode.trim() ? requiredMessage('Kumaş kodu') : ' '} fullWidth />
+                <TextField label="Kumaş Adı" value={fabric.fabricName} onChange={(event) => updateField('fabricName', event.target.value)} required helperText={!fabric.fabricName.trim() ? requiredMessage('Kumaş adı') : ' '} fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField select label="Supplier" value={fabric.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required fullWidth>
+                <TextField select label="Tedarikçi" value={fabric.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!fabric.supplierId ? requiredMessage('Tedarikçi') : ' '} fullWidth>
                   {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.supplierName}</MenuItem>)}
                 </TextField>
-                <TextField select label="Color" value={fabric.colorId} onChange={(event) => updateField('colorId', event.target.value)} required fullWidth>
+                <TextField select label="Renk" value={fabric.colorId} onChange={(event) => updateField('colorId', event.target.value)} required helperText={!fabric.colorId ? requiredMessage('Renk') : ' '} fullWidth>
                   {colors.map((color) => <MenuItem key={color.id} value={color.id}>{color.name}</MenuItem>)}
                 </TextField>
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Composition" value={fabric.composition} onChange={(event) => updateField('composition', event.target.value)} fullWidth />
-                <TextField label="Width" type="number" value={fabric.width} onChange={(event) => updateField('width', Number(event.target.value))} fullWidth />
-                <TextField label="Weight (gsm)" type="number" value={fabric.weightGsm} onChange={(event) => updateField('weightGsm', Number(event.target.value))} fullWidth />
+                <TextField label="İçerik" value={fabric.composition} onChange={(event) => updateField('composition', event.target.value)} fullWidth />
+                <TextField label="En" type="number" value={fabric.width} onChange={(event) => updateField('width', Number(event.target.value))} fullWidth />
+                <TextField label="Gramaj (gsm)" type="number" value={fabric.weightGsm} onChange={(event) => updateField('weightGsm', Number(event.target.value))} fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Unit" value={fabric.unit} onChange={(event) => updateField('unit', event.target.value)} required fullWidth />
-                <TextField label="Purchase Price" type="number" value={fabric.purchasePrice} onChange={(event) => updateField('purchasePrice', Number(event.target.value))} fullWidth />
-                <TextField label="Current Stock (Kg)" type="number" value={fabric.currentStockKg} onChange={(event) => updateField('currentStockKg', Number(event.target.value))} disabled={!isNew} fullWidth />
+                <TextField label="Birim" value={fabric.unit} onChange={(event) => updateField('unit', event.target.value)} required fullWidth />
+                <TextField label="Alış Fiyatı" type="number" value={fabric.purchasePrice} onChange={(event) => updateField('purchasePrice', Number(event.target.value))} fullWidth />
+                <TextField label="Mevcut Stok (Kg)" type="number" value={fabric.currentStockKg} onChange={(event) => updateField('currentStockKg', Number(event.target.value))} disabled={!isNew} fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Minimum Stock" type="number" value={fabric.minimumStock} onChange={(event) => updateField('minimumStock', Number(event.target.value))} fullWidth />
-                <TextField select label="Status" value={fabric.status} onChange={(event) => updateField('status', event.target.value)} required fullWidth>
-                  {statuses.map((status) => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                <TextField label="Minimum Stok" type="number" value={fabric.minimumStock} onChange={(event) => updateField('minimumStock', Number(event.target.value))} fullWidth />
+                <TextField select label="Durum" value={fabric.status} onChange={(event) => updateField('status', event.target.value)} required fullWidth>
+                  {statuses.map((status) => <MenuItem key={status} value={status}>{trStatus(status)}</MenuItem>)}
                 </TextField>
               </Stack>
-              <TextField label="Notes" value={fabric.notes} onChange={(event) => updateField('notes', event.target.value)} multiline minRows={3} fullWidth />
+              <TextField label="Notlar" value={fabric.notes} onChange={(event) => updateField('notes', event.target.value)} multiline minRows={3} fullWidth />
               <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-                <Button onClick={() => navigate('/fabric/fabrics')}>Cancel</Button>
-                <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />} disabled={saving}>Save</Button>
+                <Button onClick={() => navigate('/fabric/fabrics')}>{commonText.cancel}</Button>
+                <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />} disabled={saving}>{commonText.save}</Button>
               </Stack>
             </Stack>
           </Box>

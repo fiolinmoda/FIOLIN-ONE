@@ -19,6 +19,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import { deleteProduct, getProducts } from './api'
 import type { Product } from './types'
+import { confirmDelete, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 export function ProductListPage() {
   const navigate = useNavigate()
@@ -35,7 +37,7 @@ export function ProductListPage() {
       const data = await getProducts(search)
       setProducts(data)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Products could not be loaded.')
+      setError(toUserMessage(exception, 'Ürünler yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -51,7 +53,7 @@ export function ProductListPage() {
 
   const handleDelete = useCallback(
     async (product: Product) => {
-      const confirmed = window.confirm(`Delete ${product.productCode} - ${product.productName}?`)
+      const confirmed = confirmDelete(`${product.productCode} - ${product.productName}`)
 
       if (!confirmed) {
         return
@@ -63,7 +65,7 @@ export function ProductListPage() {
         await deleteProduct(product.id)
         await loadProducts()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Product could not be deleted.')
+        setError(toUserMessage(exception, 'Ürün silinemedi.'))
       }
     },
     [loadProducts],
@@ -71,12 +73,12 @@ export function ProductListPage() {
 
   const columns = useMemo<GridColDef<Product>[]>(
     () => [
-      { field: 'productCode', headerName: 'Code', minWidth: 140, flex: 0.7 },
-      { field: 'productName', headerName: 'Product Name', minWidth: 220, flex: 1.2 },
-      { field: 'brand', headerName: 'Brand', minWidth: 140, flex: 0.8 },
-      { field: 'category', headerName: 'Category', minWidth: 150, flex: 0.8 },
-      { field: 'season', headerName: 'Season', minWidth: 120, flex: 0.6 },
-      { field: 'status', headerName: 'Status', minWidth: 120, flex: 0.6 },
+      { field: 'productCode', headerName: 'Ürün Kodu', minWidth: 140, flex: 0.7 },
+      { field: 'productName', headerName: 'Ürün Adı', minWidth: 220, flex: 1.2 },
+      { field: 'brand', headerName: 'Marka', minWidth: 140, flex: 0.8 },
+      { field: 'category', headerName: 'Kategori', minWidth: 150, flex: 0.8 },
+      { field: 'season', headerName: 'Sezon', minWidth: 120, flex: 0.6 },
+      { field: 'status', headerName: 'Durum', minWidth: 120, flex: 0.6, valueFormatter: (value: string) => trStatus(value) },
       {
         field: 'actions',
         headerName: '',
@@ -86,12 +88,12 @@ export function ProductListPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit product">
+            <Tooltip title="Ürünü düzenle">
               <IconButton size="small" onClick={() => navigate(`/products/${row.id}`)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete product">
+            <Tooltip title="Ürünü sil">
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -112,15 +114,15 @@ export function ProductListPage() {
       >
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            Product Management
+            Ürün Yönetimi
           </Typography>
           <Typography color="text.secondary">
-            Manage product cards for manufacturing and wholesale operations.
+            Model bazlı ürün kartlarını ve satışa açılacak varyantları yönetin.
           </Typography>
         </Box>
 
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/products/new')}>
-          Add Product
+          Ürün Ekle
         </Button>
       </Stack>
 
@@ -131,7 +133,7 @@ export function ProductListPage() {
           <TextField
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search products"
+            placeholder="Ürün kodu veya adına göre ara"
             size="small"
             fullWidth
             slotProps={{

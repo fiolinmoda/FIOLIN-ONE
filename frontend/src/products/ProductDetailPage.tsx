@@ -21,6 +21,8 @@ import type { MasterDataItem } from '../masterData/types'
 import { createProduct, getProduct, updateProduct } from './api'
 import { ProductVariantsTab } from './ProductVariantsTab'
 import type { ProductInput } from './types'
+import { commonText, requiredMessage, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const emptyProduct: ProductInput = {
   productCode: '',
@@ -59,7 +61,7 @@ export function ProductDetailPage() {
       setSeasons(seasonItems.filter((item) => item.isActive))
     }
 
-    void loadMasterData().catch(() => setError('Master data could not be loaded.'))
+    void loadMasterData().catch(() => setError('Tanımlar yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export function ProductDetailPage() {
           status: data.status,
         })
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Product could not be loaded.')
+        setError(toUserMessage(exception, 'Ürün yüklenemedi.'))
       } finally {
         setLoading(false)
       }
@@ -91,7 +93,7 @@ export function ProductDetailPage() {
     void loadProduct()
   }, [id, isNew])
 
-  const title = useMemo(() => (isNew ? 'Add Product' : 'Edit Product'), [isNew])
+  const title = useMemo(() => (isNew ? 'Ürün Ekle' : 'Ürün Düzenle'), [isNew])
 
   function updateField(field: keyof ProductInput, value: string | null) {
     setProduct((current) => ({ ...current, [field]: value }))
@@ -111,7 +113,7 @@ export function ProductDetailPage() {
 
       navigate('/products')
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Product could not be saved.')
+      setError(toUserMessage(exception, 'Ürün kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -121,13 +123,13 @@ export function ProductDetailPage() {
     <Stack spacing={3}>
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/products')}>
-          Back
+          {commonText.back}
         </Button>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
             {title}
           </Typography>
-          <Typography color="text.secondary">Product card details</Typography>
+          <Typography color="text.secondary">Ürün kartı temel bilgileri</Typography>
         </Box>
       </Stack>
 
@@ -147,8 +149,8 @@ export function ProductDetailPage() {
               scrollButtons="auto"
               sx={{ borderBottom: 1, borderColor: 'divider', px: { xs: 1, md: 2 } }}
             >
-              <Tab label="Product Info" />
-              <Tab label="Variants" disabled={isNew} />
+              <Tab label="Ürün Bilgileri" />
+              <Tab label="Varyantlar" disabled={isNew} />
             </Tabs>
 
             {activeTab === 0 && (
@@ -156,17 +158,19 @@ export function ProductDetailPage() {
                 <Stack spacing={3}>
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <TextField
-                      label="Product Code"
+                      label="Ürün Kodu"
                       value={product.productCode}
                       onChange={(event) => updateField('productCode', event.target.value)}
                       required
+                      helperText={!product.productCode.trim() ? requiredMessage('Ürün kodu') : ' '}
                       fullWidth
                     />
                     <TextField
-                      label="Product Name"
+                      label="Ürün Adı"
                       value={product.productName}
                       onChange={(event) => updateField('productName', event.target.value)}
                       required
+                      helperText={!product.productName.trim() ? requiredMessage('Ürün adı') : ' '}
                       fullWidth
                     />
                   </Stack>
@@ -174,12 +178,12 @@ export function ProductDetailPage() {
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <TextField
                       select
-                      label="Brand"
+                      label="Marka"
                       value={product.brandId ?? ''}
                       onChange={(event) => updateField('brandId', event.target.value || null)}
                       fullWidth
                     >
-                      <MenuItem value="">None</MenuItem>
+                      <MenuItem value="">{commonText.none}</MenuItem>
                       {brands.map((brand) => (
                         <MenuItem key={brand.id} value={brand.id}>
                           {brand.name}
@@ -188,12 +192,12 @@ export function ProductDetailPage() {
                     </TextField>
                     <TextField
                       select
-                      label="Category"
+                      label="Kategori"
                       value={product.categoryId ?? ''}
                       onChange={(event) => updateField('categoryId', event.target.value || null)}
                       fullWidth
                     >
-                      <MenuItem value="">None</MenuItem>
+                      <MenuItem value="">{commonText.none}</MenuItem>
                       {categories.map((category) => (
                         <MenuItem key={category.id} value={category.id}>
                           {category.name}
@@ -205,12 +209,12 @@ export function ProductDetailPage() {
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <TextField
                       select
-                      label="Season"
+                      label="Sezon"
                       value={product.seasonId ?? ''}
                       onChange={(event) => updateField('seasonId', event.target.value || null)}
                       fullWidth
                     >
-                      <MenuItem value="">None</MenuItem>
+                      <MenuItem value="">{commonText.none}</MenuItem>
                       {seasons.map((season) => (
                         <MenuItem key={season.id} value={season.id}>
                           {season.name}
@@ -219,7 +223,7 @@ export function ProductDetailPage() {
                     </TextField>
                     <TextField
                       select
-                      label="Status"
+                      label="Durum"
                       value={product.status}
                       onChange={(event) => updateField('status', event.target.value)}
                       required
@@ -227,21 +231,21 @@ export function ProductDetailPage() {
                     >
                       {statuses.map((status) => (
                         <MenuItem key={status} value={status}>
-                          {status}
+                          {trStatus(status)}
                         </MenuItem>
                       ))}
                     </TextField>
                   </Stack>
 
                   <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-                    <Button onClick={() => navigate('/products')}>Cancel</Button>
+                    <Button onClick={() => navigate('/products')}>{commonText.cancel}</Button>
                     <Button
                       type="submit"
                       variant="contained"
                       startIcon={<SaveOutlinedIcon />}
                       disabled={saving}
                     >
-                      Save
+                      {commonText.save}
                     </Button>
                   </Stack>
                 </Stack>

@@ -32,6 +32,8 @@ import {
 } from './api'
 import type { MasterDataInput, MasterDataItem, MasterDataType } from './types'
 import { masterDataLabels } from './types'
+import { commonText, confirmDelete, dialogContentSx, dialogPaperSx, requiredMessage } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const emptyItem: MasterDataInput = {
   name: '',
@@ -65,7 +67,7 @@ export function MasterDataPage() {
       const data = await getMasterDataItems(masterDataType, search)
       setItems(data)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : `${title} could not be loaded.`)
+      setError(toUserMessage(exception, `${title} yüklenemedi.`))
     } finally {
       setLoading(false)
     }
@@ -98,7 +100,7 @@ export function MasterDataPage() {
 
   const handleDelete = useCallback(
     async (item: MasterDataItem) => {
-      const confirmed = window.confirm(`Delete ${item.name}?`)
+      const confirmed = confirmDelete(item.name)
 
       if (!confirmed) {
         return
@@ -110,7 +112,7 @@ export function MasterDataPage() {
         await deleteMasterDataItem(masterDataType, item.id)
         await loadItems()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : `${title} could not be deleted.`)
+        setError(toUserMessage(exception, `${title} silinemedi.`))
       }
     },
     [loadItems, masterDataType, title],
@@ -131,7 +133,7 @@ export function MasterDataPage() {
       setDialogOpen(false)
       await loadItems()
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : `${title} could not be saved.`)
+      setError(toUserMessage(exception, `${title} kaydedilemedi.`))
     } finally {
       setSaving(false)
     }
@@ -139,15 +141,15 @@ export function MasterDataPage() {
 
   const columns = useMemo<GridColDef<MasterDataItem>[]>(
     () => [
-      { field: 'code', headerName: 'Code', minWidth: 140, flex: 0.7 },
-      { field: 'name', headerName: 'Name', minWidth: 220, flex: 1.2 },
-      { field: 'sortOrder', headerName: 'Sort', type: 'number', minWidth: 100, flex: 0.4 },
+      { field: 'code', headerName: 'Kod', minWidth: 140, flex: 0.7 },
+      { field: 'name', headerName: 'Ad', minWidth: 220, flex: 1.2 },
+      { field: 'sortOrder', headerName: 'Sıra', type: 'number', minWidth: 100, flex: 0.4 },
       {
         field: 'isActive',
-        headerName: 'Active',
+        headerName: 'Aktif',
         minWidth: 110,
         flex: 0.4,
-        valueFormatter: (value: boolean) => (value ? 'Yes' : 'No'),
+        valueFormatter: (value: boolean) => (value ? commonText.yes : commonText.no),
       },
       {
         field: 'actions',
@@ -158,12 +160,12 @@ export function MasterDataPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit">
+            <Tooltip title={commonText.edit}>
               <IconButton size="small" onClick={() => openEditDialog(row)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete">
+            <Tooltip title={commonText.delete}>
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -186,10 +188,10 @@ export function MasterDataPage() {
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
             {title}
           </Typography>
-          <Typography color="text.secondary">Manage shared product master data.</Typography>
+          <Typography color="text.secondary">Ürün, satın alma ve üretimde kullanılan ortak tanımları yönetin.</Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
-          Add
+          Yeni Ekle
         </Button>
       </Stack>
 
@@ -200,7 +202,7 @@ export function MasterDataPage() {
           <TextField
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={`Search ${title.toLowerCase()}`}
+            placeholder={`${title} içinde ara`}
             size="small"
             fullWidth
             slotProps={{
@@ -236,33 +238,37 @@ export function MasterDataPage() {
         </Stack>
       </Paper>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingItem ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
-          <DialogContent>
+          <DialogTitle>{editingItem ? `${title} Düzenle` : `${title} Ekle`}</DialogTitle>
+          <DialogContent sx={dialogContentSx}>
+            {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <TextField
-                label="Name"
+                label="Ad"
                 value={itemInput.name}
                 onChange={(event) => setItemInput((current) => ({ ...current, name: event.target.value }))}
                 required
+                helperText={!itemInput.name.trim() ? requiredMessage('Ad') : ' '}
                 fullWidth
               />
               <TextField
-                label="Code"
+                label="Kod"
                 value={itemInput.code}
                 onChange={(event) => setItemInput((current) => ({ ...current, code: event.target.value }))}
                 required
+                helperText={!itemInput.code.trim() ? requiredMessage('Kod') : ' '}
                 fullWidth
               />
               <TextField
-                label="Sort Order"
+                label="Sıra"
                 type="number"
                 value={itemInput.sortOrder}
                 onChange={(event) =>
                   setItemInput((current) => ({ ...current, sortOrder: Number(event.target.value) }))
                 }
                 required
+                helperText={itemInput.sortOrder < 0 ? 'Sıra negatif olamaz.' : ' '}
                 fullWidth
                 slotProps={{
                   htmlInput: {
@@ -279,14 +285,14 @@ export function MasterDataPage() {
                     }
                   />
                 }
-                label="Active"
+                label="Aktif"
               />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDialogOpen(false)}>{commonText.cancel}</Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              Save
+              {commonText.save}
             </Button>
           </DialogActions>
         </Box>

@@ -21,6 +21,8 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import { deleteFabric, getFabrics } from './api'
 import type { Fabric } from './types'
+import { confirmDelete, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 function formatKg(value: number): string {
   return `${value.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} Kg`
@@ -41,7 +43,7 @@ export function FabricListPage() {
       const data = await getFabrics(search)
       setFabrics(data.items)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Fabrics could not be loaded.')
+      setError(toUserMessage(exception, 'Kumaş kartları yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -57,7 +59,7 @@ export function FabricListPage() {
 
   const handleDelete = useCallback(
     async (fabric: Fabric) => {
-      const confirmed = window.confirm(`Delete ${fabric.fabricCode} - ${fabric.fabricName}?`)
+      const confirmed = confirmDelete(`${fabric.fabricCode} - ${fabric.fabricName}`)
 
       if (!confirmed) {
         return
@@ -69,7 +71,7 @@ export function FabricListPage() {
         await deleteFabric(fabric.id)
         await loadFabrics()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Fabric could not be deleted.')
+        setError(toUserMessage(exception, 'Kumaş kartı silinemedi.'))
       }
     },
     [loadFabrics],
@@ -77,13 +79,13 @@ export function FabricListPage() {
 
   const columns = useMemo<GridColDef<Fabric>[]>(
     () => [
-      { field: 'fabricCode', headerName: 'Code', minWidth: 130, flex: 0.6 },
-      { field: 'fabricName', headerName: 'Fabric', minWidth: 220, flex: 1.1 },
-      { field: 'supplierName', headerName: 'Supplier', minWidth: 190, flex: 1 },
-      { field: 'color', headerName: 'Color', minWidth: 130, flex: 0.6 },
+      { field: 'fabricCode', headerName: 'Kod', minWidth: 130, flex: 0.6 },
+      { field: 'fabricName', headerName: 'Kumaş', minWidth: 220, flex: 1.1 },
+      { field: 'supplierName', headerName: 'Tedarikçi', minWidth: 190, flex: 1 },
+      { field: 'color', headerName: 'Renk', minWidth: 130, flex: 0.6 },
       {
         field: 'currentStockKg',
-        headerName: 'Stock',
+        headerName: 'Stok',
         type: 'number',
         minWidth: 130,
         flex: 0.5,
@@ -91,7 +93,7 @@ export function FabricListPage() {
       },
       {
         field: 'reservedQuantityKg',
-        headerName: 'Reserved',
+        headerName: 'Rezerve',
         type: 'number',
         minWidth: 130,
         flex: 0.5,
@@ -99,12 +101,12 @@ export function FabricListPage() {
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: 'Durum',
         minWidth: 140,
         flex: 0.6,
         renderCell: ({ value }) => (
           <Chip
-            label={String(value)}
+            label={trStatus(String(value))}
             size="small"
             color={value === 'OUT OF STOCK' ? 'error' : 'success'}
             variant="outlined"
@@ -120,12 +122,12 @@ export function FabricListPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit fabric">
+            <Tooltip title="Kumaş kartını düzenle">
               <IconButton size="small" onClick={() => navigate(`/fabric/fabrics/${row.id}`)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete fabric">
+            <Tooltip title="Kumaş kartını sil">
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -142,14 +144,14 @@ export function FabricListPage() {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            Fabric List
+            Kumaş Kartları
           </Typography>
-          <Typography color="text.secondary">Manage fabric cards and current weight-based stock.</Typography>
+          <Typography color="text.secondary">Kumaş kartlarını ve kilogram bazlı stokları yönetin.</Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<FileDownloadOutlinedIcon />}>Export</Button>
+          <Button variant="outlined" startIcon={<FileDownloadOutlinedIcon />}>Dışa Aktar</Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/fabric/fabrics/new')}>
-            Add Fabric
+            Kumaş Ekle
           </Button>
         </Stack>
       </Stack>
@@ -158,7 +160,7 @@ export function FabricListPage() {
 
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
         <Stack spacing={2}>
-          <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search fabrics" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
+          <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Kumaş ara" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
           <Box sx={{ width: '100%', minHeight: 500 }}>
             <DataGrid rows={fabrics} columns={columns} loading={loading} disableRowSelectionOnClick pageSizeOptions={[10, 25, 50]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }} />
           </Box>

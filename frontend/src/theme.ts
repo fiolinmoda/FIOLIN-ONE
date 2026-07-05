@@ -1,27 +1,33 @@
 import { createTheme } from '@mui/material/styles'
+import { trTR as coreTrTR } from '@mui/material/locale'
+import { trTR as dataGridTrTR } from '@mui/x-data-grid/locales'
 
-export const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1f6f78',
+export const theme = createTheme(
+  {
+    palette: {
+      mode: 'light',
+      primary: {
+        main: '#1f6f78',
+      },
+      secondary: {
+        main: '#8a5a44',
+      },
+      background: {
+        default: '#f7f8fa',
+        paper: '#ffffff',
+      },
     },
-    secondary: {
-      main: '#8a5a44',
+    shape: {
+      borderRadius: 8,
     },
-    background: {
-      default: '#f7f8fa',
-      paper: '#ffffff',
+    typography: {
+      fontFamily:
+        "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      h3: {
+        letterSpacing: 0,
+      },
     },
   },
-  shape: {
-    borderRadius: 8,
-  },
-  typography: {
-    fontFamily:
-      "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    h3: {
-      letterSpacing: 0,
-    },
-  },
-})
+  coreTrTR,
+  dataGridTrTR,
+)

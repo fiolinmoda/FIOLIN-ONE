@@ -9,31 +9,9 @@ import type {
   WorkshopReturnInput,
   WorkshopShipmentInput,
 } from './types'
+import { apiRequest } from '../common/apiClient'
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000'
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = window.localStorage.getItem('fiolin-one-token')
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init?.headers,
-    },
-    ...init,
-  })
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => null)
-    throw new Error(body?.message ?? 'Request failed.')
-  }
-
-  if (response.status === 204) {
-    return undefined as T
-  }
-
-  return response.json()
-}
+const request = apiRequest
 
 function query(search: string, status = '', pageSize = 100): string {
   const params = new URLSearchParams({ page: '1', pageSize: String(pageSize) })

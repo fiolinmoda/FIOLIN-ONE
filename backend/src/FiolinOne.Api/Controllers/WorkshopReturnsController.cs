@@ -1,10 +1,8 @@
 using FiolinOne.Application.Production;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FiolinOne.Api.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/workshop-returns")]
 [Produces("application/json")]

@@ -31,6 +31,8 @@ import {
   updatePurchaseInvoice,
 } from './api'
 import type { PurchaseInvoice, PurchaseInvoiceInput, PurchaseOrder, Supplier } from './types'
+import { commonText, confirmDelete, dialogContentSx, dialogPaperSx, requiredMessage, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const statuses = ['Draft', 'Waiting Payment', 'Completed', 'Cancelled']
 
@@ -83,7 +85,7 @@ export function PurchaseInvoicePage() {
       const data = await getPurchaseInvoices(search)
       setInvoices(data.items)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Purchase invoices could not be loaded.')
+      setError(toUserMessage(exception, 'Alış faturaları yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -97,7 +99,7 @@ export function PurchaseInvoicePage() {
       setOrders(orderResult.items)
     }
 
-    void loadLookups().catch(() => setError('Purchasing lookups could not be loaded.'))
+    void loadLookups().catch(() => setError('Satın alma seçim listeleri yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export function PurchaseInvoicePage() {
 
   const handleDelete = useCallback(
     async (invoice: PurchaseInvoice) => {
-      const confirmed = window.confirm(`Delete purchase invoice ${invoice.invoiceNumber}?`)
+      const confirmed = confirmDelete(invoice.invoiceNumber)
 
       if (!confirmed) {
         return
@@ -154,7 +156,7 @@ export function PurchaseInvoicePage() {
         await deletePurchaseInvoice(invoice.id)
         await loadInvoices()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Purchase invoice could not be deleted.')
+        setError(toUserMessage(exception, 'Alış faturası silinemedi.'))
       }
     },
     [loadInvoices],
@@ -200,7 +202,7 @@ export function PurchaseInvoicePage() {
       setDialogOpen(false)
       await loadInvoices()
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Purchase invoice could not be saved.')
+      setError(toUserMessage(exception, 'Alış faturası kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -208,25 +210,25 @@ export function PurchaseInvoicePage() {
 
   const columns = useMemo<GridColDef<PurchaseInvoice>[]>(
     () => [
-      { field: 'invoiceNumber', headerName: 'Invoice No', minWidth: 150, flex: 0.8 },
-      { field: 'supplierName', headerName: 'Supplier', minWidth: 220, flex: 1.2 },
-      { field: 'purchaseNumber', headerName: 'Purchase No', minWidth: 150, flex: 0.8 },
+      { field: 'invoiceNumber', headerName: 'Fatura No', minWidth: 150, flex: 0.8 },
+      { field: 'supplierName', headerName: 'Tedarikçi', minWidth: 220, flex: 1.2 },
+      { field: 'purchaseNumber', headerName: 'Sipariş No', minWidth: 150, flex: 0.8 },
       {
         field: 'invoiceDate',
-        headerName: 'Date',
+        headerName: 'Tarih',
         minWidth: 120,
         flex: 0.6,
         valueFormatter: (value: string) => formatDate(value),
       },
       {
         field: 'invoiceAmount',
-        headerName: 'Amount',
+        headerName: 'Tutar',
         type: 'number',
         minWidth: 130,
         flex: 0.6,
         valueFormatter: (value: number) => formatAmount(value),
       },
-      { field: 'status', headerName: 'Status', minWidth: 150, flex: 0.7 },
+      { field: 'status', headerName: 'Durum', minWidth: 150, flex: 0.7, valueFormatter: (value: string) => trStatus(value) },
       {
         field: 'actions',
         headerName: '',
@@ -236,12 +238,12 @@ export function PurchaseInvoicePage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit invoice">
+            <Tooltip title="Faturayı düzenle">
               <IconButton size="small" onClick={() => openEditDialog(row)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete invoice">
+            <Tooltip title="Faturayı sil">
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -258,12 +260,12 @@ export function PurchaseInvoicePage() {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            Purchase Invoices
+            Alış Faturaları
           </Typography>
-          <Typography color="text.secondary">Enter supplier invoices after goods are received.</Typography>
+          <Typography color="text.secondary">Mal kabul sonrası gelen tedarikçi faturalarını girin.</Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
-          Add Invoice
+          Fatura Ekle
         </Button>
       </Stack>
 
@@ -271,53 +273,54 @@ export function PurchaseInvoicePage() {
 
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
         <Stack spacing={2}>
-          <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search purchase invoices" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
+          <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Alış faturası ara" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
           <Box sx={{ width: '100%', minHeight: 460 }}>
             <DataGrid rows={invoices} columns={columns} loading={loading} disableRowSelectionOnClick pageSizeOptions={[10, 25, 50]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }} />
           </Box>
         </Stack>
       </Paper>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md">
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingInvoice ? 'Edit Purchase Invoice' : 'Add Purchase Invoice'}</DialogTitle>
-          <DialogContent>
+          <DialogTitle>{editingInvoice ? 'Alış Faturası Düzenle' : 'Alış Faturası Ekle'}</DialogTitle>
+          <DialogContent sx={dialogContentSx}>
+            {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Invoice Number" value={invoiceInput.invoiceNumber} onChange={(event) => updateField('invoiceNumber', event.target.value)} required fullWidth />
-                <TextField label="Invoice Date" type="date" value={invoiceInput.invoiceDate} onChange={(event) => updateField('invoiceDate', event.target.value)} required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
+                <TextField label="Fatura Numarası" value={invoiceInput.invoiceNumber} onChange={(event) => updateField('invoiceNumber', event.target.value)} required helperText={!invoiceInput.invoiceNumber.trim() ? requiredMessage('Fatura numarası') : ' '} fullWidth />
+                <TextField label="Fatura Tarihi" type="date" value={invoiceInput.invoiceDate} onChange={(event) => updateField('invoiceDate', event.target.value)} required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField select label="Supplier" value={invoiceInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required fullWidth>
+                <TextField select label="Tedarikçi" value={invoiceInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!invoiceInput.supplierId ? requiredMessage('Tedarikçi') : ' '} fullWidth>
                   {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.supplierName}</MenuItem>)}
                 </TextField>
-                <TextField select label="Purchase Order" value={invoiceInput.purchaseOrderId ?? ''} onChange={(event) => updateField('purchaseOrderId', event.target.value || null)} fullWidth>
-                  <MenuItem value="">None</MenuItem>
+                <TextField select label="Satın Alma Siparişi" value={invoiceInput.purchaseOrderId ?? ''} onChange={(event) => updateField('purchaseOrderId', event.target.value || null)} fullWidth>
+                  <MenuItem value="">{commonText.none}</MenuItem>
                   {orders.map((order) => <MenuItem key={order.id} value={order.id}>{order.purchaseNumber}</MenuItem>)}
                 </TextField>
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Invoice Amount" type="number" value={invoiceInput.invoiceAmount} onChange={(event) => updateField('invoiceAmount', Number(event.target.value))} required fullWidth />
-                <TextField select label="Status" value={invoiceInput.status} onChange={(event) => updateField('status', event.target.value)} required fullWidth>
-                  {statuses.map((status) => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                <TextField label="Fatura Tutarı" type="number" value={invoiceInput.invoiceAmount} onChange={(event) => updateField('invoiceAmount', Number(event.target.value))} required fullWidth />
+                <TextField select label="Durum" value={invoiceInput.status} onChange={(event) => updateField('status', event.target.value)} required fullWidth>
+                  {statuses.map((status) => <MenuItem key={status} value={status}>{trStatus(status)}</MenuItem>)}
                 </TextField>
               </Stack>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Invoice Line</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Fatura Kalemi</Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Item" value={invoiceInput.items[0].itemName} onChange={(event) => updateFirstItem('itemName', event.target.value)} required fullWidth />
-                <TextField label="Quantity" type="number" value={invoiceInput.items[0].quantity} onChange={(event) => updateFirstItem('quantity', Number(event.target.value))} required fullWidth />
+                <TextField label="Kalem" value={invoiceInput.items[0].itemName} onChange={(event) => updateFirstItem('itemName', event.target.value)} required fullWidth />
+                <TextField label="Miktar" type="number" value={invoiceInput.items[0].quantity} onChange={(event) => updateFirstItem('quantity', Number(event.target.value))} required fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Unit" value={invoiceInput.items[0].unit} onChange={(event) => updateFirstItem('unit', event.target.value)} required fullWidth />
-                <TextField label="Unit Price" type="number" value={invoiceInput.items[0].unitPrice} onChange={(event) => updateFirstItem('unitPrice', Number(event.target.value))} required fullWidth />
-                <TextField label="Line Total" type="number" value={invoiceInput.items[0].totalAmount} onChange={(event) => updateFirstItem('totalAmount', Number(event.target.value))} fullWidth />
+                <TextField label="Birim" value={invoiceInput.items[0].unit} onChange={(event) => updateFirstItem('unit', event.target.value)} required fullWidth />
+                <TextField label="Birim Fiyat" type="number" value={invoiceInput.items[0].unitPrice} onChange={(event) => updateFirstItem('unitPrice', Number(event.target.value))} required fullWidth />
+                <TextField label="Satır Toplamı" type="number" value={invoiceInput.items[0].totalAmount} onChange={(event) => updateFirstItem('totalAmount', Number(event.target.value))} fullWidth />
               </Stack>
-              <TextField label="Notes" value={invoiceInput.notes} onChange={(event) => updateField('notes', event.target.value)} multiline minRows={2} fullWidth />
+              <TextField label="Notlar" value={invoiceInput.notes} onChange={(event) => updateField('notes', event.target.value)} multiline minRows={2} fullWidth />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={saving}>Save</Button>
+            <Button onClick={() => setDialogOpen(false)}>{commonText.cancel}</Button>
+            <Button type="submit" variant="contained" disabled={saving}>{commonText.save}</Button>
           </DialogActions>
         </Box>
       </Dialog>

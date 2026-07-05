@@ -52,45 +52,45 @@ import { SupplierManagementPage } from './purchasing/SupplierManagementPage'
 const drawerWidth = 280
 
 const modules = [
-  { name: 'Product Cards', path: '/products', icon: <CategoryOutlinedIcon />, active: true },
+  { name: 'Ürünler', path: '/products', icon: <CategoryOutlinedIcon />, active: true },
 ]
 
 const masterDataModules = [
-  { name: 'Brands', path: '/master-data/brands', icon: <DatasetOutlinedIcon />, active: true },
-  { name: 'Categories', path: '/master-data/categories', icon: <DatasetOutlinedIcon />, active: true },
-  { name: 'Seasons', path: '/master-data/seasons', icon: <DatasetOutlinedIcon />, active: true },
-  { name: 'Colors', path: '/master-data/colors', icon: <DatasetOutlinedIcon />, active: true },
-  { name: 'Sizes', path: '/master-data/sizes', icon: <DatasetOutlinedIcon />, active: true },
-  { name: 'Fabric Types', path: '/master-data/fabric-types', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Markalar', path: '/master-data/brands', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Kategoriler', path: '/master-data/categories', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Sezonlar', path: '/master-data/seasons', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Renkler', path: '/master-data/colors', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Bedenler', path: '/master-data/sizes', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'Kumaş Tipleri', path: '/master-data/fabric-types', icon: <DatasetOutlinedIcon />, active: true },
 ]
 
 const purchasingModules = [
-  { name: 'Purchase Orders', path: '/purchasing/orders', icon: <ReceiptLongOutlinedIcon /> },
-  { name: 'Suppliers', path: '/purchasing/suppliers', icon: <DatasetOutlinedIcon /> },
-  { name: 'Goods Receipt', path: '/purchasing/goods-receipts', icon: <Inventory2OutlinedIcon /> },
-  { name: 'Purchase Invoices', path: '/purchasing/invoices', icon: <PriceCheckOutlinedIcon /> },
+  { name: 'Satın Alma Siparişleri', path: '/purchasing/orders', icon: <ReceiptLongOutlinedIcon /> },
+  { name: 'Tedarikçiler', path: '/purchasing/suppliers', icon: <DatasetOutlinedIcon /> },
+  { name: 'Mal Kabul', path: '/purchasing/goods-receipts', icon: <Inventory2OutlinedIcon /> },
+  { name: 'Alış Faturaları', path: '/purchasing/invoices', icon: <PriceCheckOutlinedIcon /> },
 ]
 
 const fabricModules = [
-  { name: 'Fabric List', path: '/fabric/fabrics', icon: <SpaOutlinedIcon /> },
-  { name: 'Fabric Stock', path: '/fabric/stock', icon: <Inventory2OutlinedIcon /> },
-  { name: 'Stock Movements', path: '/fabric/movements', icon: <SyncAltOutlinedIcon /> },
-  { name: 'Reservations', path: '/fabric/reservations', icon: <BookmarkAddedOutlinedIcon /> },
+  { name: 'Kumaş Kartları', path: '/fabric/fabrics', icon: <SpaOutlinedIcon /> },
+  { name: 'Kumaş Stok', path: '/fabric/stock', icon: <Inventory2OutlinedIcon /> },
+  { name: 'Stok Hareketleri', path: '/fabric/movements', icon: <SyncAltOutlinedIcon /> },
+  { name: 'Rezervasyonlar', path: '/fabric/reservations', icon: <BookmarkAddedOutlinedIcon /> },
 ]
 
 const productionModules = [
-  { name: 'Dashboard', path: '/production/dashboard', icon: <DashboardOutlinedIcon /> },
-  { name: 'Production Orders', path: '/production/orders', icon: <FactoryOutlinedIcon /> },
-  { name: 'Cutting', path: '/production/cutting', icon: <ContentCutOutlinedIcon /> },
-  { name: 'Workshop Shipment', path: '/production/workshop-shipment', icon: <LocalShippingOutlinedIcon /> },
-  { name: 'Workshop Return', path: '/production/workshop-return', icon: <SyncAltOutlinedIcon /> },
-  { name: 'Warehouse Entry', path: '/production/warehouse-entry', icon: <WarehouseOutlinedIcon /> },
+  { name: 'Ana Sayfa', path: '/production/dashboard', icon: <DashboardOutlinedIcon /> },
+  { name: 'Üretim Emirleri', path: '/production/orders', icon: <FactoryOutlinedIcon /> },
+  { name: 'Kesim', path: '/production/cutting', icon: <ContentCutOutlinedIcon /> },
+  { name: 'Atölyeye Gönderim', path: '/production/workshop-shipment', icon: <LocalShippingOutlinedIcon /> },
+  { name: 'Atölye Dönüşü', path: '/production/workshop-return', icon: <SyncAltOutlinedIcon /> },
+  { name: 'Depo Girişi', path: '/production/warehouse-entry', icon: <WarehouseOutlinedIcon /> },
 ]
 
 const plannedModules = [
-  { name: 'Pattern Management', icon: <AssignmentOutlinedIcon /> },
-  { name: 'Warehouse', icon: <LocalShippingOutlinedIcon /> },
-  { name: 'Finance', icon: <PriceCheckOutlinedIcon /> },
+  { name: 'Kalıp Yönetimi', icon: <AssignmentOutlinedIcon /> },
+  { name: 'Depo', icon: <LocalShippingOutlinedIcon /> },
+  { name: 'Finans', icon: <PriceCheckOutlinedIcon /> },
 ]
 
 function App() {
@@ -110,7 +110,7 @@ function App() {
             <Typography variant="h6" component="div" sx={{ fontWeight: 700 }}>
               FIOLIN ONE
             </Typography>
-            <Chip label="Product Management" size="small" color="primary" variant="outlined" />
+            <Chip label="ERP Yönetimi" size="small" color="primary" variant="outlined" />
           </Stack>
         </Toolbar>
       </AppBar>
@@ -140,11 +140,11 @@ function App() {
                   disabled={!item.active}
                 >
                   <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.name} secondary={item.active ? 'Active module' : 'Planned module'} />
+                  <ListItemText primary={item.name} secondary={item.active ? 'Kullanımda' : 'Planlandı'} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Master Data</ListSubheader>
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Tanımlar</ListSubheader>
             {masterDataModules.map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
@@ -157,7 +157,7 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Purchasing</ListSubheader>
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Satın Alma</ListSubheader>
             {purchasingModules.map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
@@ -170,7 +170,7 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Fabric</ListSubheader>
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Kumaş Yönetimi</ListSubheader>
             {fabricModules.map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
@@ -183,7 +183,7 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Production</ListSubheader>
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Üretim</ListSubheader>
             {productionModules.map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
@@ -196,12 +196,12 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planned</ListSubheader>
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planlanan Modüller</ListSubheader>
             {plannedModules.map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton component="div" disabled>
                   <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.name} secondary="Planned module" />
+                  <ListItemText primary={item.name} secondary="Planlandı" />
                 </ListItemButton>
               </ListItem>
             ))}
@@ -213,7 +213,7 @@ function App() {
         <Toolbar />
         {!isDesktop && (
           <Box sx={{ px: 2, pt: 2 }}>
-            <Chip icon={<CategoryOutlinedIcon />} label="Product Cards" color="primary" variant="outlined" />
+            <Chip icon={<CategoryOutlinedIcon />} label="Ürünler" color="primary" variant="outlined" />
           </Box>
         )}
         <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>

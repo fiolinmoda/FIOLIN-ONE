@@ -19,6 +19,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import { deletePurchaseOrder, getPurchaseOrders } from './api'
 import type { PurchaseOrder } from './types'
+import { confirmDelete, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)
@@ -43,7 +45,7 @@ export function PurchaseOrderListPage() {
       const data = await getPurchaseOrders(search)
       setOrders(data.items)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Purchase orders could not be loaded.')
+      setError(toUserMessage(exception, 'Satın alma siparişleri yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -59,7 +61,7 @@ export function PurchaseOrderListPage() {
 
   const handleDelete = useCallback(
     async (order: PurchaseOrder) => {
-      const confirmed = window.confirm(`Delete purchase order ${order.purchaseNumber}?`)
+      const confirmed = confirmDelete(order.purchaseNumber)
 
       if (!confirmed) {
         return
@@ -71,7 +73,7 @@ export function PurchaseOrderListPage() {
         await deletePurchaseOrder(order.id)
         await loadOrders()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Purchase order could not be deleted.')
+        setError(toUserMessage(exception, 'Satın alma siparişi silinemedi.'))
       }
     },
     [loadOrders],
@@ -79,26 +81,26 @@ export function PurchaseOrderListPage() {
 
   const columns = useMemo<GridColDef<PurchaseOrder>[]>(
     () => [
-      { field: 'purchaseNumber', headerName: 'Purchase No', minWidth: 150, flex: 0.8 },
-      { field: 'supplierName', headerName: 'Supplier', minWidth: 220, flex: 1.2 },
+      { field: 'purchaseNumber', headerName: 'Sipariş No', minWidth: 150, flex: 0.8 },
+      { field: 'supplierName', headerName: 'Tedarikçi', minWidth: 220, flex: 1.2 },
       {
         field: 'orderDate',
-        headerName: 'Order Date',
+        headerName: 'Sipariş Tarihi',
         minWidth: 130,
         flex: 0.6,
         valueFormatter: (value: string) => formatDate(value),
       },
       {
         field: 'expectedDate',
-        headerName: 'Expected',
+        headerName: 'Beklenen Tarih',
         minWidth: 130,
         flex: 0.6,
         valueFormatter: (value: string | null) => formatDate(value),
       },
-      { field: 'status', headerName: 'Status', minWidth: 150, flex: 0.7 },
+      { field: 'status', headerName: 'Durum', minWidth: 150, flex: 0.7, valueFormatter: (value: string) => trStatus(value) },
       {
         field: 'totalAmount',
-        headerName: 'Total',
+        headerName: 'Toplam',
         type: 'number',
         minWidth: 140,
         flex: 0.6,
@@ -113,12 +115,12 @@ export function PurchaseOrderListPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit purchase order">
+            <Tooltip title="Satın alma siparişini düzenle">
               <IconButton size="small" onClick={() => navigate(`/purchasing/orders/${row.id}`)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete purchase order">
+            <Tooltip title="Satın alma siparişini sil">
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -139,12 +141,12 @@ export function PurchaseOrderListPage() {
       >
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            Purchase Orders
+            Satın Alma Siparişleri
           </Typography>
-          <Typography color="text.secondary">Track supplier purchase orders from draft to invoice.</Typography>
+          <Typography color="text.secondary">Tedarikçi siparişlerini oluşturma aşamasından faturaya kadar takip edin.</Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/purchasing/orders/new')}>
-          Add Purchase Order
+          Sipariş Ekle
         </Button>
       </Stack>
 
@@ -155,7 +157,7 @@ export function PurchaseOrderListPage() {
           <TextField
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search purchase orders"
+            placeholder="Satın alma siparişi ara"
             size="small"
             fullWidth
             slotProps={{

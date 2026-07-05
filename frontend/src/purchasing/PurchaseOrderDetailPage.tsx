@@ -22,6 +22,8 @@ import { getMasterDataItems } from '../masterData/api'
 import type { MasterDataItem } from '../masterData/types'
 import { createPurchaseOrder, getPurchaseOrder, getSuppliers, updatePurchaseOrder } from './api'
 import type { PurchaseOrderInput, PurchaseOrderItemInput, Supplier } from './types'
+import { commonText, requiredMessage, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const statuses = ['Draft', 'Approved', 'Partially Received', 'Fully Received', 'Waiting Invoice', 'Completed', 'Cancelled']
 const itemStatuses = ['Open', 'Partially Received', 'Received', 'Cancelled']
@@ -77,7 +79,7 @@ export function PurchaseOrderDetailPage() {
       setColors(colorItems.filter((item) => item.isActive))
     }
 
-    void loadLookups().catch(() => setError('Purchasing lookups could not be loaded.'))
+    void loadLookups().catch(() => setError('Satın alma seçim listeleri yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -111,7 +113,7 @@ export function PurchaseOrderDetailPage() {
           })),
         })
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Purchase order could not be loaded.')
+        setError(toUserMessage(exception, 'Satın alma siparişi yüklenemedi.'))
       } finally {
         setLoading(false)
       }
@@ -167,7 +169,7 @@ export function PurchaseOrderDetailPage() {
 
       navigate('/purchasing/orders')
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Purchase order could not be saved.')
+      setError(toUserMessage(exception, 'Satın alma siparişi kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -177,7 +179,7 @@ export function PurchaseOrderDetailPage() {
     () => [
       {
         field: 'itemName',
-        headerName: 'Item',
+        headerName: 'Kalem',
         minWidth: 190,
         flex: 1,
         renderCell: ({ row }) => (
@@ -191,7 +193,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'fabricTypeId',
-        headerName: 'Fabric Type',
+        headerName: 'Kumaş Tipi',
         minWidth: 160,
         flex: 0.8,
         renderCell: ({ row }) => (
@@ -202,7 +204,7 @@ export function PurchaseOrderDetailPage() {
             size="small"
             fullWidth
           >
-            <MenuItem value="">None</MenuItem>
+            <MenuItem value="">{commonText.none}</MenuItem>
             {fabricTypes.map((item) => (
               <MenuItem key={item.id} value={item.id}>
                 {item.name}
@@ -213,7 +215,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'colorId',
-        headerName: 'Color',
+        headerName: 'Renk',
         minWidth: 140,
         flex: 0.7,
         renderCell: ({ row }) => (
@@ -224,7 +226,7 @@ export function PurchaseOrderDetailPage() {
             size="small"
             fullWidth
           >
-            <MenuItem value="">None</MenuItem>
+            <MenuItem value="">{commonText.none}</MenuItem>
             {colors.map((item) => (
               <MenuItem key={item.id} value={item.id}>
                 {item.name}
@@ -235,7 +237,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'quantity',
-        headerName: 'Qty',
+        headerName: 'Miktar',
         minWidth: 110,
         renderCell: ({ row }) => (
           <TextField
@@ -249,7 +251,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'unit',
-        headerName: 'Unit',
+        headerName: 'Birim',
         minWidth: 110,
         renderCell: ({ row }) => (
           <TextField
@@ -262,7 +264,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'unitPrice',
-        headerName: 'Unit Price',
+        headerName: 'Birim Fiyat',
         minWidth: 120,
         renderCell: ({ row }) => (
           <TextField
@@ -276,7 +278,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'receivedQuantity',
-        headerName: 'Received',
+        headerName: 'Gelen',
         minWidth: 120,
         renderCell: ({ row }) => (
           <TextField
@@ -290,7 +292,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: 'Durum',
         minWidth: 160,
         renderCell: ({ row }) => (
           <TextField
@@ -302,7 +304,7 @@ export function PurchaseOrderDetailPage() {
           >
             {itemStatuses.map((status) => (
               <MenuItem key={status} value={status}>
-                {status}
+                {trStatus(status)}
               </MenuItem>
             ))}
           </TextField>
@@ -315,7 +317,7 @@ export function PurchaseOrderDetailPage() {
         filterable: false,
         width: 64,
         renderCell: ({ row }) => (
-          <Tooltip title="Remove item">
+          <Tooltip title="Kalemi sil">
             <IconButton size="small" color="error" onClick={() => removeItem(row.rowIndex)}>
               <DeleteOutlinedIcon fontSize="small" />
             </IconButton>
@@ -332,13 +334,13 @@ export function PurchaseOrderDetailPage() {
     <Stack spacing={3}>
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/purchasing/orders')}>
-          Back
+          {commonText.back}
         </Button>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            {isNew ? 'Add Purchase Order' : 'Edit Purchase Order'}
+            {isNew ? 'Satın Alma Siparişi Ekle' : 'Satın Alma Siparişi Düzenle'}
           </Typography>
-          <Typography color="text.secondary">Supplier order, expected delivery, and item lines.</Typography>
+          <Typography color="text.secondary">Tedarikçi, teslim tarihi ve sipariş kalemlerini yönetin.</Typography>
         </Box>
       </Stack>
 
@@ -349,20 +351,22 @@ export function PurchaseOrderDetailPage() {
           <Stack spacing={3}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
               <TextField
-                label="Purchase Number"
+                label="Sipariş Numarası"
                 value={order.purchaseNumber}
                 onChange={(event) => updateOrderField('purchaseNumber', event.target.value)}
                 disabled={loading}
                 required
+                helperText={!order.purchaseNumber.trim() ? requiredMessage('Sipariş numarası') : ' '}
                 fullWidth
               />
               <TextField
                 select
-                label="Supplier"
+                label="Tedarikçi"
                 value={order.supplierId}
                 onChange={(event) => updateOrderField('supplierId', event.target.value)}
                 disabled={loading}
                 required
+                helperText={!order.supplierId ? requiredMessage('Tedarikçi') : ' '}
                 fullWidth
               >
                 {suppliers.map((supplier) => (
@@ -374,7 +378,7 @@ export function PurchaseOrderDetailPage() {
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
               <TextField
-                label="Order Date"
+                label="Sipariş Tarihi"
                 type="date"
                 value={order.orderDate}
                 onChange={(event) => updateOrderField('orderDate', event.target.value)}
@@ -383,7 +387,7 @@ export function PurchaseOrderDetailPage() {
                 slotProps={{ inputLabel: { shrink: true } }}
               />
               <TextField
-                label="Expected Date"
+                label="Beklenen Tarih"
                 type="date"
                 value={order.expectedDate ?? ''}
                 onChange={(event) => updateOrderField('expectedDate', event.target.value || null)}
@@ -392,7 +396,7 @@ export function PurchaseOrderDetailPage() {
               />
               <TextField
                 select
-                label="Status"
+                label="Durum"
                 value={order.status}
                 onChange={(event) => updateOrderField('status', event.target.value)}
                 required
@@ -400,13 +404,13 @@ export function PurchaseOrderDetailPage() {
               >
                 {statuses.map((status) => (
                   <MenuItem key={status} value={status}>
-                    {status}
+                    {trStatus(status)}
                   </MenuItem>
                 ))}
               </TextField>
             </Stack>
             <TextField
-              label="Notes"
+              label="Notlar"
               value={order.notes}
               onChange={(event) => updateOrderField('notes', event.target.value)}
               multiline
@@ -417,12 +421,12 @@ export function PurchaseOrderDetailPage() {
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between' }}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Items
+                  Kalemler
                 </Typography>
-                <Typography color="text.secondary">Total: {totalAmount.toLocaleString('tr-TR')}</Typography>
+                <Typography color="text.secondary">Toplam: {totalAmount.toLocaleString('tr-TR')}</Typography>
               </Box>
               <Button startIcon={<AddIcon />} onClick={addItem}>
-                Add Item
+                Kalem Ekle
               </Button>
             </Stack>
 
@@ -438,9 +442,9 @@ export function PurchaseOrderDetailPage() {
             </Box>
 
             <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-              <Button onClick={() => navigate('/purchasing/orders')}>Cancel</Button>
+              <Button onClick={() => navigate('/purchasing/orders')}>{commonText.cancel}</Button>
               <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />} disabled={saving}>
-                Save
+                {commonText.save}
               </Button>
             </Stack>
           </Stack>

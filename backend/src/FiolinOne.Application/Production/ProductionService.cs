@@ -107,15 +107,16 @@ public sealed class ProductionService(
             request.FabricId,
             request.ConsumedWeightKg,
             order.ProductionNumber,
-            request.CuttingDate,
+            ToUtc(request.CuttingDate),
             request.Notes),
             cancellationToken);
 
         order.SetStatus(ProductionStatuses.Cutting);
-        var record = new CuttingRecord(request.ProductionOrderId, request.FabricId, request.ConsumedWeightKg, request.WasteWeightKg, request.CuttingDate, NormalizeOptional(request.OperatorName), NormalizeOptional(request.Notes));
+        var cuttingDate = ToUtc(request.CuttingDate);
+        var record = new CuttingRecord(request.ProductionOrderId, request.FabricId, request.ConsumedWeightKg, request.WasteWeightKg, cuttingDate, NormalizeOptional(request.OperatorName), NormalizeOptional(request.Notes));
         await productionRepository.AddCuttingRecordAsync(record, cancellationToken);
-        await AddTimelineAsync(request.ProductionOrderId, "Fabric Consumed", $"{request.ConsumedWeightKg} Kg consumed. Waste: {request.WasteWeightKg} Kg.", request.CuttingDate, cancellationToken);
-        await AddTimelineAsync(request.ProductionOrderId, "Cutting Finished", "Cutting record created.", request.CuttingDate, cancellationToken);
+        await AddTimelineAsync(request.ProductionOrderId, "Fabric Consumed", $"{request.ConsumedWeightKg} Kg consumed. Waste: {request.WasteWeightKg} Kg.", cuttingDate, cancellationToken);
+        await AddTimelineAsync(request.ProductionOrderId, "Cutting Finished", "Cutting record created.", cuttingDate, cancellationToken);
         await productionRepository.SaveChangesAsync(cancellationToken);
         return new CuttingRecordDto(record.Id, record.ProductionOrderId, record.FabricId, string.Empty, record.ConsumedWeightKg, record.WasteWeightKg, record.CuttingDate, record.OperatorName, record.Notes);
     }
@@ -124,9 +125,10 @@ public sealed class ProductionService(
     {
         var order = await GetRequiredOrderAsync(request.ProductionOrderId, cancellationToken);
         order.SetStatus(ProductionStatuses.AtWorkshop);
-        var shipment = new WorkshopShipment(request.ProductionOrderId, request.Workshop.Trim(), request.ShipmentDate, request.ExpectedReturnDate, request.SentQuantity, NormalizeOptional(request.Notes), request.Status.Trim());
+        var shipmentDate = ToUtc(request.ShipmentDate);
+        var shipment = new WorkshopShipment(request.ProductionOrderId, request.Workshop.Trim(), shipmentDate, ToUtc(request.ExpectedReturnDate), request.SentQuantity, NormalizeOptional(request.Notes), request.Status.Trim());
         await productionRepository.AddWorkshopShipmentAsync(shipment, cancellationToken);
-        await AddTimelineAsync(request.ProductionOrderId, "Workshop Shipment", $"{request.SentQuantity} sent to {request.Workshop.Trim()}.", request.ShipmentDate, cancellationToken);
+        await AddTimelineAsync(request.ProductionOrderId, "Workshop Shipment", $"{request.SentQuantity} sent to {request.Workshop.Trim()}.", shipmentDate, cancellationToken);
         await productionRepository.SaveChangesAsync(cancellationToken);
         return ToDto(shipment);
     }
@@ -134,9 +136,10 @@ public sealed class ProductionService(
     public async Task<WorkshopReturnDto> CreateWorkshopReturnAsync(CreateWorkshopReturnRequest request, CancellationToken cancellationToken)
     {
         await GetRequiredOrderAsync(request.ProductionOrderId, cancellationToken);
-        var workshopReturn = new WorkshopReturn(request.ProductionOrderId, request.WorkshopShipmentId, request.ReturnedQuantity, request.ExtraQuantity, request.MissingQuantity, request.ReturnDate, NormalizeOptional(request.Notes));
+        var returnDate = ToUtc(request.ReturnDate);
+        var workshopReturn = new WorkshopReturn(request.ProductionOrderId, request.WorkshopShipmentId, request.ReturnedQuantity, request.ExtraQuantity, request.MissingQuantity, returnDate, NormalizeOptional(request.Notes));
         await productionRepository.AddWorkshopReturnAsync(workshopReturn, cancellationToken);
-        await AddTimelineAsync(request.ProductionOrderId, "Workshop Return", $"Returned {request.ReturnedQuantity}, extra {request.ExtraQuantity}, missing {request.MissingQuantity}.", request.ReturnDate, cancellationToken);
+        await AddTimelineAsync(request.ProductionOrderId, "Workshop Return", $"Returned {request.ReturnedQuantity}, extra {request.ExtraQuantity}, missing {request.MissingQuantity}.", returnDate, cancellationToken);
         await productionRepository.SaveChangesAsync(cancellationToken);
         return ToDto(workshopReturn);
     }
@@ -159,9 +162,10 @@ public sealed class ProductionService(
     {
         var order = await GetRequiredOrderAsync(request.ProductionOrderId, cancellationToken);
         order.SetStatus(ProductionStatuses.Completed);
-        var entry = new WarehouseEntry(request.ProductionOrderId, request.ActualQuantity, request.WarehouseDate, NormalizeOptional(request.Notes));
+        var warehouseDate = ToUtc(request.WarehouseDate);
+        var entry = new WarehouseEntry(request.ProductionOrderId, request.ActualQuantity, warehouseDate, NormalizeOptional(request.Notes));
         await productionRepository.AddWarehouseEntryAsync(entry, cancellationToken);
-        await AddTimelineAsync(request.ProductionOrderId, "Warehouse Entry", $"{request.ActualQuantity} finished products received.", request.WarehouseDate, cancellationToken);
+        await AddTimelineAsync(request.ProductionOrderId, "Warehouse Entry", $"{request.ActualQuantity} finished products received.", warehouseDate, cancellationToken);
         await productionRepository.SaveChangesAsync(cancellationToken);
         return ToDto(entry);
     }
@@ -239,4 +243,6 @@ public sealed class ProductionService(
     private static ProductionTimelineDto ToDto(ProductionTimelineEntry entry) => new(entry.Id, entry.ProductionOrderId, entry.EventType, entry.Description, entry.EventDate, entry.CreatedAt);
 
     private static string? NormalizeOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static DateTime ToUtc(DateTime value) => value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    private static DateTime? ToUtc(DateTime? value) => value.HasValue ? ToUtc(value.Value) : null;
 }

@@ -1,11 +1,9 @@
 using FiolinOne.Application.Common.Models;
 using FiolinOne.Application.Production;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FiolinOne.Api.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/production-orders")]
 [Produces("application/json")]

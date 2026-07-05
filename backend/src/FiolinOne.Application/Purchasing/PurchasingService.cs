@@ -106,8 +106,8 @@ public sealed class PurchasingService(
         var purchaseOrder = new PurchaseOrder(
             request.PurchaseNumber.Trim(),
             request.SupplierId,
-            request.OrderDate,
-            request.ExpectedDate,
+            ToUtc(request.OrderDate),
+            ToUtc(request.ExpectedDate),
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
 
@@ -136,8 +136,8 @@ public sealed class PurchasingService(
         purchaseOrder.Update(
             request.PurchaseNumber.Trim(),
             request.SupplierId,
-            request.OrderDate,
-            request.ExpectedDate,
+            ToUtc(request.OrderDate),
+            ToUtc(request.ExpectedDate),
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
 
@@ -193,7 +193,7 @@ public sealed class PurchasingService(
             request.ReceiptNumber.Trim(),
             request.SupplierId,
             request.PurchaseOrderId,
-            request.ReceiptDate,
+            ToUtc(request.ReceiptDate),
             request.Warehouse.Trim(),
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
@@ -224,7 +224,7 @@ public sealed class PurchasingService(
             request.ReceiptNumber.Trim(),
             request.SupplierId,
             request.PurchaseOrderId,
-            request.ReceiptDate,
+            ToUtc(request.ReceiptDate),
             request.Warehouse.Trim(),
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
@@ -279,7 +279,7 @@ public sealed class PurchasingService(
 
         var invoice = new PurchaseInvoice(
             request.InvoiceNumber.Trim(),
-            request.InvoiceDate,
+            ToUtc(request.InvoiceDate),
             request.SupplierId,
             request.PurchaseOrderId,
             request.InvoiceAmount,
@@ -310,7 +310,7 @@ public sealed class PurchasingService(
 
         invoice.Update(
             request.InvoiceNumber.Trim(),
-            request.InvoiceDate,
+            ToUtc(request.InvoiceDate),
             request.SupplierId,
             request.PurchaseOrderId,
             request.InvoiceAmount,
@@ -590,5 +590,15 @@ public sealed class PurchasingService(
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static DateTime ToUtc(DateTime value)
+    {
+        return value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    }
+
+    private static DateTime? ToUtc(DateTime? value)
+    {
+        return value.HasValue ? ToUtc(value.Value) : null;
     }
 }

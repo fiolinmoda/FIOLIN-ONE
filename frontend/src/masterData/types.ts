@@ -18,10 +18,10 @@ export type MasterDataInput = {
 }
 
 export const masterDataLabels: Record<MasterDataType, string> = {
-  brands: 'Brands',
-  categories: 'Categories',
-  seasons: 'Seasons',
-  colors: 'Colors',
-  sizes: 'Sizes',
-  'fabric-types': 'Fabric Types',
+  brands: 'Markalar',
+  categories: 'Kategoriler',
+  seasons: 'Sezonlar',
+  colors: 'Renkler',
+  sizes: 'Bedenler',
+  'fabric-types': 'Kumaş Tipleri',
 }

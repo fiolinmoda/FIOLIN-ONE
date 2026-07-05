@@ -25,6 +25,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import { createSupplier, deleteSupplier, getSuppliers, updateSupplier } from './api'
 import type { Supplier, SupplierInput } from './types'
+import { commonText, confirmDelete, dialogContentSx, dialogPaperSx, requiredMessage } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const emptySupplier: SupplierInput = {
   supplierCode: '',
@@ -55,7 +57,7 @@ export function SupplierManagementPage() {
       const data = await getSuppliers(search)
       setSuppliers(data.items)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Suppliers could not be loaded.')
+      setError(toUserMessage(exception, 'Tedarikçiler yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -92,7 +94,7 @@ export function SupplierManagementPage() {
 
   const handleDelete = useCallback(
     async (supplier: Supplier) => {
-      const confirmed = window.confirm(`Delete ${supplier.supplierName}?`)
+      const confirmed = confirmDelete(supplier.supplierName)
 
       if (!confirmed) {
         return
@@ -104,7 +106,7 @@ export function SupplierManagementPage() {
         await deleteSupplier(supplier.id)
         await loadSuppliers()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Supplier could not be deleted.')
+        setError(toUserMessage(exception, 'Tedarikçi silinemedi.'))
       }
     },
     [loadSuppliers],
@@ -125,7 +127,7 @@ export function SupplierManagementPage() {
       setDialogOpen(false)
       await loadSuppliers()
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Supplier could not be saved.')
+        setError(toUserMessage(exception, 'Tedarikçi kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -133,17 +135,17 @@ export function SupplierManagementPage() {
 
   const columns = useMemo<GridColDef<Supplier>[]>(
     () => [
-      { field: 'supplierCode', headerName: 'Code', minWidth: 140, flex: 0.7 },
-      { field: 'supplierName', headerName: 'Supplier', minWidth: 220, flex: 1.2 },
-      { field: 'phone', headerName: 'Phone', minWidth: 140, flex: 0.7 },
-      { field: 'email', headerName: 'Email', minWidth: 190, flex: 1 },
-      { field: 'taxNumber', headerName: 'Tax No', minWidth: 130, flex: 0.6 },
+      { field: 'supplierCode', headerName: 'Kod', minWidth: 140, flex: 0.7 },
+      { field: 'supplierName', headerName: 'Tedarikçi', minWidth: 220, flex: 1.2 },
+      { field: 'phone', headerName: 'Telefon', minWidth: 140, flex: 0.7 },
+      { field: 'email', headerName: 'E-posta', minWidth: 190, flex: 1 },
+      { field: 'taxNumber', headerName: 'Vergi No', minWidth: 130, flex: 0.6 },
       {
         field: 'active',
-        headerName: 'Active',
+        headerName: 'Aktif',
         minWidth: 100,
         flex: 0.4,
-        valueFormatter: (value: boolean) => (value ? 'Yes' : 'No'),
+        valueFormatter: (value: boolean) => (value ? commonText.yes : commonText.no),
       },
       {
         field: 'actions',
@@ -154,12 +156,12 @@ export function SupplierManagementPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit supplier">
+            <Tooltip title="Tedarikçi düzenle">
               <IconButton size="small" onClick={() => openEditDialog(row)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete supplier">
+            <Tooltip title="Tedarikçi sil">
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -180,12 +182,12 @@ export function SupplierManagementPage() {
       >
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            Suppliers
+            Tedarikçiler
           </Typography>
-          <Typography color="text.secondary">Manage purchasing supplier records.</Typography>
+          <Typography color="text.secondary">Satın alma sürecinde kullanılan tedarikçi kayıtlarını yönetin.</Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
-          Add Supplier
+          Tedarikçi Ekle
         </Button>
       </Stack>
 
@@ -196,7 +198,7 @@ export function SupplierManagementPage() {
           <TextField
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search suppliers"
+            placeholder="Tedarikçi ara"
             size="small"
             fullWidth
             slotProps={{
@@ -223,36 +225,39 @@ export function SupplierManagementPage() {
         </Stack>
       </Paper>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md">
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingSupplier ? 'Edit Supplier' : 'Add Supplier'}</DialogTitle>
-          <DialogContent>
+          <DialogTitle>{editingSupplier ? 'Tedarikçi Düzenle' : 'Tedarikçi Ekle'}</DialogTitle>
+          <DialogContent sx={dialogContentSx}>
+            {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                 <TextField
-                  label="Supplier Code"
+                  label="Tedarikçi Kodu"
                   value={supplierInput.supplierCode}
                   onChange={(event) => setSupplierInput((current) => ({ ...current, supplierCode: event.target.value }))}
                   required
+                  helperText={!supplierInput.supplierCode.trim() ? requiredMessage('Tedarikçi kodu') : ' '}
                   fullWidth
                 />
                 <TextField
-                  label="Supplier Name"
+                  label="Tedarikçi Adı"
                   value={supplierInput.supplierName}
                   onChange={(event) => setSupplierInput((current) => ({ ...current, supplierName: event.target.value }))}
                   required
+                  helperText={!supplierInput.supplierName.trim() ? requiredMessage('Tedarikçi adı') : ' '}
                   fullWidth
                 />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                 <TextField
-                  label="Phone"
+                  label="Telefon"
                   value={supplierInput.phone}
                   onChange={(event) => setSupplierInput((current) => ({ ...current, phone: event.target.value }))}
                   fullWidth
                 />
                 <TextField
-                  label="Email"
+                  label="E-posta"
                   type="email"
                   value={supplierInput.email}
                   onChange={(event) => setSupplierInput((current) => ({ ...current, email: event.target.value }))}
@@ -261,20 +266,20 @@ export function SupplierManagementPage() {
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                 <TextField
-                  label="Tax Number"
+                  label="Vergi Numarası"
                   value={supplierInput.taxNumber}
                   onChange={(event) => setSupplierInput((current) => ({ ...current, taxNumber: event.target.value }))}
                   fullWidth
                 />
                 <TextField
-                  label="Payment Term"
+                  label="Ödeme Vadesi"
                   value={supplierInput.paymentTerm}
                   onChange={(event) => setSupplierInput((current) => ({ ...current, paymentTerm: event.target.value }))}
                   fullWidth
                 />
               </Stack>
               <TextField
-                label="Address"
+                label="Adres"
                 value={supplierInput.address}
                 onChange={(event) => setSupplierInput((current) => ({ ...current, address: event.target.value }))}
                 multiline
@@ -288,14 +293,14 @@ export function SupplierManagementPage() {
                     onChange={(event) => setSupplierInput((current) => ({ ...current, active: event.target.checked }))}
                   />
                 }
-                label="Active"
+                label="Aktif"
               />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDialogOpen(false)}>{commonText.cancel}</Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              Save
+              {commonText.save}
             </Button>
           </DialogActions>
         </Box>

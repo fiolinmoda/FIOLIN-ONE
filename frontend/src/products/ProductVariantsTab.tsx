@@ -29,6 +29,8 @@ import {
   updateProductVariant,
 } from './api'
 import type { ProductVariant, ProductVariantInput } from './types'
+import { commonText, confirmDelete, dialogContentSx, dialogPaperSx, requiredMessage, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 type ProductVariantsTabProps = {
   productId: string
@@ -67,7 +69,7 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
       setSizes(sizeItems.filter((item) => item.isActive))
     }
 
-    void loadMasterData().catch(() => setError('Variant master data could not be loaded.'))
+    void loadMasterData().catch(() => setError('Varyant tanımları yüklenemedi.'))
   }, [])
 
   const loadVariants = useCallback(async () => {
@@ -78,7 +80,7 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
       const data = await getProductVariants(productId)
       setVariants(data)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Variants could not be loaded.')
+      setError(toUserMessage(exception, 'Varyantlar yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -113,7 +115,7 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
 
   const handleDelete = useCallback(
     async (variant: ProductVariant) => {
-      const confirmed = window.confirm(`Delete ${variant.color} / ${variant.size} variant?`)
+      const confirmed = confirmDelete(`${variant.color} / ${variant.size}`)
 
       if (!confirmed) {
         return
@@ -125,7 +127,7 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
         await deleteProductVariant(productId, variant.id)
         await loadVariants()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Variant could not be deleted.')
+        setError(toUserMessage(exception, 'Varyant silinemedi.'))
       }
     },
     [loadVariants, productId],
@@ -146,7 +148,7 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
       setDialogOpen(false)
       await loadVariants()
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Variant could not be saved.')
+      setError(toUserMessage(exception, 'Varyant kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -154,12 +156,12 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
 
   const columns = useMemo<GridColDef<ProductVariant>[]>(
     () => [
-      { field: 'color', headerName: 'Color', minWidth: 140, flex: 0.9 },
-      { field: 'size', headerName: 'Size', minWidth: 110, flex: 0.6 },
+      { field: 'color', headerName: 'Renk', minWidth: 140, flex: 0.9 },
+      { field: 'size', headerName: 'Beden', minWidth: 110, flex: 0.6 },
       { field: 'barcode', headerName: 'Barcode', minWidth: 170, flex: 1 },
       { field: 'trendyolSku', headerName: 'Trendyol SKU', minWidth: 170, flex: 1 },
-      { field: 'stock', headerName: 'Stock', type: 'number', minWidth: 110, flex: 0.5 },
-      { field: 'status', headerName: 'Status', minWidth: 120, flex: 0.6 },
+      { field: 'stock', headerName: 'Stok', type: 'number', minWidth: 110, flex: 0.5 },
+      { field: 'status', headerName: 'Durum', minWidth: 120, flex: 0.6, valueFormatter: (value: string) => trStatus(value) },
       {
         field: 'actions',
         headerName: '',
@@ -169,12 +171,12 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit variant">
+            <Tooltip title="Varyantı düzenle">
               <IconButton size="small" onClick={() => openEditDialog(row)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete variant">
+            <Tooltip title="Varyantı sil">
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -195,14 +197,14 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
       >
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Variants
+            Varyantlar
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Sellable color and size combinations for this product model.
+            Satışa açılan renk ve beden kombinasyonları.
           </Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
-          Add Variant
+          Varyant Ekle
         </Button>
       </Stack>
 
@@ -231,18 +233,20 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
         </Box>
       </Paper>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingVariant ? 'Edit Variant' : 'Add Variant'}</DialogTitle>
-          <DialogContent>
+          <DialogTitle>{editingVariant ? 'Varyant Düzenle' : 'Varyant Ekle'}</DialogTitle>
+          <DialogContent sx={dialogContentSx}>
+            {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
                   select
-                  label="Color"
+                  label="Renk"
                   value={variantInput.colorId}
                   onChange={(event) => updateField('colorId', event.target.value)}
                   required
+                  helperText={!variantInput.colorId ? requiredMessage('Renk') : ' '}
                   fullWidth
                 >
                   {colors.map((color) => (
@@ -253,10 +257,11 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
                 </TextField>
                 <TextField
                   select
-                  label="Size"
+                  label="Beden"
                   value={variantInput.sizeId}
                   onChange={(event) => updateField('sizeId', event.target.value)}
                   required
+                  helperText={!variantInput.sizeId ? requiredMessage('Beden') : ' '}
                   fullWidth
                 >
                   {sizes.map((size) => (
@@ -269,10 +274,11 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
-                  label="Barcode"
+                  label="Barkod"
                   value={variantInput.barcode}
                   onChange={(event) => updateField('barcode', event.target.value)}
                   required
+                  helperText={!variantInput.barcode.trim() ? requiredMessage('Barkod') : ' '}
                   fullWidth
                 />
                 <TextField
@@ -285,11 +291,12 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
-                  label="Stock"
+                  label="Stok"
                   type="number"
                   value={variantInput.stock}
                   onChange={(event) => updateField('stock', Number(event.target.value))}
                   required
+                  helperText={variantInput.stock < 0 ? 'Stok negatif olamaz.' : ' '}
                   fullWidth
                   slotProps={{
                     htmlInput: {
@@ -299,7 +306,7 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
                 />
                 <TextField
                   select
-                  label="Status"
+                  label="Durum"
                   value={variantInput.status}
                   onChange={(event) => updateField('status', event.target.value)}
                   required
@@ -307,7 +314,7 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
                 >
                   {statuses.map((status) => (
                     <MenuItem key={status} value={status}>
-                      {status}
+                      {trStatus(status)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -315,9 +322,9 @@ export function ProductVariantsTab({ productId }: ProductVariantsTabProps) {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDialogOpen(false)}>{commonText.cancel}</Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              Save
+              {commonText.save}
             </Button>
           </DialogActions>
         </Box>

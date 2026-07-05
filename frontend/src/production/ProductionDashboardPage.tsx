@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, Paper, Stack, Typography } from '@mui/material'
 import { getProductionDashboard } from './api'
 import type { ProductionDashboard } from './types'
+import { toUserMessage } from '../common/apiClient'
 
 const emptyDashboard: ProductionDashboard = {
   productionPlanned: 0,
@@ -18,22 +19,22 @@ export function ProductionDashboardPage() {
   useEffect(() => {
     void getProductionDashboard()
       .then(setDashboard)
-      .catch((exception) => setError(exception instanceof Error ? exception.message : 'Dashboard could not be loaded.'))
+      .catch((exception) => setError(toUserMessage(exception, 'Üretim ana sayfası yüklenemedi.')))
   }, [])
 
   const cards = [
-    ['Production Planned', dashboard.productionPlanned],
-    ['In Cutting', dashboard.inCutting],
-    ['At Workshop', dashboard.atWorkshop],
-    ['Ironing & Packaging', dashboard.ironingPackaging],
-    ['Completed', dashboard.completed],
+    ['Planlanan Üretim', dashboard.productionPlanned],
+    ['Kesimde', dashboard.inCutting],
+    ['Atölyede', dashboard.atWorkshop],
+    ['Ütü / Paket', dashboard.ironingPackaging],
+    ['Tamamlanan', dashboard.completed],
   ]
 
   return (
     <Stack spacing={3}>
       <div>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Production Dashboard</Typography>
-        <Typography color="text.secondary">Live production order status overview.</Typography>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Üretim Ana Sayfa</Typography>
+        <Typography color="text.secondary">Üretim emirlerinin güncel durum özeti.</Typography>
       </div>
       {error && <Alert severity="error">{error}</Alert>}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

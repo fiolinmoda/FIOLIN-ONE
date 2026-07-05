@@ -31,6 +31,8 @@ import {
   updateGoodsReceipt,
 } from './api'
 import type { GoodsReceipt, GoodsReceiptInput, PurchaseOrder, Supplier } from './types'
+import { commonText, confirmDelete, dialogContentSx, dialogPaperSx, requiredMessage, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const statuses = ['Draft', 'Accepted', 'Difference', 'Completed', 'Cancelled']
 
@@ -79,7 +81,7 @@ export function GoodsReceiptPage() {
       const data = await getGoodsReceipts(search)
       setReceipts(data.items)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Goods receipts could not be loaded.')
+      setError(toUserMessage(exception, 'Mal kabul kayıtları yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -93,7 +95,7 @@ export function GoodsReceiptPage() {
       setOrders(orderResult.items)
     }
 
-    void loadLookups().catch(() => setError('Purchasing lookups could not be loaded.'))
+    void loadLookups().catch(() => setError('Satın alma seçim listeleri yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -138,7 +140,7 @@ export function GoodsReceiptPage() {
 
   const handleDelete = useCallback(
     async (receipt: GoodsReceipt) => {
-      const confirmed = window.confirm(`Delete goods receipt ${receipt.receiptNumber}?`)
+      const confirmed = confirmDelete(receipt.receiptNumber)
 
       if (!confirmed) {
         return
@@ -150,7 +152,7 @@ export function GoodsReceiptPage() {
         await deleteGoodsReceipt(receipt.id)
         await loadReceipts()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Goods receipt could not be deleted.')
+        setError(toUserMessage(exception, 'Mal kabul kaydı silinemedi.'))
       }
     },
     [loadReceipts],
@@ -188,7 +190,7 @@ export function GoodsReceiptPage() {
       setDialogOpen(false)
       await loadReceipts()
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Goods receipt could not be saved.')
+      setError(toUserMessage(exception, 'Mal kabul kaydı kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -196,18 +198,18 @@ export function GoodsReceiptPage() {
 
   const columns = useMemo<GridColDef<GoodsReceipt>[]>(
     () => [
-      { field: 'receiptNumber', headerName: 'Receipt No', minWidth: 150, flex: 0.8 },
-      { field: 'supplierName', headerName: 'Supplier', minWidth: 220, flex: 1.2 },
-      { field: 'purchaseNumber', headerName: 'Purchase No', minWidth: 150, flex: 0.8 },
+      { field: 'receiptNumber', headerName: 'Kabul No', minWidth: 150, flex: 0.8 },
+      { field: 'supplierName', headerName: 'Tedarikçi', minWidth: 220, flex: 1.2 },
+      { field: 'purchaseNumber', headerName: 'Sipariş No', minWidth: 150, flex: 0.8 },
       {
         field: 'receiptDate',
-        headerName: 'Date',
+        headerName: 'Tarih',
         minWidth: 120,
         flex: 0.6,
         valueFormatter: (value: string) => formatDate(value),
       },
-      { field: 'warehouse', headerName: 'Warehouse', minWidth: 160, flex: 0.8 },
-      { field: 'status', headerName: 'Status', minWidth: 130, flex: 0.6 },
+      { field: 'warehouse', headerName: 'Depo', minWidth: 160, flex: 0.8 },
+      { field: 'status', headerName: 'Durum', minWidth: 130, flex: 0.6, valueFormatter: (value: string) => trStatus(value) },
       {
         field: 'actions',
         headerName: '',
@@ -217,12 +219,12 @@ export function GoodsReceiptPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit receipt">
+            <Tooltip title="Mal kabul düzenle">
               <IconButton size="small" onClick={() => openEditDialog(row)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete receipt">
+            <Tooltip title="Mal kabul sil">
               <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -239,12 +241,12 @@ export function GoodsReceiptPage() {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            Goods Receipt
+            Mal Kabul
           </Typography>
-          <Typography color="text.secondary">Record supplier arrivals and warehouse acceptance.</Typography>
+          <Typography color="text.secondary">Tedarikçiden gelen malları ve depo kabulünü kaydedin.</Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
-          Add Receipt
+          Mal Kabul Ekle
         </Button>
       </Stack>
 
@@ -255,7 +257,7 @@ export function GoodsReceiptPage() {
           <TextField
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search goods receipts"
+            placeholder="Mal kabul ara"
             size="small"
             fullWidth
             slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }}
@@ -266,46 +268,47 @@ export function GoodsReceiptPage() {
         </Stack>
       </Paper>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md">
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingReceipt ? 'Edit Goods Receipt' : 'Add Goods Receipt'}</DialogTitle>
-          <DialogContent>
+          <DialogTitle>{editingReceipt ? 'Mal Kabul Düzenle' : 'Mal Kabul Ekle'}</DialogTitle>
+          <DialogContent sx={dialogContentSx}>
+            {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Receipt Number" value={receiptInput.receiptNumber} onChange={(event) => updateField('receiptNumber', event.target.value)} required fullWidth />
-                <TextField select label="Supplier" value={receiptInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required fullWidth>
+                <TextField label="Kabul Numarası" value={receiptInput.receiptNumber} onChange={(event) => updateField('receiptNumber', event.target.value)} required helperText={!receiptInput.receiptNumber.trim() ? requiredMessage('Kabul numarası') : ' '} fullWidth />
+                <TextField select label="Tedarikçi" value={receiptInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!receiptInput.supplierId ? requiredMessage('Tedarikçi') : ' '} fullWidth>
                   {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.supplierName}</MenuItem>)}
                 </TextField>
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField select label="Purchase Order" value={receiptInput.purchaseOrderId ?? ''} onChange={(event) => updateField('purchaseOrderId', event.target.value || null)} fullWidth>
-                  <MenuItem value="">None</MenuItem>
+                <TextField select label="Satın Alma Siparişi" value={receiptInput.purchaseOrderId ?? ''} onChange={(event) => updateField('purchaseOrderId', event.target.value || null)} fullWidth>
+                  <MenuItem value="">{commonText.none}</MenuItem>
                   {orders.map((order) => <MenuItem key={order.id} value={order.id}>{order.purchaseNumber}</MenuItem>)}
                 </TextField>
-                <TextField label="Receipt Date" type="date" value={receiptInput.receiptDate} onChange={(event) => updateField('receiptDate', event.target.value)} required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
+                <TextField label="Kabul Tarihi" type="date" value={receiptInput.receiptDate} onChange={(event) => updateField('receiptDate', event.target.value)} required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Warehouse" value={receiptInput.warehouse} onChange={(event) => updateField('warehouse', event.target.value)} required fullWidth />
-                <TextField select label="Status" value={receiptInput.status} onChange={(event) => updateField('status', event.target.value)} required fullWidth>
-                  {statuses.map((status) => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                <TextField label="Depo" value={receiptInput.warehouse} onChange={(event) => updateField('warehouse', event.target.value)} required helperText={!receiptInput.warehouse.trim() ? requiredMessage('Depo') : ' '} fullWidth />
+                <TextField select label="Durum" value={receiptInput.status} onChange={(event) => updateField('status', event.target.value)} required fullWidth>
+                  {statuses.map((status) => <MenuItem key={status} value={status}>{trStatus(status)}</MenuItem>)}
                 </TextField>
               </Stack>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Receipt Line</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Kabul Kalemi</Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Item" value={receiptInput.items[0].itemName} onChange={(event) => updateFirstItem('itemName', event.target.value)} required fullWidth />
-                <TextField label="Quantity" type="number" value={receiptInput.items[0].receivedQuantity} onChange={(event) => updateFirstItem('receivedQuantity', Number(event.target.value))} required fullWidth />
+                <TextField label="Kalem" value={receiptInput.items[0].itemName} onChange={(event) => updateFirstItem('itemName', event.target.value)} required fullWidth />
+                <TextField label="Miktar" type="number" value={receiptInput.items[0].receivedQuantity} onChange={(event) => updateFirstItem('receivedQuantity', Number(event.target.value))} required fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Unit" value={receiptInput.items[0].unit} onChange={(event) => updateFirstItem('unit', event.target.value)} required fullWidth />
-                <TextField label="Acceptance" value={receiptInput.items[0].acceptance} onChange={(event) => updateFirstItem('acceptance', event.target.value)} required fullWidth />
-                <TextField label="Difference" type="number" value={receiptInput.items[0].differenceQuantity} onChange={(event) => updateFirstItem('differenceQuantity', Number(event.target.value))} fullWidth />
+                <TextField label="Birim" value={receiptInput.items[0].unit} onChange={(event) => updateFirstItem('unit', event.target.value)} required fullWidth />
+                <TextField label="Kabul Durumu" value={receiptInput.items[0].acceptance} onChange={(event) => updateFirstItem('acceptance', event.target.value)} required fullWidth />
+                <TextField label="Fark" type="number" value={receiptInput.items[0].differenceQuantity} onChange={(event) => updateFirstItem('differenceQuantity', Number(event.target.value))} fullWidth />
               </Stack>
-              <TextField label="Notes" value={receiptInput.notes} onChange={(event) => updateField('notes', event.target.value)} multiline minRows={2} fullWidth />
+              <TextField label="Notlar" value={receiptInput.notes} onChange={(event) => updateField('notes', event.target.value)} multiline minRows={2} fullWidth />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={saving}>Save</Button>
+            <Button onClick={() => setDialogOpen(false)}>{commonText.cancel}</Button>
+            <Button type="submit" variant="contained" disabled={saving}>{commonText.save}</Button>
           </DialogActions>
         </Box>
       </Dialog>

@@ -142,7 +142,7 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
             request.PurchaseOrderId,
             NormalizeOptional(request.BatchLot),
             request.Warehouse.Trim(),
-            request.ArrivalDate,
+            ToUtc(request.ArrivalDate),
             NormalizeOptional(request.Notes));
 
         await fabricRepository.AddMovementAsync(movement, cancellationToken);
@@ -169,7 +169,7 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
             request.PurchaseOrderId,
             NormalizeOptional(request.BatchLot),
             request.Warehouse.Trim(),
-            request.MovementDate,
+            ToUtc(request.MovementDate),
             NormalizeOptional(request.Notes));
 
         await fabricRepository.AddMovementAsync(movement, cancellationToken);
@@ -192,7 +192,7 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
             null,
             null,
             "Production",
-            request.ConsumptionDate,
+            ToUtc(request.ConsumptionDate),
             NormalizeOptional($"{request.ProductionReference} {request.Notes}".Trim()));
 
         await fabricRepository.AddMovementAsync(movement, cancellationToken);
@@ -223,7 +223,7 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
             request.ReservationNumber.Trim(),
             request.ProductionReference.Trim(),
             request.ReservedQuantityKg,
-            request.ReservationDate,
+            ToUtc(request.ReservationDate),
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
 
@@ -252,7 +252,7 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
             request.ReservationNumber.Trim(),
             request.ProductionReference.Trim(),
             request.ReservedQuantityKg,
-            request.ReservationDate,
+            ToUtc(request.ReservationDate),
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
 
@@ -420,5 +420,10 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static DateTime ToUtc(DateTime value)
+    {
+        return value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
     }
 }

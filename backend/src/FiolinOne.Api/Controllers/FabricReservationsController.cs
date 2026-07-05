@@ -1,11 +1,9 @@
 using FiolinOne.Application.Common.Models;
 using FiolinOne.Application.Fabric;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FiolinOne.Api.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/fabric-reservations")]
 [Produces("application/json")]

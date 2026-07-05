@@ -5,6 +5,8 @@ import { Alert, Box, Button, Paper, Stack, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { getProductionTimeline } from './api'
 import type { ProductionTimeline } from './types'
+import { commonText } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 export function ProductionTimelinePage() {
   const navigate = useNavigate()
@@ -14,22 +16,22 @@ export function ProductionTimelinePage() {
 
   useEffect(() => {
     if (!id) return
-    void getProductionTimeline(id).then(setTimeline).catch((exception) => setError(exception instanceof Error ? exception.message : 'Timeline could not be loaded.'))
+    void getProductionTimeline(id).then(setTimeline).catch((exception) => setError(toUserMessage(exception, 'Zaman çizelgesi yüklenemedi.')))
   }, [id])
 
   const columns = useMemo<GridColDef<ProductionTimeline>[]>(() => [
-    { field: 'eventType', headerName: 'Event', minWidth: 190, flex: 0.8 },
-    { field: 'description', headerName: 'Description', minWidth: 320, flex: 1.5 },
-    { field: 'eventDate', headerName: 'Date', minWidth: 170, flex: 0.7, valueFormatter: (value: string) => new Date(value).toLocaleString('tr-TR') },
+    { field: 'eventType', headerName: 'Olay', minWidth: 190, flex: 0.8 },
+    { field: 'description', headerName: 'Açıklama', minWidth: 320, flex: 1.5 },
+    { field: 'eventDate', headerName: 'Tarih', minWidth: 170, flex: 0.7, valueFormatter: (value: string) => new Date(value).toLocaleString('tr-TR') },
   ], [])
 
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/production/orders/${id}`)}>Back</Button>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/production/orders/${id}`)}>{commonText.back}</Button>
         <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Production Timeline</Typography>
-          <Typography color="text.secondary">Important events for this production order.</Typography>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Üretim Zaman Çizelgesi</Typography>
+          <Typography color="text.secondary">Bu üretim emri için önemli olaylar.</Typography>
         </Box>
       </Stack>
       {error && <Alert severity="error">{error}</Alert>}

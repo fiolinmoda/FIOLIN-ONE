@@ -25,6 +25,8 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import { createFabricReservation, deleteFabricReservation, getFabricReservations, getFabrics, updateFabricReservation } from './api'
 import type { Fabric, FabricReservation, FabricReservationInput } from './types'
+import { commonText, confirmDelete, dialogContentSx, dialogPaperSx, requiredMessage, trStatus } from '../common/uiText'
+import { toUserMessage } from '../common/apiClient'
 
 const statuses = ['Active', 'Completed', 'Cancelled']
 
@@ -61,7 +63,7 @@ export function ReservationListPage() {
       const data = await getFabricReservations(search)
       setReservations(data.items)
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Reservations could not be loaded.')
+      setError(toUserMessage(exception, 'Rezervasyonlar yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -73,7 +75,7 @@ export function ReservationListPage() {
       setFabrics(data.items)
     }
 
-    void loadFabrics().catch(() => setError('Fabric lookup could not be loaded.'))
+    void loadFabrics().catch(() => setError('Kumaş listesi yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -103,7 +105,7 @@ export function ReservationListPage() {
 
   const handleDelete = useCallback(
     async (reservation: FabricReservation) => {
-      const confirmed = window.confirm(`Delete reservation ${reservation.reservationNumber}?`)
+      const confirmed = confirmDelete(reservation.reservationNumber)
 
       if (!confirmed) {
         return
@@ -115,7 +117,7 @@ export function ReservationListPage() {
         await deleteFabricReservation(reservation.id)
         await loadReservations()
       } catch (exception) {
-        setError(exception instanceof Error ? exception.message : 'Reservation could not be deleted.')
+        setError(toUserMessage(exception, 'Rezervasyon silinemedi.'))
       }
     },
     [loadReservations],
@@ -136,7 +138,7 @@ export function ReservationListPage() {
       setDialogOpen(false)
       await loadReservations()
     } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'Reservation could not be saved.')
+      setError(toUserMessage(exception, 'Rezervasyon kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -144,13 +146,13 @@ export function ReservationListPage() {
 
   const columns = useMemo<GridColDef<FabricReservation>[]>(
     () => [
-      { field: 'reservationNumber', headerName: 'Reservation No', minWidth: 160, flex: 0.8 },
-      { field: 'fabricCode', headerName: 'Fabric Code', minWidth: 140, flex: 0.7 },
-      { field: 'fabricName', headerName: 'Fabric', minWidth: 220, flex: 1.1 },
-      { field: 'productionReference', headerName: 'Production Ref', minWidth: 170, flex: 0.8 },
-      { field: 'reservedQuantityKg', headerName: 'Reserved Kg', type: 'number', minWidth: 130, flex: 0.6 },
-      { field: 'reservationDate', headerName: 'Date', minWidth: 120, valueFormatter: (value: string) => formatDate(value) },
-      { field: 'status', headerName: 'Status', minWidth: 130, flex: 0.6 },
+      { field: 'reservationNumber', headerName: 'Rezervasyon No', minWidth: 160, flex: 0.8 },
+      { field: 'fabricCode', headerName: 'Kumaş Kodu', minWidth: 140, flex: 0.7 },
+      { field: 'fabricName', headerName: 'Kumaş', minWidth: 220, flex: 1.1 },
+      { field: 'productionReference', headerName: 'Üretim Ref.', minWidth: 170, flex: 0.8 },
+      { field: 'reservedQuantityKg', headerName: 'Rezerve Kg', type: 'number', minWidth: 130, flex: 0.6 },
+      { field: 'reservationDate', headerName: 'Tarih', minWidth: 120, valueFormatter: (value: string) => formatDate(value) },
+      { field: 'status', headerName: 'Durum', minWidth: 130, flex: 0.6, valueFormatter: (value: string) => trStatus(value) },
       {
         field: 'actions',
         headerName: '',
@@ -160,8 +162,8 @@ export function ReservationListPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Edit reservation"><IconButton size="small" onClick={() => openEditDialog(row)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-            <Tooltip title="Delete reservation"><IconButton size="small" color="error" onClick={() => void handleDelete(row)}><DeleteOutlinedIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title="Rezervasyonu düzenle"><IconButton size="small" onClick={() => openEditDialog(row)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title="Rezervasyonu sil"><IconButton size="small" color="error" onClick={() => void handleDelete(row)}><DeleteOutlinedIcon fontSize="small" /></IconButton></Tooltip>
           </Stack>
         ),
       },
@@ -173,12 +175,12 @@ export function ReservationListPage() {
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}>
         <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Fabric Reservations</Typography>
-          <Typography color="text.secondary">Reserve available fabric weight for production.</Typography>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Kumaş Rezervasyonları</Typography>
+          <Typography color="text.secondary">Üretim için kullanılabilir kumaş miktarını rezerve edin.</Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<FileDownloadOutlinedIcon />}>Export</Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>Add Reservation</Button>
+          <Button variant="outlined" startIcon={<FileDownloadOutlinedIcon />}>Dışa Aktar</Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>Rezervasyon Ekle</Button>
         </Stack>
       </Stack>
 
@@ -186,36 +188,37 @@ export function ReservationListPage() {
 
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
         <Stack spacing={2}>
-          <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search reservations" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
+          <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rezervasyon ara" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
           <Box sx={{ width: '100%', minHeight: 500 }}>
             <DataGrid rows={reservations} columns={columns} loading={loading} disableRowSelectionOnClick pageSizeOptions={[10, 25, 50]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }} />
           </Box>
         </Stack>
       </Paper>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingReservation ? 'Edit Reservation' : 'Add Reservation'}</DialogTitle>
-          <DialogContent>
+          <DialogTitle>{editingReservation ? 'Rezervasyon Düzenle' : 'Rezervasyon Ekle'}</DialogTitle>
+          <DialogContent sx={dialogContentSx}>
+            {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
-              <TextField select label="Fabric" value={reservationInput.fabricId} onChange={(event) => setReservationInput((current) => ({ ...current, fabricId: event.target.value }))} required fullWidth>
-                {fabrics.map((fabric) => <MenuItem key={fabric.id} value={fabric.id}>{fabric.fabricCode} - {fabric.fabricName} ({fabric.availableStockKg} Kg available)</MenuItem>)}
+              <TextField select label="Kumaş" value={reservationInput.fabricId} onChange={(event) => setReservationInput((current) => ({ ...current, fabricId: event.target.value }))} required helperText={!reservationInput.fabricId ? requiredMessage('Kumaş') : ' '} fullWidth>
+                {fabrics.map((fabric) => <MenuItem key={fabric.id} value={fabric.id}>{fabric.fabricCode} - {fabric.fabricName} ({fabric.availableStockKg} Kg kullanılabilir)</MenuItem>)}
               </TextField>
-              <TextField label="Reservation Number" value={reservationInput.reservationNumber} onChange={(event) => setReservationInput((current) => ({ ...current, reservationNumber: event.target.value }))} required fullWidth />
-              <TextField label="Production Reference" value={reservationInput.productionReference} onChange={(event) => setReservationInput((current) => ({ ...current, productionReference: event.target.value }))} required fullWidth />
+              <TextField label="Rezervasyon Numarası" value={reservationInput.reservationNumber} onChange={(event) => setReservationInput((current) => ({ ...current, reservationNumber: event.target.value }))} required helperText={!reservationInput.reservationNumber.trim() ? requiredMessage('Rezervasyon numarası') : ' '} fullWidth />
+              <TextField label="Üretim Referansı" value={reservationInput.productionReference} onChange={(event) => setReservationInput((current) => ({ ...current, productionReference: event.target.value }))} required fullWidth />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <TextField label="Reserved Quantity (Kg)" type="number" value={reservationInput.reservedQuantityKg} onChange={(event) => setReservationInput((current) => ({ ...current, reservedQuantityKg: Number(event.target.value) }))} required fullWidth />
-                <TextField label="Reservation Date" type="date" value={reservationInput.reservationDate} onChange={(event) => setReservationInput((current) => ({ ...current, reservationDate: event.target.value }))} required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
+                <TextField label="Rezerve Miktar (Kg)" type="number" value={reservationInput.reservedQuantityKg} onChange={(event) => setReservationInput((current) => ({ ...current, reservedQuantityKg: Number(event.target.value) }))} required fullWidth />
+                <TextField label="Rezervasyon Tarihi" type="date" value={reservationInput.reservationDate} onChange={(event) => setReservationInput((current) => ({ ...current, reservationDate: event.target.value }))} required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
               </Stack>
-              <TextField select label="Status" value={reservationInput.status} onChange={(event) => setReservationInput((current) => ({ ...current, status: event.target.value }))} required fullWidth>
-                {statuses.map((status) => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+              <TextField select label="Durum" value={reservationInput.status} onChange={(event) => setReservationInput((current) => ({ ...current, status: event.target.value }))} required fullWidth>
+                {statuses.map((status) => <MenuItem key={status} value={status}>{trStatus(status)}</MenuItem>)}
               </TextField>
-              <TextField label="Notes" value={reservationInput.notes} onChange={(event) => setReservationInput((current) => ({ ...current, notes: event.target.value }))} multiline minRows={2} fullWidth />
+              <TextField label="Notlar" value={reservationInput.notes} onChange={(event) => setReservationInput((current) => ({ ...current, notes: event.target.value }))} multiline minRows={2} fullWidth />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={saving}>Save</Button>
+            <Button onClick={() => setDialogOpen(false)}>{commonText.cancel}</Button>
+            <Button type="submit" variant="contained" disabled={saving}>{commonText.save}</Button>
           </DialogActions>
         </Box>
       </Dialog>
