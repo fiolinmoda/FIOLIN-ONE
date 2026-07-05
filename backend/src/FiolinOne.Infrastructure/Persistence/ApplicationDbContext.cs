@@ -2,6 +2,7 @@ using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Domain.Fabric;
 using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Products;
+using FiolinOne.Domain.Production;
 using FiolinOne.Domain.Purchasing;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +29,13 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<FiolinOne.Domain.Fabric.Fabric> Fabrics => Set<FiolinOne.Domain.Fabric.Fabric>();
     public DbSet<FabricMovement> FabricMovements => Set<FabricMovement>();
     public DbSet<FabricReservation> FabricReservations => Set<FabricReservation>();
+    public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
+    public DbSet<ProductionOrderItem> ProductionOrderItems => Set<ProductionOrderItem>();
+    public DbSet<CuttingRecord> CuttingRecords => Set<CuttingRecord>();
+    public DbSet<WorkshopShipment> WorkshopShipments => Set<WorkshopShipment>();
+    public DbSet<WorkshopReturn> WorkshopReturns => Set<WorkshopReturn>();
+    public DbSet<WarehouseEntry> WarehouseEntries => Set<WarehouseEntry>();
+    public DbSet<ProductionTimelineEntry> ProductionTimelineEntries => Set<ProductionTimelineEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

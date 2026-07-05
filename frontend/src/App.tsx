@@ -28,6 +28,8 @@ import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
 import BookmarkAddedOutlinedIcon from '@mui/icons-material/BookmarkAddedOutlined'
+import ContentCutOutlinedIcon from '@mui/icons-material/ContentCutOutlined'
+import WarehouseOutlinedIcon from '@mui/icons-material/WarehouseOutlined'
 import { FabricDetailPage } from './fabric/FabricDetailPage'
 import { FabricListPage } from './fabric/FabricListPage'
 import { FabricStockPage } from './fabric/FabricStockPage'
@@ -36,6 +38,11 @@ import { StockMovementsPage } from './fabric/StockMovementsPage'
 import { MasterDataPage } from './masterData/MasterDataPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
 import { ProductListPage } from './products/ProductListPage'
+import { ProductionDashboardPage } from './production/ProductionDashboardPage'
+import { ProductionDetailPage } from './production/ProductionDetailPage'
+import { ProductionListPage } from './production/ProductionListPage'
+import { ProductionOperationPage } from './production/ProductionOperationPages'
+import { ProductionTimelinePage } from './production/ProductionTimelinePage'
 import { GoodsReceiptPage } from './purchasing/GoodsReceiptPage'
 import { PurchaseInvoicePage } from './purchasing/PurchaseInvoicePage'
 import { PurchaseOrderDetailPage } from './purchasing/PurchaseOrderDetailPage'
@@ -71,9 +78,17 @@ const fabricModules = [
   { name: 'Reservations', path: '/fabric/reservations', icon: <BookmarkAddedOutlinedIcon /> },
 ]
 
+const productionModules = [
+  { name: 'Dashboard', path: '/production/dashboard', icon: <DashboardOutlinedIcon /> },
+  { name: 'Production Orders', path: '/production/orders', icon: <FactoryOutlinedIcon /> },
+  { name: 'Cutting', path: '/production/cutting', icon: <ContentCutOutlinedIcon /> },
+  { name: 'Workshop Shipment', path: '/production/workshop-shipment', icon: <LocalShippingOutlinedIcon /> },
+  { name: 'Workshop Return', path: '/production/workshop-return', icon: <SyncAltOutlinedIcon /> },
+  { name: 'Warehouse Entry', path: '/production/warehouse-entry', icon: <WarehouseOutlinedIcon /> },
+]
+
 const plannedModules = [
   { name: 'Pattern Management', icon: <AssignmentOutlinedIcon /> },
-  { name: 'Production Orders', icon: <FactoryOutlinedIcon /> },
   { name: 'Warehouse', icon: <LocalShippingOutlinedIcon /> },
   { name: 'Finance', icon: <PriceCheckOutlinedIcon /> },
 ]
@@ -168,6 +183,19 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Production</ListSubheader>
+            {productionModules.map((item) => (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton
+                  component={RouterLink}
+                  to={item.path}
+                  selected={location.pathname.startsWith(item.path)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.name} />
+                </ListItemButton>
+              </ListItem>
+            ))}
             <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planned</ListSubheader>
             {plannedModules.map((item) => (
               <ListItem key={item.name} disablePadding>
@@ -204,6 +232,14 @@ function App() {
             <Route path="/fabric/stock" element={<FabricStockPage />} />
             <Route path="/fabric/movements" element={<StockMovementsPage />} />
             <Route path="/fabric/reservations" element={<ReservationListPage />} />
+            <Route path="/production/dashboard" element={<ProductionDashboardPage />} />
+            <Route path="/production/orders" element={<ProductionListPage />} />
+            <Route path="/production/orders/:id" element={<ProductionDetailPage />} />
+            <Route path="/production/orders/:id/timeline" element={<ProductionTimelinePage />} />
+            <Route path="/production/cutting" element={<ProductionOperationPage kind="cutting" />} />
+            <Route path="/production/workshop-shipment" element={<ProductionOperationPage kind="shipment" />} />
+            <Route path="/production/workshop-return" element={<ProductionOperationPage kind="return" />} />
+            <Route path="/production/warehouse-entry" element={<ProductionOperationPage kind="warehouse" />} />
           </Routes>
         </Container>
       </Box>
