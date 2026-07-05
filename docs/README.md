@@ -24,6 +24,7 @@ Draft
 - [Database](database/er-diagram.md)
 - [API Blueprint](api/api-blueprint.md)
 - [API](api/api-standards.md)
+- [UI / UX Blueprint](ui/ui-blueprint.md)
 - [UI](ui/ui-standards.md)
 - [Workflows](workflows/barcode-workflow.md)
 - [Deployment](deployment/docker.md)
