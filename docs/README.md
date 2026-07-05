@@ -10,7 +10,7 @@ Draft
 
 ## Last Updated
 
-2026-07-04
+2026-07-05
 
 ## Documentation Map
 
@@ -22,6 +22,7 @@ Draft
 - [Product Development Business Analysis](business/product-development.md)
 - [Database Blueprint](database/database-blueprint.md)
 - [Database](database/er-diagram.md)
+- [API Blueprint](api/api-blueprint.md)
 - [API](api/api-standards.md)
 - [UI](ui/ui-standards.md)
 - [Workflows](workflows/barcode-workflow.md)
