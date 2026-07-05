@@ -1,3 +1,4 @@
+using FiolinOne.Application.Fabric;
 using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Application.MasterData;
 using FiolinOne.Application.Products;
@@ -7,6 +8,7 @@ using FiolinOne.Infrastructure.MasterData;
 using FiolinOne.Infrastructure.Persistence;
 using FiolinOne.Infrastructure.Products;
 using FiolinOne.Infrastructure.Purchasing;
+using FiolinOne.Infrastructure.Fabric;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
         services.AddScoped<IPurchasingRepository, PurchasingRepository>();
+        services.AddScoped<IFabricRepository, FabricRepository>();
 
         return services;
     }

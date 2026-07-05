@@ -1,4 +1,5 @@
 using FiolinOne.Application.Common.Interfaces;
+using FiolinOne.Domain.Fabric;
 using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Products;
 using FiolinOne.Domain.Purchasing;
@@ -24,6 +25,9 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<GoodsReceiptItem> GoodsReceiptItems => Set<GoodsReceiptItem>();
     public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
     public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
+    public DbSet<FiolinOne.Domain.Fabric.Fabric> Fabrics => Set<FiolinOne.Domain.Fabric.Fabric>();
+    public DbSet<FabricMovement> FabricMovements => Set<FabricMovement>();
+    public DbSet<FabricReservation> FabricReservations => Set<FabricReservation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

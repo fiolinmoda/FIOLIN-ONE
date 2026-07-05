@@ -2,7 +2,7 @@
 
 FIOLIN ONE is the ERP platform foundation for a clothing manufacturer and wholesaler.
 
-This repository contains the project architecture, Product Management, Master Data, and Purchasing v1.0 foundations. Future modules such as Fabric Management, Production Orders, Cutting, Sewing, Warehouse, Barcode System, Dealer B2B, Trendyol Orders, Finance, and Reports will continue to build on this foundation.
+This repository contains the project architecture, Product Management, Master Data, Purchasing v1.0, and Fabric Management v1.0 foundations. Future modules such as Production Orders, Cutting, Sewing, Warehouse, Barcode System, Dealer B2B, Trendyol Orders, Finance, and Reports will continue to build on this foundation.
 
 ## Architecture
 
@@ -67,6 +67,14 @@ FIOLIN-ONE
 - Secured CRUD APIs under `/api/suppliers`, `/api/purchase-orders`, `/api/goods-receipts`, and `/api/purchase-invoices`
 - Pagination, filtering, sorting, FluentValidation, Swagger metadata, and XML controller comments
 - Purchasing navigation with Purchase Order List, Purchase Order Detail, Supplier Management, Goods Receipt, and Purchase Invoice screens
+
+## Fabric Management v1.0
+
+- Weight-based Fabric cards linked to suppliers and colors
+- Current stock, reserved stock, available stock, minimum stock, and automatic `OUT OF STOCK` status
+- Fabric purchase arrival, production consumption, manual adjustment, inventory count, return, and reservation workflows
+- Secured APIs under `/api/fabrics`, `/api/fabric-movements`, and `/api/fabric-reservations`
+- Fabric List, Fabric Detail, Fabric Stock, Stock Movements, and Reservation List screens
 
 ## Documentation
 

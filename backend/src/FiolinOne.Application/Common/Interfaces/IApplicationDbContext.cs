@@ -1,6 +1,7 @@
 using FiolinOne.Domain.Products;
 using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Purchasing;
+using FiolinOne.Domain.Fabric;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -23,6 +24,9 @@ public interface IApplicationDbContext
     DbSet<GoodsReceiptItem> GoodsReceiptItems { get; }
     DbSet<PurchaseInvoice> PurchaseInvoices { get; }
     DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems { get; }
+    DbSet<FiolinOne.Domain.Fabric.Fabric> Fabrics { get; }
+    DbSet<FabricMovement> FabricMovements { get; }
+    DbSet<FabricReservation> FabricReservations { get; }
 
     DatabaseFacade Database { get; }
 

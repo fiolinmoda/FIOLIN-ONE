@@ -25,6 +25,14 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import PriceCheckOutlinedIcon from '@mui/icons-material/PriceCheckOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
+import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
+import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
+import BookmarkAddedOutlinedIcon from '@mui/icons-material/BookmarkAddedOutlined'
+import { FabricDetailPage } from './fabric/FabricDetailPage'
+import { FabricListPage } from './fabric/FabricListPage'
+import { FabricStockPage } from './fabric/FabricStockPage'
+import { ReservationListPage } from './fabric/ReservationListPage'
+import { StockMovementsPage } from './fabric/StockMovementsPage'
 import { MasterDataPage } from './masterData/MasterDataPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
 import { ProductListPage } from './products/ProductListPage'
@@ -56,8 +64,14 @@ const purchasingModules = [
   { name: 'Purchase Invoices', path: '/purchasing/invoices', icon: <PriceCheckOutlinedIcon /> },
 ]
 
+const fabricModules = [
+  { name: 'Fabric List', path: '/fabric/fabrics', icon: <SpaOutlinedIcon /> },
+  { name: 'Fabric Stock', path: '/fabric/stock', icon: <Inventory2OutlinedIcon /> },
+  { name: 'Stock Movements', path: '/fabric/movements', icon: <SyncAltOutlinedIcon /> },
+  { name: 'Reservations', path: '/fabric/reservations', icon: <BookmarkAddedOutlinedIcon /> },
+]
+
 const plannedModules = [
-  { name: 'Fabric Management', icon: <Inventory2OutlinedIcon /> },
   { name: 'Pattern Management', icon: <AssignmentOutlinedIcon /> },
   { name: 'Production Orders', icon: <FactoryOutlinedIcon /> },
   { name: 'Warehouse', icon: <LocalShippingOutlinedIcon /> },
@@ -141,6 +155,19 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Fabric</ListSubheader>
+            {fabricModules.map((item) => (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton
+                  component={RouterLink}
+                  to={item.path}
+                  selected={location.pathname.startsWith(item.path)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.name} />
+                </ListItemButton>
+              </ListItem>
+            ))}
             <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planned</ListSubheader>
             {plannedModules.map((item) => (
               <ListItem key={item.name} disablePadding>
@@ -172,6 +199,11 @@ function App() {
             <Route path="/purchasing/suppliers" element={<SupplierManagementPage />} />
             <Route path="/purchasing/goods-receipts" element={<GoodsReceiptPage />} />
             <Route path="/purchasing/invoices" element={<PurchaseInvoicePage />} />
+            <Route path="/fabric/fabrics" element={<FabricListPage />} />
+            <Route path="/fabric/fabrics/:id" element={<FabricDetailPage />} />
+            <Route path="/fabric/stock" element={<FabricStockPage />} />
+            <Route path="/fabric/movements" element={<StockMovementsPage />} />
+            <Route path="/fabric/reservations" element={<ReservationListPage />} />
           </Routes>
         </Container>
       </Box>
