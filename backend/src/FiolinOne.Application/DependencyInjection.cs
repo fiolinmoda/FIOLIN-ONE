@@ -2,6 +2,7 @@ using FluentValidation;
 using FiolinOne.Application.MasterData;
 using FiolinOne.Application.Products;
 using FiolinOne.Application.Products.Variants;
+using FiolinOne.Application.Purchasing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FiolinOne.Application;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IMasterDataService, MasterDataService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IProductVariantService, ProductVariantService>();
+        services.AddScoped<IPurchasingService, PurchasingService>();
 
         return services;
     }

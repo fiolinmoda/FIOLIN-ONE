@@ -24,9 +24,15 @@ import FactoryOutlinedIcon from '@mui/icons-material/FactoryOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import PriceCheckOutlinedIcon from '@mui/icons-material/PriceCheckOutlined'
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import { MasterDataPage } from './masterData/MasterDataPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
 import { ProductListPage } from './products/ProductListPage'
+import { GoodsReceiptPage } from './purchasing/GoodsReceiptPage'
+import { PurchaseInvoicePage } from './purchasing/PurchaseInvoicePage'
+import { PurchaseOrderDetailPage } from './purchasing/PurchaseOrderDetailPage'
+import { PurchaseOrderListPage } from './purchasing/PurchaseOrderListPage'
+import { SupplierManagementPage } from './purchasing/SupplierManagementPage'
 
 const drawerWidth = 280
 
@@ -41,6 +47,13 @@ const masterDataModules = [
   { name: 'Colors', path: '/master-data/colors', icon: <DatasetOutlinedIcon />, active: true },
   { name: 'Sizes', path: '/master-data/sizes', icon: <DatasetOutlinedIcon />, active: true },
   { name: 'Fabric Types', path: '/master-data/fabric-types', icon: <DatasetOutlinedIcon />, active: true },
+]
+
+const purchasingModules = [
+  { name: 'Purchase Orders', path: '/purchasing/orders', icon: <ReceiptLongOutlinedIcon /> },
+  { name: 'Suppliers', path: '/purchasing/suppliers', icon: <DatasetOutlinedIcon /> },
+  { name: 'Goods Receipt', path: '/purchasing/goods-receipts', icon: <Inventory2OutlinedIcon /> },
+  { name: 'Purchase Invoices', path: '/purchasing/invoices', icon: <PriceCheckOutlinedIcon /> },
 ]
 
 const plannedModules = [
@@ -115,6 +128,19 @@ function App() {
                 </ListItemButton>
               </ListItem>
             ))}
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Purchasing</ListSubheader>
+            {purchasingModules.map((item) => (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton
+                  component={RouterLink}
+                  to={item.path}
+                  selected={location.pathname.startsWith(item.path)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.name} />
+                </ListItemButton>
+              </ListItem>
+            ))}
             <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planned</ListSubheader>
             {plannedModules.map((item) => (
               <ListItem key={item.name} disablePadding>
@@ -141,6 +167,11 @@ function App() {
             <Route path="/products" element={<ProductListPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/master-data/:type" element={<MasterDataPage />} />
+            <Route path="/purchasing/orders" element={<PurchaseOrderListPage />} />
+            <Route path="/purchasing/orders/:id" element={<PurchaseOrderDetailPage />} />
+            <Route path="/purchasing/suppliers" element={<SupplierManagementPage />} />
+            <Route path="/purchasing/goods-receipts" element={<GoodsReceiptPage />} />
+            <Route path="/purchasing/invoices" element={<PurchaseInvoicePage />} />
           </Routes>
         </Container>
       </Box>
