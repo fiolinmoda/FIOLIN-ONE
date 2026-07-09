@@ -192,6 +192,7 @@ public sealed class PurchasingService(
         await EnsurePurchaseOrderExistsAsync(request.PurchaseOrderId, cancellationToken);
         var receiptNumber = await GetDocumentNumberAsync(request.ReceiptNumber, DocumentNumberTypes.GoodsReceipt, cancellationToken);
         await EnsureReceiptNumberIsUniqueAsync(receiptNumber, null, cancellationToken);
+        await EnsureGoodsReceiptDoesNotExceedOrderAsync(request.PurchaseOrderId, request.Items, null, cancellationToken);
 
         var goodsReceipt = new GoodsReceipt(
             receiptNumber,
@@ -223,6 +224,7 @@ public sealed class PurchasingService(
         await EnsureSupplierExistsAsync(request.SupplierId, cancellationToken);
         await EnsurePurchaseOrderExistsAsync(request.PurchaseOrderId, cancellationToken);
         await EnsureReceiptNumberIsUniqueAsync(request.ReceiptNumber, id, cancellationToken);
+        await EnsureGoodsReceiptDoesNotExceedOrderAsync(request.PurchaseOrderId, request.Items, id, cancellationToken);
 
         goodsReceipt.Update(
             request.ReceiptNumber.Trim(),
@@ -281,13 +283,16 @@ public sealed class PurchasingService(
         await EnsurePurchaseOrderExistsAsync(request.PurchaseOrderId, cancellationToken);
         var invoiceNumber = await GetDocumentNumberAsync(request.InvoiceNumber, DocumentNumberTypes.PurchaseInvoice, cancellationToken);
         await EnsureInvoiceNumberIsUniqueAsync(invoiceNumber, null, cancellationToken);
+        await EnsureInvoiceDoesNotExceedReceivedAsync(request.PurchaseOrderId, request.Items, null, cancellationToken);
+        var invoiceItems = ToPurchaseInvoiceItems(Guid.Empty, request.Items);
+        var invoiceAmount = invoiceItems.Sum(item => item.TotalAmount);
 
         var invoice = new PurchaseInvoice(
             invoiceNumber,
             ToUtc(request.InvoiceDate),
             request.SupplierId,
             request.PurchaseOrderId,
-            request.InvoiceAmount,
+            invoiceAmount,
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
 
@@ -312,17 +317,20 @@ public sealed class PurchasingService(
         await EnsureSupplierExistsAsync(request.SupplierId, cancellationToken);
         await EnsurePurchaseOrderExistsAsync(request.PurchaseOrderId, cancellationToken);
         await EnsureInvoiceNumberIsUniqueAsync(request.InvoiceNumber, id, cancellationToken);
+        await EnsureInvoiceDoesNotExceedReceivedAsync(request.PurchaseOrderId, request.Items, id, cancellationToken);
+        var invoiceItems = ToPurchaseInvoiceItems(id, request.Items);
+        var invoiceAmount = invoiceItems.Sum(item => item.TotalAmount);
 
         invoice.Update(
             request.InvoiceNumber.Trim(),
             ToUtc(request.InvoiceDate),
             request.SupplierId,
             request.PurchaseOrderId,
-            request.InvoiceAmount,
+            invoiceAmount,
             request.Status.Trim(),
             NormalizeOptional(request.Notes));
 
-        await purchasingRepository.ReplacePurchaseInvoiceItemsAsync(invoice, ToPurchaseInvoiceItems(id, request.Items), cancellationToken);
+        await purchasingRepository.ReplacePurchaseInvoiceItemsAsync(invoice, invoiceItems, cancellationToken);
         await purchasingRepository.SaveChangesAsync(cancellationToken);
 
         invoice = await purchasingRepository.GetPurchaseInvoiceByIdAsync(id, cancellationToken) ?? invoice;
@@ -354,7 +362,7 @@ public sealed class PurchasingService(
     {
         if (await purchasingRepository.SupplierCodeExistsAsync(supplierCode.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Supplier code already exists.");
+            throw new InvalidOperationException("Bu tedarikçi kodu zaten kullanılıyor.");
         }
     }
 
@@ -362,7 +370,7 @@ public sealed class PurchasingService(
     {
         if (await purchasingRepository.PurchaseNumberExistsAsync(purchaseNumber.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Purchase number already exists.");
+            throw new InvalidOperationException("Bu satın alma numarası zaten kullanılıyor.");
         }
     }
 
@@ -370,7 +378,7 @@ public sealed class PurchasingService(
     {
         if (await purchasingRepository.ReceiptNumberExistsAsync(receiptNumber.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Receipt number already exists.");
+            throw new InvalidOperationException("Bu mal kabul numarası zaten kullanılıyor.");
         }
     }
 
@@ -378,7 +386,7 @@ public sealed class PurchasingService(
     {
         if (await purchasingRepository.InvoiceNumberExistsAsync(invoiceNumber.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Invoice number already exists.");
+            throw new InvalidOperationException("Bu fatura numarası zaten kullanılıyor.");
         }
     }
 
@@ -386,7 +394,7 @@ public sealed class PurchasingService(
     {
         if (!await purchasingRepository.SupplierExistsAsync(supplierId, cancellationToken))
         {
-            throw new InvalidOperationException("Supplier does not exist.");
+            throw new InvalidOperationException("Tedarikçi bulunamadı.");
         }
     }
 
@@ -395,7 +403,7 @@ public sealed class PurchasingService(
         if (purchaseOrderId.HasValue &&
             !await purchasingRepository.PurchaseOrderExistsAsync(purchaseOrderId.Value, cancellationToken))
         {
-            throw new InvalidOperationException("Purchase order does not exist.");
+            throw new InvalidOperationException("Satın alma siparişi bulunamadı.");
         }
     }
 
@@ -414,7 +422,67 @@ public sealed class PurchasingService(
     {
         if (id.HasValue && !await masterDataRepository.ExistsAsync(type, id.Value, cancellationToken))
         {
-            throw new InvalidOperationException("Selected master data item does not exist.");
+            throw new InvalidOperationException("Seçilen tanım kaydı bulunamadı.");
+        }
+    }
+
+    private async Task EnsureGoodsReceiptDoesNotExceedOrderAsync(
+        Guid? purchaseOrderId,
+        IReadOnlyList<GoodsReceiptItemRequest> items,
+        Guid? excludedReceiptId,
+        CancellationToken cancellationToken)
+    {
+        foreach (var item in items.Where(item => item.PurchaseOrderItemId.HasValue))
+        {
+            var orderItem = await purchasingRepository.GetPurchaseOrderItemByIdAsync(item.PurchaseOrderItemId!.Value, cancellationToken)
+                ?? throw new InvalidOperationException("Satın alma sipariş kalemi bulunamadı.");
+
+            if (purchaseOrderId.HasValue && orderItem.PurchaseOrderId != purchaseOrderId.Value)
+            {
+                throw new InvalidOperationException("Mal kabul kalemi seçilen satın alma siparişine ait değil.");
+            }
+
+            var receivedBefore = await purchasingRepository.GetReceivedQuantityForPurchaseOrderItemAsync(
+                orderItem.Id,
+                excludedReceiptId,
+                cancellationToken);
+
+            if (receivedBefore + item.ReceivedQuantity > orderItem.Quantity)
+            {
+                throw new InvalidOperationException($"{orderItem.ItemName} için kabul miktarı sipariş miktarını aşamaz.");
+            }
+        }
+    }
+
+    private async Task EnsureInvoiceDoesNotExceedReceivedAsync(
+        Guid? purchaseOrderId,
+        IReadOnlyList<PurchaseInvoiceItemRequest> items,
+        Guid? excludedInvoiceId,
+        CancellationToken cancellationToken)
+    {
+        foreach (var item in items.Where(item => item.PurchaseOrderItemId.HasValue))
+        {
+            var orderItem = await purchasingRepository.GetPurchaseOrderItemByIdAsync(item.PurchaseOrderItemId!.Value, cancellationToken)
+                ?? throw new InvalidOperationException("Satın alma sipariş kalemi bulunamadı.");
+
+            if (purchaseOrderId.HasValue && orderItem.PurchaseOrderId != purchaseOrderId.Value)
+            {
+                throw new InvalidOperationException("Fatura kalemi seçilen satın alma siparişine ait değil.");
+            }
+
+            var receivedQuantity = await purchasingRepository.GetReceivedQuantityForPurchaseOrderItemAsync(
+                orderItem.Id,
+                null,
+                cancellationToken);
+            var invoicedBefore = await purchasingRepository.GetInvoicedQuantityForPurchaseOrderItemAsync(
+                orderItem.Id,
+                excludedInvoiceId,
+                cancellationToken);
+
+            if (invoicedBefore + item.Quantity > receivedQuantity)
+            {
+                throw new InvalidOperationException($"{orderItem.ItemName} için fatura miktarı kabul edilmiş miktarı aşamaz.");
+            }
         }
     }
 
@@ -459,7 +527,7 @@ public sealed class PurchasingService(
             request.Quantity,
             request.Unit.Trim(),
             request.UnitPrice,
-            request.TotalAmount)).ToList();
+            request.Quantity * request.UnitPrice)).ToList();
     }
 
     private static SupplierDto ToDto(Supplier supplier)

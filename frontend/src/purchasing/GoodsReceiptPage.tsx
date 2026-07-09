@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
@@ -81,7 +81,7 @@ export function GoodsReceiptPage() {
       const data = await getGoodsReceipts(search)
       setReceipts(data.items)
     } catch (exception) {
-      setError(toUserMessage(exception, 'Mal kabul kayÄ±tlarÄ± yÃ¼klenemedi.'))
+      setError(toUserMessage(exception, 'Mal kabul kayıtları yüklenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -95,7 +95,7 @@ export function GoodsReceiptPage() {
       setOrders(orderResult.items)
     }
 
-    void loadLookups().catch(() => setError('SatÄ±n alma seÃ§im listeleri yÃ¼klenemedi.'))
+    void loadLookups().catch(() => setError('Satın alma seçim listeleri yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export function GoodsReceiptPage() {
         await deleteGoodsReceipt(receipt.id)
         await loadReceipts()
       } catch (exception) {
-        setError(toUserMessage(exception, 'Mal kabul kaydÄ± silinemedi.'))
+        setError(toUserMessage(exception, 'Mal kabul kaydı silinemedi.'))
       }
     },
     [loadReceipts],
@@ -160,6 +160,30 @@ export function GoodsReceiptPage() {
 
   function updateField(field: keyof GoodsReceiptInput, value: string | null) {
     setReceiptInput((current) => ({ ...current, [field]: value }))
+  }
+
+  function updatePurchaseOrder(value: string | null) {
+    const selectedOrder = orders.find((order) => order.id === value)
+    const firstItem = selectedOrder?.items[0]
+
+    setReceiptInput((current) => ({
+      ...current,
+      purchaseOrderId: value,
+      supplierId: selectedOrder?.supplierId ?? current.supplierId,
+      items: firstItem
+        ? [
+            {
+              id: current.items[0]?.id ?? null,
+              purchaseOrderItemId: firstItem.id,
+              itemName: firstItem.itemName,
+              receivedQuantity: Math.max(firstItem.remainingQuantity, 0) || 1,
+              unit: firstItem.unit,
+              acceptance: 'Accepted',
+              differenceQuantity: 0,
+            },
+          ]
+        : current.items,
+    }))
   }
 
   function updateFirstItem(field: keyof GoodsReceiptInput['items'][number], value: string | number | null) {
@@ -190,7 +214,7 @@ export function GoodsReceiptPage() {
       setDialogOpen(false)
       await loadReceipts()
     } catch (exception) {
-      setError(toUserMessage(exception, 'Mal kabul kaydÄ± kaydedilemedi.'))
+      setError(toUserMessage(exception, 'Mal kabul kaydı kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -199,8 +223,8 @@ export function GoodsReceiptPage() {
   const columns = useMemo<GridColDef<GoodsReceipt>[]>(
     () => [
       { field: 'receiptNumber', headerName: 'Kabul No', minWidth: 150, flex: 0.8 },
-      { field: 'supplierName', headerName: 'TedarikÃ§i', minWidth: 220, flex: 1.2 },
-      { field: 'purchaseNumber', headerName: 'SipariÅŸ No', minWidth: 150, flex: 0.8 },
+      { field: 'supplierName', headerName: 'Tedarikçi', minWidth: 220, flex: 1.2 },
+      { field: 'purchaseNumber', headerName: 'Sipariş No', minWidth: 150, flex: 0.8 },
       {
         field: 'receiptDate',
         headerName: 'Tarih',
@@ -219,7 +243,7 @@ export function GoodsReceiptPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Mal kabul dÃ¼zenle">
+            <Tooltip title="Mal kabul düzenle">
               <IconButton size="small" onClick={() => openEditDialog(row)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
@@ -243,7 +267,7 @@ export function GoodsReceiptPage() {
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
             Mal Kabul
           </Typography>
-          <Typography color="text.secondary">TedarikÃ§iden gelen mallarÄ± ve depo kabulÃ¼nÃ¼ kaydedin.</Typography>
+          <Typography color="text.secondary">Tedarikçiden gelen malları ve depo kabulünü kaydedin.</Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
           Mal Kabul Ekle
@@ -270,18 +294,18 @@ export function GoodsReceiptPage() {
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingReceipt ? 'Mal Kabul DÃ¼zenle' : 'Mal Kabul Ekle'}</DialogTitle>
+          <DialogTitle>{editingReceipt ? 'Mal Kabul Düzenle' : 'Mal Kabul Ekle'}</DialogTitle>
           <DialogContent sx={dialogContentSx}>
             {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                 <TextField label="Kabul Numarası" value={editingReceipt ? receiptInput.receiptNumber : 'Otomatik oluşturulacaktır'} onChange={(event) => updateField('receiptNumber', event.target.value)} disabled helperText={editingReceipt ? 'Oluşturulduktan sonra değiştirilemez.' : 'Kaydettiğinizde sistem tarafından verilir.'} fullWidth />
-                <TextField select label="TedarikÃ§i" value={receiptInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!receiptInput.supplierId ? requiredMessage('TedarikÃ§i') : ' '} fullWidth>
+                <TextField select label="Tedarikçi" value={receiptInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!receiptInput.supplierId ? requiredMessage('Tedarikçi') : ' '} fullWidth>
                   {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.supplierName}</MenuItem>)}
                 </TextField>
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField select label="SatÄ±n Alma SipariÅŸi" value={receiptInput.purchaseOrderId ?? ''} onChange={(event) => updateField('purchaseOrderId', event.target.value || null)} fullWidth>
+                <TextField select label="Satın Alma Siparişi" value={receiptInput.purchaseOrderId ?? ''} onChange={(event) => updatePurchaseOrder(event.target.value || null)} fullWidth>
                   <MenuItem value="">{commonText.none}</MenuItem>
                   {orders.map((order) => <MenuItem key={order.id} value={order.id}>{order.purchaseNumber}</MenuItem>)}
                 </TextField>

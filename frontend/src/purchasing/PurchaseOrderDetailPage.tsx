@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
@@ -79,7 +79,7 @@ export function PurchaseOrderDetailPage() {
       setColors(colorItems.filter((item) => item.isActive))
     }
 
-    void loadLookups().catch(() => setError('SatÄ±n alma seÃ§im listeleri yÃ¼klenemedi.'))
+    void loadLookups().catch(() => setError('Satın alma seçim listeleri yüklenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export function PurchaseOrderDetailPage() {
           })),
         })
       } catch (exception) {
-        setError(toUserMessage(exception, 'SatÄ±n alma sipariÅŸi yÃ¼klenemedi.'))
+        setError(toUserMessage(exception, 'Satın alma siparişi yüklenemedi.'))
       } finally {
         setLoading(false)
       }
@@ -169,7 +169,7 @@ export function PurchaseOrderDetailPage() {
 
       navigate('/purchasing/orders')
     } catch (exception) {
-      setError(toUserMessage(exception, 'SatÄ±n alma sipariÅŸi kaydedilemedi.'))
+      setError(toUserMessage(exception, 'Satın alma siparişi kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -193,7 +193,7 @@ export function PurchaseOrderDetailPage() {
       },
       {
         field: 'fabricTypeId',
-        headerName: 'KumaÅŸ Tipi',
+        headerName: 'Kumaş Tipi',
         minWidth: 160,
         flex: 0.8,
         renderCell: ({ row }) => (
@@ -338,9 +338,9 @@ export function PurchaseOrderDetailPage() {
         </Button>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
-            {isNew ? 'SatÄ±n Alma SipariÅŸi Ekle' : 'SatÄ±n Alma SipariÅŸi DÃ¼zenle'}
+            {isNew ? 'Satın Alma Siparişi Ekle' : 'Satın Alma Siparişi Düzenle'}
           </Typography>
-          <Typography color="text.secondary">TedarikÃ§i, teslim tarihi ve sipariÅŸ kalemlerini yÃ¶netin.</Typography>
+          <Typography color="text.secondary">Tedarikçi, teslim tarihi ve sipariş kalemlerini yönetin.</Typography>
         </Box>
       </Stack>
 
@@ -353,12 +353,12 @@ export function PurchaseOrderDetailPage() {
               <TextField label="Sipariş Numarası" value={isNew ? 'Otomatik oluşturulacaktır' : order.purchaseNumber} onChange={(event) => updateOrderField('purchaseNumber', event.target.value)} disabled helperText={isNew ? 'Kaydettiğinizde sistem tarafından verilir.' : 'Oluşturulduktan sonra değiştirilemez.'} fullWidth />
               <TextField
                 select
-                label="TedarikÃ§i"
+                label="Tedarikçi"
                 value={order.supplierId}
                 onChange={(event) => updateOrderField('supplierId', event.target.value)}
                 disabled={loading}
                 required
-                helperText={!order.supplierId ? requiredMessage('TedarikÃ§i') : ' '}
+                helperText={!order.supplierId ? requiredMessage('Tedarikçi') : ' '}
                 fullWidth
               >
                 {suppliers.map((supplier) => (
@@ -370,7 +370,7 @@ export function PurchaseOrderDetailPage() {
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
               <TextField
-                label="SipariÅŸ Tarihi"
+                label="Sipariş Tarihi"
                 type="date"
                 value={order.orderDate}
                 onChange={(event) => updateOrderField('orderDate', event.target.value)}

@@ -13,6 +13,7 @@ public interface IPurchasingRepository
 
     Task<PagedResult<PurchaseOrder>> GetPurchaseOrdersAsync(QueryParameters query, CancellationToken cancellationToken);
     Task<PurchaseOrder?> GetPurchaseOrderByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<PurchaseOrderItem?> GetPurchaseOrderItemByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> PurchaseOrderExistsAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> PurchaseNumberExistsAsync(string purchaseNumber, Guid? excludedId, CancellationToken cancellationToken);
     Task AddPurchaseOrderAsync(PurchaseOrder purchaseOrder, CancellationToken cancellationToken);
@@ -21,12 +22,14 @@ public interface IPurchasingRepository
     Task<PagedResult<GoodsReceipt>> GetGoodsReceiptsAsync(QueryParameters query, CancellationToken cancellationToken);
     Task<GoodsReceipt?> GetGoodsReceiptByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> ReceiptNumberExistsAsync(string receiptNumber, Guid? excludedId, CancellationToken cancellationToken);
+    Task<decimal> GetReceivedQuantityForPurchaseOrderItemAsync(Guid purchaseOrderItemId, Guid? excludedReceiptId, CancellationToken cancellationToken);
     Task AddGoodsReceiptAsync(GoodsReceipt goodsReceipt, CancellationToken cancellationToken);
     Task ReplaceGoodsReceiptItemsAsync(GoodsReceipt goodsReceipt, IReadOnlyList<GoodsReceiptItem> items, CancellationToken cancellationToken);
 
     Task<PagedResult<PurchaseInvoice>> GetPurchaseInvoicesAsync(QueryParameters query, CancellationToken cancellationToken);
     Task<PurchaseInvoice?> GetPurchaseInvoiceByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> InvoiceNumberExistsAsync(string invoiceNumber, Guid? excludedId, CancellationToken cancellationToken);
+    Task<decimal> GetInvoicedQuantityForPurchaseOrderItemAsync(Guid purchaseOrderItemId, Guid? excludedInvoiceId, CancellationToken cancellationToken);
     Task AddPurchaseInvoiceAsync(PurchaseInvoice purchaseInvoice, CancellationToken cancellationToken);
     Task ReplacePurchaseInvoiceItemsAsync(PurchaseInvoice purchaseInvoice, IReadOnlyList<PurchaseInvoiceItem> items, CancellationToken cancellationToken);
 

@@ -92,6 +92,13 @@ public sealed class PurchasingRepository(ApplicationDbContext dbContext) : IPurc
             .FirstOrDefaultAsync(order => order.Id == id, cancellationToken);
     }
 
+    public Task<PurchaseOrderItem?> GetPurchaseOrderItemByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return dbContext.PurchaseOrderItems
+            .Include(item => item.PurchaseOrder)
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+    }
+
     public Task<bool> PurchaseOrderExistsAsync(Guid id, CancellationToken cancellationToken)
     {
         return dbContext.PurchaseOrders.AnyAsync(order => order.Id == id, cancellationToken);
@@ -167,6 +174,18 @@ public sealed class PurchasingRepository(ApplicationDbContext dbContext) : IPurc
             cancellationToken);
     }
 
+    public Task<decimal> GetReceivedQuantityForPurchaseOrderItemAsync(
+        Guid purchaseOrderItemId,
+        Guid? excludedReceiptId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.GoodsReceiptItems
+            .Where(item =>
+                item.PurchaseOrderItemId == purchaseOrderItemId &&
+                (!excludedReceiptId.HasValue || item.GoodsReceiptId != excludedReceiptId.Value))
+            .SumAsync(item => item.ReceivedQuantity, cancellationToken);
+    }
+
     public async Task AddGoodsReceiptAsync(GoodsReceipt goodsReceipt, CancellationToken cancellationToken)
     {
         await dbContext.GoodsReceipts.AddAsync(goodsReceipt, cancellationToken);
@@ -227,6 +246,18 @@ public sealed class PurchasingRepository(ApplicationDbContext dbContext) : IPurc
         return dbContext.PurchaseInvoices.AnyAsync(
             invoice => invoice.InvoiceNumber == invoiceNumber && (!excludedId.HasValue || invoice.Id != excludedId),
             cancellationToken);
+    }
+
+    public Task<decimal> GetInvoicedQuantityForPurchaseOrderItemAsync(
+        Guid purchaseOrderItemId,
+        Guid? excludedInvoiceId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PurchaseInvoiceItems
+            .Where(item =>
+                item.PurchaseOrderItemId == purchaseOrderItemId &&
+                (!excludedInvoiceId.HasValue || item.PurchaseInvoiceId != excludedInvoiceId.Value))
+            .SumAsync(item => item.Quantity, cancellationToken);
     }
 
     public async Task AddPurchaseInvoiceAsync(PurchaseInvoice purchaseInvoice, CancellationToken cancellationToken)
