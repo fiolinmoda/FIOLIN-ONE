@@ -90,6 +90,32 @@ FIOLIN-ONE
 
 Project documentation starts at [docs/README.md](docs/README.md).
 
+## FIOLIN ONE'ı Çalıştırma
+
+FIOLIN ONE'ı yerel bilgisayarda başlatmak için tek adım yeterlidir:
+
+Çift tıklayın:
+
+```text
+FIOLIN ONE.cmd
+```
+
+Bu başlatıcı Docker Desktop'ı ve PostgreSQL'i hazırlar, backend ve frontend uygulamalarını başlatır, uygun Vite portunu bulur ve tarayıcıyı otomatik açar.
+
+Uygulamayı kapatmak için çift tıklayın:
+
+```text
+FIOLIN ONE Kapat.cmd
+```
+
+Projeyi güncellemek ve tekrar başlatmak için çift tıklayın:
+
+```text
+FIOLIN ONE Güncelle.cmd
+```
+
+Başlatma, kapatma ve güncelleme kayıtları `logs` klasörüne yazılır.
+
 ## Frontend Foundation
 
 - React
@@ -117,13 +143,13 @@ Default local endpoints:
 
 ## Local Development
 
-For day-to-day development on Windows, use the one-command launcher:
+For day-to-day development on Windows, use the one-click launcher:
 
-```powershell
-.\start-dev.ps1
+```text
+FIOLIN ONE.cmd
 ```
 
-or:
+Legacy developer shortcuts still forward to the same launcher:
 
 ```cmd
 start-dev.cmd

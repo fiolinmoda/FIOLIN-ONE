@@ -9,6 +9,8 @@ build/
 appsettings.Development.json
 .dotnet-sdk/
 .tools/
+.fiolin-one/
+logs/*.log
 
 # IDE
 .vs/
