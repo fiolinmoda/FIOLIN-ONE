@@ -126,12 +126,12 @@ public sealed class ProductVariantService(
     {
         if (await productVariantRepository.VariantCombinationExistsAsync(productId, colorId, sizeId, excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("A variant with the same product, color, and size already exists.");
+            throw new InvalidOperationException("Bu ürün için aynı renk ve beden varyantı zaten var.");
         }
 
         if (await productVariantRepository.BarcodeExistsAsync(barcode.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Barcode already exists.");
+            throw new InvalidOperationException("Bu barkod zaten kullanılıyor.");
         }
 
         var normalizedTrendyolSku = NormalizeOptional(trendyolSku);
@@ -139,7 +139,7 @@ public sealed class ProductVariantService(
         if (normalizedTrendyolSku is not null &&
             await productVariantRepository.TrendyolSkuExistsAsync(normalizedTrendyolSku, excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Trendyol SKU already exists.");
+            throw new InvalidOperationException("Bu Trendyol SKU zaten kullanılıyor.");
         }
     }
 
@@ -147,7 +147,7 @@ public sealed class ProductVariantService(
     {
         if (!await masterDataRepository.ExistsAsync(type, id, cancellationToken))
         {
-            throw new InvalidOperationException("Selected master data item does not exist.");
+            throw new InvalidOperationException("Seçilen tanım kaydı bulunamadı.");
         }
     }
 

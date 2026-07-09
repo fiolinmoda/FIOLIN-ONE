@@ -96,7 +96,7 @@ public sealed class ProductService(
 
         if (exists)
         {
-            throw new InvalidOperationException("Product code already exists.");
+            throw new InvalidOperationException("Bu ürün kodu zaten kullanılıyor.");
         }
     }
 
@@ -109,7 +109,7 @@ public sealed class ProductService(
 
         if (!await masterDataRepository.ExistsAsync(type, id.Value, cancellationToken))
         {
-            throw new InvalidOperationException("Selected master data item does not exist.");
+            throw new InvalidOperationException("Seçilen tanım kaydı bulunamadı.");
         }
     }
 

@@ -6,22 +6,33 @@ public sealed class CreateProductVariantRequestValidator : AbstractValidator<Cre
 {
     public CreateProductVariantRequestValidator()
     {
-        RuleFor(request => request.ColorId).NotEmpty();
-        RuleFor(request => request.SizeId).NotEmpty();
+        RuleFor(request => request.ColorId)
+            .NotEmpty()
+            .WithMessage("Renk zorunludur.");
+
+        RuleFor(request => request.SizeId)
+            .NotEmpty()
+            .WithMessage("Beden zorunludur.");
 
         RuleFor(request => request.Barcode)
             .NotEmpty()
-            .MaximumLength(100);
+            .WithMessage("Barkod zorunludur.")
+            .MaximumLength(100)
+            .WithMessage("Barkod en fazla 100 karakter olabilir.");
 
         RuleFor(request => request.TrendyolSku)
-            .MaximumLength(100);
+            .MaximumLength(100)
+            .WithMessage("Trendyol SKU en fazla 100 karakter olabilir.");
 
         RuleFor(request => request.Stock)
-            .GreaterThanOrEqualTo(0);
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("Stok negatif olamaz.");
 
         RuleFor(request => request.Status)
             .NotEmpty()
-            .MaximumLength(50);
+            .WithMessage("Durum zorunludur.")
+            .MaximumLength(50)
+            .WithMessage("Durum en fazla 50 karakter olabilir.");
     }
 }
 
@@ -29,21 +40,32 @@ public sealed class UpdateProductVariantRequestValidator : AbstractValidator<Upd
 {
     public UpdateProductVariantRequestValidator()
     {
-        RuleFor(request => request.ColorId).NotEmpty();
-        RuleFor(request => request.SizeId).NotEmpty();
+        RuleFor(request => request.ColorId)
+            .NotEmpty()
+            .WithMessage("Renk zorunludur.");
+
+        RuleFor(request => request.SizeId)
+            .NotEmpty()
+            .WithMessage("Beden zorunludur.");
 
         RuleFor(request => request.Barcode)
             .NotEmpty()
-            .MaximumLength(100);
+            .WithMessage("Barkod zorunludur.")
+            .MaximumLength(100)
+            .WithMessage("Barkod en fazla 100 karakter olabilir.");
 
         RuleFor(request => request.TrendyolSku)
-            .MaximumLength(100);
+            .MaximumLength(100)
+            .WithMessage("Trendyol SKU en fazla 100 karakter olabilir.");
 
         RuleFor(request => request.Stock)
-            .GreaterThanOrEqualTo(0);
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("Stok negatif olamaz.");
 
         RuleFor(request => request.Status)
             .NotEmpty()
-            .MaximumLength(50);
+            .WithMessage("Durum zorunludur.")
+            .MaximumLength(50)
+            .WithMessage("Durum en fazla 50 karakter olabilir.");
     }
 }
