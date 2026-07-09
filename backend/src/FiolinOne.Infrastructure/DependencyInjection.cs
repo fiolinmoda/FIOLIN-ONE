@@ -28,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IDocumentNumberGenerator, DocumentNumberGenerator>();
         services.AddScoped<IMasterDataRepository, MasterDataRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductVariantRepository, ProductVariantRepository>();

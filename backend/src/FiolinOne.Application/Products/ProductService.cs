@@ -1,3 +1,4 @@
+using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Application.MasterData;
 using FiolinOne.Domain.Products;
 
@@ -5,7 +6,8 @@ namespace FiolinOne.Application.Products;
 
 public sealed class ProductService(
     IProductRepository productRepository,
-    IMasterDataRepository masterDataRepository) : IProductService
+    IMasterDataRepository masterDataRepository,
+    IDocumentNumberGenerator documentNumberGenerator) : IProductService
 {
     public async Task<IReadOnlyList<ProductDto>> GetProductsAsync(string? search, CancellationToken cancellationToken)
     {
@@ -23,13 +25,14 @@ public sealed class ProductService(
 
     public async Task<ProductDto> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
     {
-        await EnsureProductCodeIsUniqueAsync(request.ProductCode, null, cancellationToken);
+        var productCode = await GetDocumentNumberAsync(request.ProductCode, DocumentNumberTypes.Product, cancellationToken);
+        await EnsureProductCodeIsUniqueAsync(productCode, null, cancellationToken);
         await EnsureMasterDataExistsAsync(request.BrandId, "brands", cancellationToken);
         await EnsureMasterDataExistsAsync(request.CategoryId, "categories", cancellationToken);
         await EnsureMasterDataExistsAsync(request.SeasonId, "seasons", cancellationToken);
 
         var product = new Product(
-            request.ProductCode.Trim(),
+            productCode,
             request.ProductName.Trim(),
             request.BrandId,
             request.CategoryId,
@@ -108,6 +111,13 @@ public sealed class ProductService(
         {
             throw new InvalidOperationException("Selected master data item does not exist.");
         }
+    }
+
+    private async Task<string> GetDocumentNumberAsync(string? requestedNumber, string documentType, CancellationToken cancellationToken)
+    {
+        return string.IsNullOrWhiteSpace(requestedNumber)
+            ? await documentNumberGenerator.GenerateAsync(documentType, cancellationToken)
+            : requestedNumber.Trim();
     }
 
     private static ProductDto ToDto(Product product)

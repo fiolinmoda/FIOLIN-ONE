@@ -36,6 +36,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<WorkshopReturn> WorkshopReturns => Set<WorkshopReturn>();
     public DbSet<WarehouseEntry> WarehouseEntries => Set<WarehouseEntry>();
     public DbSet<ProductionTimelineEntry> ProductionTimelineEntries => Set<ProductionTimelineEntry>();
+    public DbSet<DocumentSequence> DocumentSequences => Set<DocumentSequence>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

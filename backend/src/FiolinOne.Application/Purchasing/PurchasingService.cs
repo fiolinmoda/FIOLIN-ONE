@@ -1,3 +1,4 @@
+using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Application.Common.Models;
 using FiolinOne.Application.MasterData;
 using FiolinOne.Domain.Purchasing;
@@ -6,7 +7,8 @@ namespace FiolinOne.Application.Purchasing;
 
 public sealed class PurchasingService(
     IPurchasingRepository purchasingRepository,
-    IMasterDataRepository masterDataRepository) : IPurchasingService
+    IMasterDataRepository masterDataRepository,
+    IDocumentNumberGenerator documentNumberGenerator) : IPurchasingService
 {
     public async Task<PagedResult<SupplierDto>> GetSuppliersAsync(PurchasingQuery query, CancellationToken cancellationToken)
     {
@@ -100,11 +102,12 @@ public sealed class PurchasingService(
     public async Task<PurchaseOrderDto> CreatePurchaseOrderAsync(CreatePurchaseOrderRequest request, CancellationToken cancellationToken)
     {
         await EnsureSupplierExistsAsync(request.SupplierId, cancellationToken);
-        await EnsurePurchaseNumberIsUniqueAsync(request.PurchaseNumber, null, cancellationToken);
+        var purchaseNumber = await GetDocumentNumberAsync(request.PurchaseNumber, DocumentNumberTypes.PurchaseOrder, cancellationToken);
+        await EnsurePurchaseNumberIsUniqueAsync(purchaseNumber, null, cancellationToken);
         await EnsurePurchaseOrderItemMasterDataExistsAsync(request.Items, cancellationToken);
 
         var purchaseOrder = new PurchaseOrder(
-            request.PurchaseNumber.Trim(),
+            purchaseNumber,
             request.SupplierId,
             ToUtc(request.OrderDate),
             ToUtc(request.ExpectedDate),
@@ -187,10 +190,11 @@ public sealed class PurchasingService(
     {
         await EnsureSupplierExistsAsync(request.SupplierId, cancellationToken);
         await EnsurePurchaseOrderExistsAsync(request.PurchaseOrderId, cancellationToken);
-        await EnsureReceiptNumberIsUniqueAsync(request.ReceiptNumber, null, cancellationToken);
+        var receiptNumber = await GetDocumentNumberAsync(request.ReceiptNumber, DocumentNumberTypes.GoodsReceipt, cancellationToken);
+        await EnsureReceiptNumberIsUniqueAsync(receiptNumber, null, cancellationToken);
 
         var goodsReceipt = new GoodsReceipt(
-            request.ReceiptNumber.Trim(),
+            receiptNumber,
             request.SupplierId,
             request.PurchaseOrderId,
             ToUtc(request.ReceiptDate),
@@ -275,10 +279,11 @@ public sealed class PurchasingService(
     {
         await EnsureSupplierExistsAsync(request.SupplierId, cancellationToken);
         await EnsurePurchaseOrderExistsAsync(request.PurchaseOrderId, cancellationToken);
-        await EnsureInvoiceNumberIsUniqueAsync(request.InvoiceNumber, null, cancellationToken);
+        var invoiceNumber = await GetDocumentNumberAsync(request.InvoiceNumber, DocumentNumberTypes.PurchaseInvoice, cancellationToken);
+        await EnsureInvoiceNumberIsUniqueAsync(invoiceNumber, null, cancellationToken);
 
         var invoice = new PurchaseInvoice(
-            request.InvoiceNumber.Trim(),
+            invoiceNumber,
             ToUtc(request.InvoiceDate),
             request.SupplierId,
             request.PurchaseOrderId,
@@ -600,5 +605,12 @@ public sealed class PurchasingService(
     private static DateTime? ToUtc(DateTime? value)
     {
         return value.HasValue ? ToUtc(value.Value) : null;
+    }
+
+    private async Task<string> GetDocumentNumberAsync(string? requestedNumber, string documentType, CancellationToken cancellationToken)
+    {
+        return string.IsNullOrWhiteSpace(requestedNumber)
+            ? await documentNumberGenerator.GenerateAsync(documentType, cancellationToken)
+            : requestedNumber.Trim();
     }
 }

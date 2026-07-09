@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -8,6 +8,7 @@ import {
   CircularProgress,
   MenuItem,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -51,6 +52,7 @@ export function FabricDetailPage() {
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadLookups() {
@@ -59,7 +61,7 @@ export function FabricDetailPage() {
       setColors(colorItems.filter((item) => item.isActive))
     }
 
-    void loadLookups().catch(() => setError('Kumaş seçim listeleri yüklenemedi.'))
+    void loadLookups().catch(() => setError('KumaÅŸ seÃ§im listeleri yÃ¼klenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -89,7 +91,7 @@ export function FabricDetailPage() {
           notes: data.notes ?? '',
         })
       } catch (exception) {
-        setError(toUserMessage(exception, 'Kumaş kartı yüklenemedi.'))
+        setError(toUserMessage(exception, 'KumaÅŸ kartÄ± yÃ¼klenemedi.'))
       } finally {
         setLoading(false)
       }
@@ -98,7 +100,7 @@ export function FabricDetailPage() {
     void loadFabric()
   }, [id, isNew])
 
-  const title = useMemo(() => (isNew ? 'Kumaş Ekle' : 'Kumaş Düzenle'), [isNew])
+  const title = useMemo(() => (isNew ? 'KumaÅŸ Ekle' : 'KumaÅŸ DÃ¼zenle'), [isNew])
 
   function updateField(field: keyof FabricInput, value: string | number) {
     setFabric((current) => ({ ...current, [field]: value }))
@@ -110,6 +112,9 @@ export function FabricDetailPage() {
     setError(null)
 
     try {
+      const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+      const saveAndNew = submitter?.name === 'saveAndNew'
+
       if (isNew) {
         await createFabric(fabric)
       } else if (id) {
@@ -117,9 +122,14 @@ export function FabricDetailPage() {
         await updateFabric(id, payload)
       }
 
-      navigate('/fabric/fabrics')
+      setSuccess('Kumaş kartı kaydedildi.')
+      if (isNew && saveAndNew) {
+        setFabric(emptyFabric)
+      } else {
+        navigate('/fabric/fabrics')
+      }
     } catch (exception) {
-      setError(toUserMessage(exception, 'Kumaş kartı kaydedilemedi.'))
+      setError(toUserMessage(exception, 'KumaÅŸ kartÄ± kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -131,7 +141,7 @@ export function FabricDetailPage() {
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/fabric/fabrics')}>{commonText.back}</Button>
         <Box>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>{title}</Typography>
-          <Typography color="text.secondary">Kumaş kartı, stok ve minimum seviye bilgileri.</Typography>
+          <Typography color="text.secondary">KumaÅŸ kartÄ±, stok ve minimum seviye bilgileri.</Typography>
         </Box>
       </Stack>
 
@@ -144,11 +154,11 @@ export function FabricDetailPage() {
           <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Kumaş Kodu" value={fabric.fabricCode} onChange={(event) => updateField('fabricCode', event.target.value)} required helperText={!fabric.fabricCode.trim() ? requiredMessage('Kumaş kodu') : ' '} fullWidth />
-                <TextField label="Kumaş Adı" value={fabric.fabricName} onChange={(event) => updateField('fabricName', event.target.value)} required helperText={!fabric.fabricName.trim() ? requiredMessage('Kumaş adı') : ' '} fullWidth />
+                <TextField label="Kumaş Kodu" value={isNew ? 'Otomatik oluşturulacaktır' : fabric.fabricCode} onChange={(event) => updateField('fabricCode', event.target.value)} disabled={isNew} helperText={isNew ? 'Kaydettiğinizde sistem tarafından verilir.' : (!fabric.fabricCode.trim() ? requiredMessage('Kumaş kodu') : ' ')} fullWidth />
+                <TextField label="KumaÅŸ AdÄ±" value={fabric.fabricName} onChange={(event) => updateField('fabricName', event.target.value)} required helperText={!fabric.fabricName.trim() ? requiredMessage('KumaÅŸ adÄ±') : ' '} fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField select label="Tedarikçi" value={fabric.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!fabric.supplierId ? requiredMessage('Tedarikçi') : ' '} fullWidth>
+                <TextField select label="TedarikÃ§i" value={fabric.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!fabric.supplierId ? requiredMessage('TedarikÃ§i') : ' '} fullWidth>
                   {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.supplierName}</MenuItem>)}
                 </TextField>
                 <TextField select label="Renk" value={fabric.colorId} onChange={(event) => updateField('colorId', event.target.value)} required helperText={!fabric.colorId ? requiredMessage('Renk') : ' '} fullWidth>
@@ -156,13 +166,13 @@ export function FabricDetailPage() {
                 </TextField>
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="İçerik" value={fabric.composition} onChange={(event) => updateField('composition', event.target.value)} fullWidth />
+                <TextField label="Ä°Ã§erik" value={fabric.composition} onChange={(event) => updateField('composition', event.target.value)} fullWidth />
                 <TextField label="En" type="number" value={fabric.width} onChange={(event) => updateField('width', Number(event.target.value))} fullWidth />
                 <TextField label="Gramaj (gsm)" type="number" value={fabric.weightGsm} onChange={(event) => updateField('weightGsm', Number(event.target.value))} fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                 <TextField label="Birim" value={fabric.unit} onChange={(event) => updateField('unit', event.target.value)} required fullWidth />
-                <TextField label="Alış Fiyatı" type="number" value={fabric.purchasePrice} onChange={(event) => updateField('purchasePrice', Number(event.target.value))} fullWidth />
+                <TextField label="AlÄ±ÅŸ FiyatÄ±" type="number" value={fabric.purchasePrice} onChange={(event) => updateField('purchasePrice', Number(event.target.value))} fullWidth />
                 <TextField label="Mevcut Stok (Kg)" type="number" value={fabric.currentStockKg} onChange={(event) => updateField('currentStockKg', Number(event.target.value))} disabled={!isNew} fullWidth />
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -174,12 +184,15 @@ export function FabricDetailPage() {
               <TextField label="Notlar" value={fabric.notes} onChange={(event) => updateField('notes', event.target.value)} multiline minRows={3} fullWidth />
               <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
                 <Button onClick={() => navigate('/fabric/fabrics')}>{commonText.cancel}</Button>
+                {isNew && <Button type="submit" name="saveAndNew" variant="outlined" startIcon={<SaveOutlinedIcon />} disabled={saving}>Kaydet ve Yeni</Button>}
                 <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />} disabled={saving}>{commonText.save}</Button>
               </Stack>
             </Stack>
           </Box>
         )}
       </Paper>
+      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess(null)} message={success} />
     </Stack>
   )
 }
+

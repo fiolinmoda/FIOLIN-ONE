@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
@@ -81,7 +81,7 @@ export function GoodsReceiptPage() {
       const data = await getGoodsReceipts(search)
       setReceipts(data.items)
     } catch (exception) {
-      setError(toUserMessage(exception, 'Mal kabul kayıtları yüklenemedi.'))
+      setError(toUserMessage(exception, 'Mal kabul kayÄ±tlarÄ± yÃ¼klenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -95,7 +95,7 @@ export function GoodsReceiptPage() {
       setOrders(orderResult.items)
     }
 
-    void loadLookups().catch(() => setError('Satın alma seçim listeleri yüklenemedi.'))
+    void loadLookups().catch(() => setError('SatÄ±n alma seÃ§im listeleri yÃ¼klenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export function GoodsReceiptPage() {
         await deleteGoodsReceipt(receipt.id)
         await loadReceipts()
       } catch (exception) {
-        setError(toUserMessage(exception, 'Mal kabul kaydı silinemedi.'))
+        setError(toUserMessage(exception, 'Mal kabul kaydÄ± silinemedi.'))
       }
     },
     [loadReceipts],
@@ -190,7 +190,7 @@ export function GoodsReceiptPage() {
       setDialogOpen(false)
       await loadReceipts()
     } catch (exception) {
-      setError(toUserMessage(exception, 'Mal kabul kaydı kaydedilemedi.'))
+      setError(toUserMessage(exception, 'Mal kabul kaydÄ± kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -199,8 +199,8 @@ export function GoodsReceiptPage() {
   const columns = useMemo<GridColDef<GoodsReceipt>[]>(
     () => [
       { field: 'receiptNumber', headerName: 'Kabul No', minWidth: 150, flex: 0.8 },
-      { field: 'supplierName', headerName: 'Tedarikçi', minWidth: 220, flex: 1.2 },
-      { field: 'purchaseNumber', headerName: 'Sipariş No', minWidth: 150, flex: 0.8 },
+      { field: 'supplierName', headerName: 'TedarikÃ§i', minWidth: 220, flex: 1.2 },
+      { field: 'purchaseNumber', headerName: 'SipariÅŸ No', minWidth: 150, flex: 0.8 },
       {
         field: 'receiptDate',
         headerName: 'Tarih',
@@ -219,7 +219,7 @@ export function GoodsReceiptPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Mal kabul düzenle">
+            <Tooltip title="Mal kabul dÃ¼zenle">
               <IconButton size="small" onClick={() => openEditDialog(row)}>
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
@@ -243,7 +243,7 @@ export function GoodsReceiptPage() {
           <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>
             Mal Kabul
           </Typography>
-          <Typography color="text.secondary">Tedarikçiden gelen malları ve depo kabulünü kaydedin.</Typography>
+          <Typography color="text.secondary">TedarikÃ§iden gelen mallarÄ± ve depo kabulÃ¼nÃ¼ kaydedin.</Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
           Mal Kabul Ekle
@@ -270,18 +270,18 @@ export function GoodsReceiptPage() {
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingReceipt ? 'Mal Kabul Düzenle' : 'Mal Kabul Ekle'}</DialogTitle>
+          <DialogTitle>{editingReceipt ? 'Mal Kabul DÃ¼zenle' : 'Mal Kabul Ekle'}</DialogTitle>
           <DialogContent sx={dialogContentSx}>
             {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField label="Kabul Numarası" value={receiptInput.receiptNumber} onChange={(event) => updateField('receiptNumber', event.target.value)} required helperText={!receiptInput.receiptNumber.trim() ? requiredMessage('Kabul numarası') : ' '} fullWidth />
-                <TextField select label="Tedarikçi" value={receiptInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!receiptInput.supplierId ? requiredMessage('Tedarikçi') : ' '} fullWidth>
+                <TextField label="Kabul Numarası" value={editingReceipt ? receiptInput.receiptNumber : 'Otomatik oluşturulacaktır'} onChange={(event) => updateField('receiptNumber', event.target.value)} disabled helperText={editingReceipt ? 'Oluşturulduktan sonra değiştirilemez.' : 'Kaydettiğinizde sistem tarafından verilir.'} fullWidth />
+                <TextField select label="TedarikÃ§i" value={receiptInput.supplierId} onChange={(event) => updateField('supplierId', event.target.value)} required helperText={!receiptInput.supplierId ? requiredMessage('TedarikÃ§i') : ' '} fullWidth>
                   {suppliers.map((supplier) => <MenuItem key={supplier.id} value={supplier.id}>{supplier.supplierName}</MenuItem>)}
                 </TextField>
               </Stack>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField select label="Satın Alma Siparişi" value={receiptInput.purchaseOrderId ?? ''} onChange={(event) => updateField('purchaseOrderId', event.target.value || null)} fullWidth>
+                <TextField select label="SatÄ±n Alma SipariÅŸi" value={receiptInput.purchaseOrderId ?? ''} onChange={(event) => updateField('purchaseOrderId', event.target.value || null)} fullWidth>
                   <MenuItem value="">{commonText.none}</MenuItem>
                   {orders.map((order) => <MenuItem key={order.id} value={order.id}>{order.purchaseNumber}</MenuItem>)}
                 </TextField>

@@ -6,19 +6,19 @@ public sealed class CreateFabricRequestValidator : AbstractValidator<CreateFabri
 {
     public CreateFabricRequestValidator()
     {
-        RuleFor(request => request.FabricCode).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.FabricName).NotEmpty().MaximumLength(200);
-        RuleFor(request => request.SupplierId).NotEmpty();
-        RuleFor(request => request.ColorId).NotEmpty();
-        RuleFor(request => request.Composition).MaximumLength(200);
-        RuleFor(request => request.Width).GreaterThanOrEqualTo(0);
-        RuleFor(request => request.WeightGsm).GreaterThanOrEqualTo(0);
-        RuleFor(request => request.Unit).NotEmpty().MaximumLength(30);
-        RuleFor(request => request.PurchasePrice).GreaterThanOrEqualTo(0);
-        RuleFor(request => request.CurrentStockKg).GreaterThanOrEqualTo(0);
-        RuleFor(request => request.MinimumStock).GreaterThanOrEqualTo(0);
-        RuleFor(request => request.Status).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.Notes).MaximumLength(1000);
+        RuleFor(request => request.FabricCode).MaximumLength(50).WithMessage("Kumaş kodu en fazla 50 karakter olabilir.");
+        RuleFor(request => request.FabricName).NotEmpty().WithMessage("Kumaş adı zorunludur.").MaximumLength(200).WithMessage("Kumaş adı en fazla 200 karakter olabilir.");
+        RuleFor(request => request.SupplierId).NotEmpty().WithMessage("Tedarikçi seçiniz.");
+        RuleFor(request => request.ColorId).NotEmpty().WithMessage("Renk seçiniz.");
+        RuleFor(request => request.Composition).MaximumLength(200).WithMessage("Kompozisyon en fazla 200 karakter olabilir.");
+        RuleFor(request => request.Width).GreaterThanOrEqualTo(0).WithMessage("En negatif olamaz.");
+        RuleFor(request => request.WeightGsm).GreaterThanOrEqualTo(0).WithMessage("Gramaj negatif olamaz.");
+        RuleFor(request => request.Unit).NotEmpty().WithMessage("Birim zorunludur.").MaximumLength(30).WithMessage("Birim en fazla 30 karakter olabilir.");
+        RuleFor(request => request.PurchasePrice).GreaterThanOrEqualTo(0).WithMessage("Alış fiyatı negatif olamaz.");
+        RuleFor(request => request.CurrentStockKg).GreaterThanOrEqualTo(0).WithMessage("Stok negatif olamaz.");
+        RuleFor(request => request.MinimumStock).GreaterThanOrEqualTo(0).WithMessage("Minimum stok negatif olamaz.");
+        RuleFor(request => request.Status).NotEmpty().WithMessage("Durum zorunludur.").MaximumLength(50).WithMessage("Durum en fazla 50 karakter olabilir.");
+        RuleFor(request => request.Notes).MaximumLength(1000).WithMessage("Not en fazla 1000 karakter olabilir.");
     }
 }
 
@@ -26,7 +26,7 @@ public sealed class UpdateFabricRequestValidator : AbstractValidator<UpdateFabri
 {
     public UpdateFabricRequestValidator()
     {
-        RuleFor(request => request.FabricCode).NotEmpty().MaximumLength(50);
+        RuleFor(request => request.FabricCode).NotEmpty().WithMessage("Kumaş kodu zorunludur.").MaximumLength(50).WithMessage("Kumaş kodu en fazla 50 karakter olabilir.");
         RuleFor(request => request.FabricName).NotEmpty().MaximumLength(200);
         RuleFor(request => request.SupplierId).NotEmpty();
         RuleFor(request => request.ColorId).NotEmpty();
@@ -89,12 +89,12 @@ public sealed class CreateFabricReservationRequestValidator : AbstractValidator<
     public CreateFabricReservationRequestValidator()
     {
         RuleFor(request => request.FabricId).NotEmpty();
-        RuleFor(request => request.ReservationNumber).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.ProductionReference).NotEmpty().MaximumLength(100);
-        RuleFor(request => request.ReservedQuantityKg).GreaterThan(0);
-        RuleFor(request => request.ReservationDate).NotEmpty();
-        RuleFor(request => request.Status).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.Notes).MaximumLength(1000);
+        RuleFor(request => request.ReservationNumber).MaximumLength(50).WithMessage("Rezervasyon numarası en fazla 50 karakter olabilir.");
+        RuleFor(request => request.ProductionReference).NotEmpty().WithMessage("Üretim referansı zorunludur.").MaximumLength(100).WithMessage("Üretim referansı en fazla 100 karakter olabilir.");
+        RuleFor(request => request.ReservedQuantityKg).GreaterThan(0).WithMessage("Rezervasyon miktarı sıfırdan büyük olmalıdır.");
+        RuleFor(request => request.ReservationDate).NotEmpty().WithMessage("Rezervasyon tarihi zorunludur.");
+        RuleFor(request => request.Status).NotEmpty().WithMessage("Durum zorunludur.").MaximumLength(50).WithMessage("Durum en fazla 50 karakter olabilir.");
+        RuleFor(request => request.Notes).MaximumLength(1000).WithMessage("Not en fazla 1000 karakter olabilir.");
     }
 }
 
@@ -103,7 +103,7 @@ public sealed class UpdateFabricReservationRequestValidator : AbstractValidator<
     public UpdateFabricReservationRequestValidator()
     {
         RuleFor(request => request.FabricId).NotEmpty();
-        RuleFor(request => request.ReservationNumber).NotEmpty().MaximumLength(50);
+        RuleFor(request => request.ReservationNumber).NotEmpty().WithMessage("Rezervasyon numarası zorunludur.").MaximumLength(50).WithMessage("Rezervasyon numarası en fazla 50 karakter olabilir.");
         RuleFor(request => request.ProductionReference).NotEmpty().MaximumLength(100);
         RuleFor(request => request.ReservedQuantityKg).GreaterThan(0);
         RuleFor(request => request.ReservationDate).NotEmpty();

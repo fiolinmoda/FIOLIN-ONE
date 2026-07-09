@@ -34,14 +34,14 @@ public sealed class CreatePurchaseOrderRequestValidator : AbstractValidator<Crea
 {
     public CreatePurchaseOrderRequestValidator()
     {
-        RuleFor(request => request.PurchaseNumber).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.SupplierId).NotEmpty();
-        RuleFor(request => request.OrderDate).NotEmpty();
+        RuleFor(request => request.PurchaseNumber).MaximumLength(50).WithMessage("Satın alma numarası en fazla 50 karakter olabilir.");
+        RuleFor(request => request.SupplierId).NotEmpty().WithMessage("Tedarikçi seçiniz.");
+        RuleFor(request => request.OrderDate).NotEmpty().WithMessage("Sipariş tarihi zorunludur.");
         RuleFor(request => request.ExpectedDate)
             .GreaterThanOrEqualTo(request => request.OrderDate)
             .When(request => request.ExpectedDate.HasValue);
-        RuleFor(request => request.Status).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.Notes).MaximumLength(1000);
+        RuleFor(request => request.Status).NotEmpty().WithMessage("Durum zorunludur.").MaximumLength(50).WithMessage("Durum en fazla 50 karakter olabilir.");
+        RuleFor(request => request.Notes).MaximumLength(1000).WithMessage("Not en fazla 1000 karakter olabilir.");
         RuleFor(request => request.Items).NotNull();
         RuleForEach(request => request.Items).SetValidator(new PurchaseOrderItemRequestValidator());
     }
@@ -51,7 +51,7 @@ public sealed class UpdatePurchaseOrderRequestValidator : AbstractValidator<Upda
 {
     public UpdatePurchaseOrderRequestValidator()
     {
-        RuleFor(request => request.PurchaseNumber).NotEmpty().MaximumLength(50);
+        RuleFor(request => request.PurchaseNumber).NotEmpty().WithMessage("Satın alma numarası zorunludur.").MaximumLength(50).WithMessage("Satın alma numarası en fazla 50 karakter olabilir.");
         RuleFor(request => request.SupplierId).NotEmpty();
         RuleFor(request => request.OrderDate).NotEmpty();
         RuleFor(request => request.ExpectedDate)
@@ -81,12 +81,12 @@ public sealed class CreateGoodsReceiptRequestValidator : AbstractValidator<Creat
 {
     public CreateGoodsReceiptRequestValidator()
     {
-        RuleFor(request => request.ReceiptNumber).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.SupplierId).NotEmpty();
-        RuleFor(request => request.ReceiptDate).NotEmpty();
-        RuleFor(request => request.Warehouse).NotEmpty().MaximumLength(150);
-        RuleFor(request => request.Status).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.Notes).MaximumLength(1000);
+        RuleFor(request => request.ReceiptNumber).MaximumLength(50).WithMessage("Mal kabul numarası en fazla 50 karakter olabilir.");
+        RuleFor(request => request.SupplierId).NotEmpty().WithMessage("Tedarikçi seçiniz.");
+        RuleFor(request => request.ReceiptDate).NotEmpty().WithMessage("Kabul tarihi zorunludur.");
+        RuleFor(request => request.Warehouse).NotEmpty().WithMessage("Depo zorunludur.").MaximumLength(150).WithMessage("Depo en fazla 150 karakter olabilir.");
+        RuleFor(request => request.Status).NotEmpty().WithMessage("Durum zorunludur.").MaximumLength(50).WithMessage("Durum en fazla 50 karakter olabilir.");
+        RuleFor(request => request.Notes).MaximumLength(1000).WithMessage("Not en fazla 1000 karakter olabilir.");
         RuleFor(request => request.Items).NotNull();
         RuleForEach(request => request.Items).SetValidator(new GoodsReceiptItemRequestValidator());
     }
@@ -96,7 +96,7 @@ public sealed class UpdateGoodsReceiptRequestValidator : AbstractValidator<Updat
 {
     public UpdateGoodsReceiptRequestValidator()
     {
-        RuleFor(request => request.ReceiptNumber).NotEmpty().MaximumLength(50);
+        RuleFor(request => request.ReceiptNumber).NotEmpty().WithMessage("Mal kabul numarası zorunludur.").MaximumLength(50).WithMessage("Mal kabul numarası en fazla 50 karakter olabilir.");
         RuleFor(request => request.SupplierId).NotEmpty();
         RuleFor(request => request.ReceiptDate).NotEmpty();
         RuleFor(request => request.Warehouse).NotEmpty().MaximumLength(150);
@@ -122,12 +122,12 @@ public sealed class CreatePurchaseInvoiceRequestValidator : AbstractValidator<Cr
 {
     public CreatePurchaseInvoiceRequestValidator()
     {
-        RuleFor(request => request.InvoiceNumber).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.InvoiceDate).NotEmpty();
-        RuleFor(request => request.SupplierId).NotEmpty();
-        RuleFor(request => request.InvoiceAmount).GreaterThanOrEqualTo(0);
-        RuleFor(request => request.Status).NotEmpty().MaximumLength(50);
-        RuleFor(request => request.Notes).MaximumLength(1000);
+        RuleFor(request => request.InvoiceNumber).MaximumLength(50).WithMessage("Fatura numarası en fazla 50 karakter olabilir.");
+        RuleFor(request => request.InvoiceDate).NotEmpty().WithMessage("Fatura tarihi zorunludur.");
+        RuleFor(request => request.SupplierId).NotEmpty().WithMessage("Tedarikçi seçiniz.");
+        RuleFor(request => request.InvoiceAmount).GreaterThanOrEqualTo(0).WithMessage("Fatura tutarı negatif olamaz.");
+        RuleFor(request => request.Status).NotEmpty().WithMessage("Durum zorunludur.").MaximumLength(50).WithMessage("Durum en fazla 50 karakter olabilir.");
+        RuleFor(request => request.Notes).MaximumLength(1000).WithMessage("Not en fazla 1000 karakter olabilir.");
         RuleFor(request => request.Items).NotNull();
         RuleForEach(request => request.Items).SetValidator(new PurchaseInvoiceItemRequestValidator());
     }
@@ -137,7 +137,7 @@ public sealed class UpdatePurchaseInvoiceRequestValidator : AbstractValidator<Up
 {
     public UpdatePurchaseInvoiceRequestValidator()
     {
-        RuleFor(request => request.InvoiceNumber).NotEmpty().MaximumLength(50);
+        RuleFor(request => request.InvoiceNumber).NotEmpty().WithMessage("Fatura numarası zorunludur.").MaximumLength(50).WithMessage("Fatura numarası en fazla 50 karakter olabilir.");
         RuleFor(request => request.InvoiceDate).NotEmpty();
         RuleFor(request => request.SupplierId).NotEmpty();
         RuleFor(request => request.InvoiceAmount).GreaterThanOrEqualTo(0);

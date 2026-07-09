@@ -1,3 +1,4 @@
+using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Application.Common.Models;
 using FiolinOne.Application.Fabric;
 using FiolinOne.Domain.Production;
@@ -6,7 +7,8 @@ namespace FiolinOne.Application.Production;
 
 public sealed class ProductionService(
     IProductionRepository productionRepository,
-    IFabricService fabricService) : IProductionService
+    IFabricService fabricService,
+    IDocumentNumberGenerator documentNumberGenerator) : IProductionService
 {
     public Task<ProductionDashboardDto> GetDashboardAsync(CancellationToken cancellationToken)
     {
@@ -32,10 +34,11 @@ public sealed class ProductionService(
 
     public async Task<ProductionOrderDto> CreateOrderAsync(CreateProductionOrderRequest request, CancellationToken cancellationToken)
     {
-        await EnsureOrderIsValidAsync(request.ProductionNumber, null, request.ProductId, request.Items, cancellationToken);
+        var productionNumber = await GetDocumentNumberAsync(request.ProductionNumber, DocumentNumberTypes.ProductionOrder, cancellationToken);
+        await EnsureOrderIsValidAsync(productionNumber, null, request.ProductId, request.Items, cancellationToken);
 
         var order = new ProductionOrder(
-            request.ProductionNumber.Trim(),
+            productionNumber,
             request.ProductId,
             request.PlannedQuantity,
             request.ProductionReason.Trim(),
@@ -245,4 +248,11 @@ public sealed class ProductionService(
     private static string? NormalizeOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     private static DateTime ToUtc(DateTime value) => value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
     private static DateTime? ToUtc(DateTime? value) => value.HasValue ? ToUtc(value.Value) : null;
+
+    private async Task<string> GetDocumentNumberAsync(string? requestedNumber, string documentType, CancellationToken cancellationToken)
+    {
+        return string.IsNullOrWhiteSpace(requestedNumber)
+            ? await documentNumberGenerator.GenerateAsync(documentType, cancellationToken)
+            : requestedNumber.Trim();
+    }
 }

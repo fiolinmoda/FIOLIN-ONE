@@ -7,16 +7,20 @@ public sealed class CreateProductRequestValidator : AbstractValidator<CreateProd
     public CreateProductRequestValidator()
     {
         RuleFor(request => request.ProductCode)
-            .NotEmpty()
-            .MaximumLength(50);
+            .MaximumLength(50)
+            .WithMessage("Ürün kodu en fazla 50 karakter olabilir.");
 
         RuleFor(request => request.ProductName)
             .NotEmpty()
-            .MaximumLength(200);
+            .WithMessage("Ürün adı zorunludur.")
+            .MaximumLength(200)
+            .WithMessage("Ürün adı en fazla 200 karakter olabilir.");
 
         RuleFor(request => request.Status)
             .NotEmpty()
-            .MaximumLength(50);
+            .WithMessage("Durum zorunludur.")
+            .MaximumLength(50)
+            .WithMessage("Durum en fazla 50 karakter olabilir.");
     }
 }
 
@@ -26,14 +30,20 @@ public sealed class UpdateProductRequestValidator : AbstractValidator<UpdateProd
     {
         RuleFor(request => request.ProductCode)
             .NotEmpty()
-            .MaximumLength(50);
+            .WithMessage("Ürün kodu zorunludur.")
+            .MaximumLength(50)
+            .WithMessage("Ürün kodu en fazla 50 karakter olabilir.");
 
         RuleFor(request => request.ProductName)
             .NotEmpty()
-            .MaximumLength(200);
+            .WithMessage("Ürün adı zorunludur.")
+            .MaximumLength(200)
+            .WithMessage("Ürün adı en fazla 200 karakter olabilir.");
 
         RuleFor(request => request.Status)
             .NotEmpty()
-            .MaximumLength(50);
+            .WithMessage("Durum zorunludur.")
+            .MaximumLength(50)
+            .WithMessage("Durum en fazla 50 karakter olabilir.");
     }
 }

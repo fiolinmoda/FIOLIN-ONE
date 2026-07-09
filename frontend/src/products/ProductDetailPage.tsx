@@ -8,6 +8,7 @@ import {
   CircularProgress,
   MenuItem,
   Paper,
+  Snackbar,
   Stack,
   Tab,
   Tabs,
@@ -43,6 +44,7 @@ export function ProductDetailPage() {
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState(0)
   const [brands, setBrands] = useState<MasterDataItem[]>([])
   const [categories, setCategories] = useState<MasterDataItem[]>([])
@@ -105,13 +107,21 @@ export function ProductDetailPage() {
     setError(null)
 
     try {
+      const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
+      const saveAndNew = submitter?.name === 'saveAndNew'
+
       if (isNew) {
         await createProduct(product)
       } else if (id) {
         await updateProduct(id, product)
       }
 
-      navigate('/products')
+      setSuccess('Ürün kaydedildi.')
+      if (isNew && saveAndNew) {
+        setProduct(emptyProduct)
+      } else {
+        navigate('/products')
+      }
     } catch (exception) {
       setError(toUserMessage(exception, 'Ürün kaydedilemedi.'))
     } finally {
@@ -159,9 +169,9 @@ export function ProductDetailPage() {
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                     <TextField
                       label="Ürün Kodu"
-                      value={product.productCode}
+                      value={isNew ? 'Otomatik oluşturulacaktır' : product.productCode}
                       onChange={(event) => updateField('productCode', event.target.value)}
-                      required
+                      disabled={isNew}
                       helperText={!product.productCode.trim() ? requiredMessage('Ürün kodu') : ' '}
                       fullWidth
                     />
@@ -239,6 +249,11 @@ export function ProductDetailPage() {
 
                   <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
                     <Button onClick={() => navigate('/products')}>{commonText.cancel}</Button>
+                    {isNew && (
+                      <Button type="submit" name="saveAndNew" variant="outlined" startIcon={<SaveOutlinedIcon />} disabled={saving}>
+                        Kaydet ve Yeni
+                      </Button>
+                    )}
                     <Button
                       type="submit"
                       variant="contained"
@@ -260,6 +275,7 @@ export function ProductDetailPage() {
           </>
         )}
       </Paper>
+      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess(null)} message={success} />
     </Stack>
   )
 }

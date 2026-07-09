@@ -1,4 +1,4 @@
-import {
+﻿import {
   AppBar,
   Box,
   Chip,
@@ -15,6 +15,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material'
+import type { ReactNode } from 'react'
 import { Link as RouterLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined'
@@ -50,45 +51,58 @@ import { PurchaseOrderListPage } from './purchasing/PurchaseOrderListPage'
 import { SupplierManagementPage } from './purchasing/SupplierManagementPage'
 
 const drawerWidth = 280
+const currentRoles = ['Administrator']
 
-const modules = [
-  { name: 'Ürünler', path: '/products', icon: <CategoryOutlinedIcon />, active: true },
+type MenuItemDefinition = {
+  name: string
+  path?: string
+  icon: ReactNode
+  active?: boolean
+  roles?: string[]
+}
+
+function canShowMenuItem(item: MenuItemDefinition): boolean {
+  return !item.roles || item.roles.some((role) => currentRoles.includes(role))
+}
+
+const modules: MenuItemDefinition[] = [
+  { name: 'ÃœrÃ¼nler', path: '/products', icon: <CategoryOutlinedIcon />, active: true },
 ]
 
-const masterDataModules = [
+const masterDataModules: MenuItemDefinition[] = [
   { name: 'Markalar', path: '/master-data/brands', icon: <DatasetOutlinedIcon />, active: true },
   { name: 'Kategoriler', path: '/master-data/categories', icon: <DatasetOutlinedIcon />, active: true },
   { name: 'Sezonlar', path: '/master-data/seasons', icon: <DatasetOutlinedIcon />, active: true },
   { name: 'Renkler', path: '/master-data/colors', icon: <DatasetOutlinedIcon />, active: true },
   { name: 'Bedenler', path: '/master-data/sizes', icon: <DatasetOutlinedIcon />, active: true },
-  { name: 'Kumaş Tipleri', path: '/master-data/fabric-types', icon: <DatasetOutlinedIcon />, active: true },
+  { name: 'KumaÅŸ Tipleri', path: '/master-data/fabric-types', icon: <DatasetOutlinedIcon />, active: true },
 ]
 
-const purchasingModules = [
-  { name: 'Satın Alma Siparişleri', path: '/purchasing/orders', icon: <ReceiptLongOutlinedIcon /> },
-  { name: 'Tedarikçiler', path: '/purchasing/suppliers', icon: <DatasetOutlinedIcon /> },
+const purchasingModules: MenuItemDefinition[] = [
+  { name: 'SatÄ±n Alma SipariÅŸleri', path: '/purchasing/orders', icon: <ReceiptLongOutlinedIcon /> },
+  { name: 'TedarikÃ§iler', path: '/purchasing/suppliers', icon: <DatasetOutlinedIcon /> },
   { name: 'Mal Kabul', path: '/purchasing/goods-receipts', icon: <Inventory2OutlinedIcon /> },
-  { name: 'Alış Faturaları', path: '/purchasing/invoices', icon: <PriceCheckOutlinedIcon /> },
+  { name: 'AlÄ±ÅŸ FaturalarÄ±', path: '/purchasing/invoices', icon: <PriceCheckOutlinedIcon /> },
 ]
 
-const fabricModules = [
-  { name: 'Kumaş Kartları', path: '/fabric/fabrics', icon: <SpaOutlinedIcon /> },
-  { name: 'Kumaş Stok', path: '/fabric/stock', icon: <Inventory2OutlinedIcon /> },
+const fabricModules: MenuItemDefinition[] = [
+  { name: 'KumaÅŸ KartlarÄ±', path: '/fabric/fabrics', icon: <SpaOutlinedIcon /> },
+  { name: 'KumaÅŸ Stok', path: '/fabric/stock', icon: <Inventory2OutlinedIcon /> },
   { name: 'Stok Hareketleri', path: '/fabric/movements', icon: <SyncAltOutlinedIcon /> },
   { name: 'Rezervasyonlar', path: '/fabric/reservations', icon: <BookmarkAddedOutlinedIcon /> },
 ]
 
-const productionModules = [
+const productionModules: MenuItemDefinition[] = [
   { name: 'Ana Sayfa', path: '/production/dashboard', icon: <DashboardOutlinedIcon /> },
-  { name: 'Üretim Emirleri', path: '/production/orders', icon: <FactoryOutlinedIcon /> },
+  { name: 'Ãœretim Emirleri', path: '/production/orders', icon: <FactoryOutlinedIcon /> },
   { name: 'Kesim', path: '/production/cutting', icon: <ContentCutOutlinedIcon /> },
-  { name: 'Atölyeye Gönderim', path: '/production/workshop-shipment', icon: <LocalShippingOutlinedIcon /> },
-  { name: 'Atölye Dönüşü', path: '/production/workshop-return', icon: <SyncAltOutlinedIcon /> },
-  { name: 'Depo Girişi', path: '/production/warehouse-entry', icon: <WarehouseOutlinedIcon /> },
+  { name: 'AtÃ¶lyeye GÃ¶nderim', path: '/production/workshop-shipment', icon: <LocalShippingOutlinedIcon /> },
+  { name: 'AtÃ¶lye DÃ¶nÃ¼ÅŸÃ¼', path: '/production/workshop-return', icon: <SyncAltOutlinedIcon /> },
+  { name: 'Depo GiriÅŸi', path: '/production/warehouse-entry', icon: <WarehouseOutlinedIcon /> },
 ]
 
-const plannedModules = [
-  { name: 'Kalıp Yönetimi', icon: <AssignmentOutlinedIcon /> },
+const plannedModules: MenuItemDefinition[] = [
+  { name: 'KalÄ±p YÃ¶netimi', icon: <AssignmentOutlinedIcon /> },
   { name: 'Depo', icon: <LocalShippingOutlinedIcon /> },
   { name: 'Finans', icon: <PriceCheckOutlinedIcon /> },
 ]
@@ -110,7 +124,7 @@ function App() {
             <Typography variant="h6" component="div" sx={{ fontWeight: 700 }}>
               FIOLIN ONE
             </Typography>
-            <Chip label="ERP Yönetimi" size="small" color="primary" variant="outlined" />
+            <Chip label="ERP YÃ¶netimi" size="small" color="primary" variant="outlined" />
           </Stack>
         </Toolbar>
       </AppBar>
@@ -131,77 +145,77 @@ function App() {
         <Toolbar />
         <Box sx={{ overflow: 'auto', py: 2 }}>
           <List dense>
-            {modules.map((item) => (
+            {modules.filter(canShowMenuItem).map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
                   component={item.path ? RouterLink : 'div'}
-                  to={item.path}
-                  selected={item.path ? location.pathname.startsWith(item.path) : false}
+                  to={item.path!}
+                  selected={item.path ? location.pathname.startsWith(item.path!) : false}
                   disabled={!item.active}
                 >
                   <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.name} secondary={item.active ? 'Kullanımda' : 'Planlandı'} />
+                  <ListItemText primary={item.name} secondary={item.active ? 'KullanÄ±mda' : 'PlanlandÄ±'} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Tanımlar</ListSubheader>
-            {masterDataModules.map((item) => (
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Sistem Tanımları</ListSubheader>
+            {masterDataModules.filter(canShowMenuItem).map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
                   component={RouterLink}
-                  to={item.path}
-                  selected={location.pathname.startsWith(item.path)}
+                  to={item.path!}
+                  selected={location.pathname.startsWith(item.path!)}
                 >
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.name} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Satın Alma</ListSubheader>
-            {purchasingModules.map((item) => (
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>SatÄ±n Alma</ListSubheader>
+            {purchasingModules.filter(canShowMenuItem).map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
                   component={RouterLink}
-                  to={item.path}
-                  selected={location.pathname.startsWith(item.path)}
+                  to={item.path!}
+                  selected={location.pathname.startsWith(item.path!)}
                 >
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.name} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Kumaş Yönetimi</ListSubheader>
-            {fabricModules.map((item) => (
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>KumaÅŸ YÃ¶netimi</ListSubheader>
+            {fabricModules.filter(canShowMenuItem).map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
                   component={RouterLink}
-                  to={item.path}
-                  selected={location.pathname.startsWith(item.path)}
+                  to={item.path!}
+                  selected={location.pathname.startsWith(item.path!)}
                 >
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.name} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Üretim</ListSubheader>
-            {productionModules.map((item) => (
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Ãœretim</ListSubheader>
+            {productionModules.filter(canShowMenuItem).map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton
                   component={RouterLink}
-                  to={item.path}
-                  selected={location.pathname.startsWith(item.path)}
+                  to={item.path!}
+                  selected={location.pathname.startsWith(item.path!)}
                 >
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.name} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planlanan Modüller</ListSubheader>
-            {plannedModules.map((item) => (
+            <ListSubheader sx={{ bgcolor: 'transparent', lineHeight: '32px' }}>Planlanan ModÃ¼ller</ListSubheader>
+            {plannedModules.filter(canShowMenuItem).map((item) => (
               <ListItem key={item.name} disablePadding>
                 <ListItemButton component="div" disabled>
                   <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.name} secondary="Planlandı" />
+                  <ListItemText primary={item.name} secondary="PlanlandÄ±" />
                 </ListItemButton>
               </ListItem>
             ))}
@@ -213,7 +227,7 @@ function App() {
         <Toolbar />
         {!isDesktop && (
           <Box sx={{ px: 2, pt: 2 }}>
-            <Chip icon={<CategoryOutlinedIcon />} label="Ürünler" color="primary" variant="outlined" />
+            <Chip icon={<CategoryOutlinedIcon />} label="ÃœrÃ¼nler" color="primary" variant="outlined" />
           </Box>
         )}
         <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
@@ -248,3 +262,5 @@ function App() {
 }
 
 export default App
+
+

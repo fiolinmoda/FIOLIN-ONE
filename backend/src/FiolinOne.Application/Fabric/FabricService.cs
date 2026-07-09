@@ -1,9 +1,12 @@
 using FiolinOne.Application.Common.Models;
+using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Domain.Fabric;
 
 namespace FiolinOne.Application.Fabric;
 
-public sealed class FabricService(IFabricRepository fabricRepository) : IFabricService
+public sealed class FabricService(
+    IFabricRepository fabricRepository,
+    IDocumentNumberGenerator documentNumberGenerator) : IFabricService
 {
     public async Task<PagedResult<FabricDto>> GetFabricsAsync(FabricQuery query, CancellationToken cancellationToken)
     {
@@ -27,12 +30,13 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
 
     public async Task<FabricDto> CreateFabricAsync(CreateFabricRequest request, CancellationToken cancellationToken)
     {
-        await EnsureFabricCodeIsUniqueAsync(request.FabricCode, null, cancellationToken);
+        var fabricCode = await GetDocumentNumberAsync(request.FabricCode, DocumentNumberTypes.Fabric, cancellationToken);
+        await EnsureFabricCodeIsUniqueAsync(fabricCode, null, cancellationToken);
         await EnsureSupplierExistsAsync(request.SupplierId, cancellationToken);
         await EnsureColorExistsAsync(request.ColorId, cancellationToken);
 
         var fabric = new Domain.Fabric.Fabric(
-            request.FabricCode.Trim(),
+            fabricCode,
             request.FabricName.Trim(),
             request.SupplierId,
             request.ColorId,
@@ -215,12 +219,13 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
 
     public async Task<FabricReservationDto> CreateReservationAsync(CreateFabricReservationRequest request, CancellationToken cancellationToken)
     {
-        await EnsureReservationNumberIsUniqueAsync(request.ReservationNumber, null, cancellationToken);
+        var reservationNumber = await GetDocumentNumberAsync(request.ReservationNumber, DocumentNumberTypes.FabricReservation, cancellationToken);
+        await EnsureReservationNumberIsUniqueAsync(reservationNumber, null, cancellationToken);
         await EnsureReservationFitsStockAsync(request.FabricId, request.ReservedQuantityKg, null, cancellationToken);
 
         var reservation = new FabricReservation(
             request.FabricId,
-            request.ReservationNumber.Trim(),
+            reservationNumber,
             request.ProductionReference.Trim(),
             request.ReservedQuantityKg,
             ToUtc(request.ReservationDate),
@@ -425,5 +430,12 @@ public sealed class FabricService(IFabricRepository fabricRepository) : IFabricS
     private static DateTime ToUtc(DateTime value)
     {
         return value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    }
+
+    private async Task<string> GetDocumentNumberAsync(string? requestedNumber, string documentType, CancellationToken cancellationToken)
+    {
+        return string.IsNullOrWhiteSpace(requestedNumber)
+            ? await documentNumberGenerator.GenerateAsync(documentType, cancellationToken)
+            : requestedNumber.Trim();
     }
 }

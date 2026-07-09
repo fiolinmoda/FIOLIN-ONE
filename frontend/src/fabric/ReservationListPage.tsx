@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
@@ -63,7 +63,7 @@ export function ReservationListPage() {
       const data = await getFabricReservations(search)
       setReservations(data.items)
     } catch (exception) {
-      setError(toUserMessage(exception, 'Rezervasyonlar yüklenemedi.'))
+      setError(toUserMessage(exception, 'Rezervasyonlar yÃ¼klenemedi.'))
     } finally {
       setLoading(false)
     }
@@ -75,7 +75,7 @@ export function ReservationListPage() {
       setFabrics(data.items)
     }
 
-    void loadFabrics().catch(() => setError('Kumaş listesi yüklenemedi.'))
+    void loadFabrics().catch(() => setError('KumaÅŸ listesi yÃ¼klenemedi.'))
   }, [])
 
   useEffect(() => {
@@ -147,9 +147,9 @@ export function ReservationListPage() {
   const columns = useMemo<GridColDef<FabricReservation>[]>(
     () => [
       { field: 'reservationNumber', headerName: 'Rezervasyon No', minWidth: 160, flex: 0.8 },
-      { field: 'fabricCode', headerName: 'Kumaş Kodu', minWidth: 140, flex: 0.7 },
-      { field: 'fabricName', headerName: 'Kumaş', minWidth: 220, flex: 1.1 },
-      { field: 'productionReference', headerName: 'Üretim Ref.', minWidth: 170, flex: 0.8 },
+      { field: 'fabricCode', headerName: 'KumaÅŸ Kodu', minWidth: 140, flex: 0.7 },
+      { field: 'fabricName', headerName: 'KumaÅŸ', minWidth: 220, flex: 1.1 },
+      { field: 'productionReference', headerName: 'Ãœretim Ref.', minWidth: 170, flex: 0.8 },
       { field: 'reservedQuantityKg', headerName: 'Rezerve Kg', type: 'number', minWidth: 130, flex: 0.6 },
       { field: 'reservationDate', headerName: 'Tarih', minWidth: 120, valueFormatter: (value: string) => formatDate(value) },
       { field: 'status', headerName: 'Durum', minWidth: 130, flex: 0.6, valueFormatter: (value: string) => trStatus(value) },
@@ -162,7 +162,7 @@ export function ReservationListPage() {
         align: 'right',
         renderCell: ({ row }) => (
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title="Rezervasyonu düzenle"><IconButton size="small" onClick={() => openEditDialog(row)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title="Rezervasyonu dÃ¼zenle"><IconButton size="small" onClick={() => openEditDialog(row)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
             <Tooltip title="Rezervasyonu sil"><IconButton size="small" color="error" onClick={() => void handleDelete(row)}><DeleteOutlinedIcon fontSize="small" /></IconButton></Tooltip>
           </Stack>
         ),
@@ -175,11 +175,11 @@ export function ReservationListPage() {
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}>
         <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Kumaş Rezervasyonları</Typography>
-          <Typography color="text.secondary">Üretim için kullanılabilir kumaş miktarını rezerve edin.</Typography>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>KumaÅŸ RezervasyonlarÄ±</Typography>
+          <Typography color="text.secondary">Ãœretim iÃ§in kullanÄ±labilir kumaÅŸ miktarÄ±nÄ± rezerve edin.</Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<FileDownloadOutlinedIcon />}>Dışa Aktar</Button>
+          <Button variant="outlined" startIcon={<FileDownloadOutlinedIcon />}>DÄ±ÅŸa Aktar</Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>Rezervasyon Ekle</Button>
         </Stack>
       </Stack>
@@ -197,15 +197,15 @@ export function ReservationListPage() {
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingReservation ? 'Rezervasyon Düzenle' : 'Rezervasyon Ekle'}</DialogTitle>
+          <DialogTitle>{editingReservation ? 'Rezervasyon DÃ¼zenle' : 'Rezervasyon Ekle'}</DialogTitle>
           <DialogContent sx={dialogContentSx}>
             {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
-              <TextField select label="Kumaş" value={reservationInput.fabricId} onChange={(event) => setReservationInput((current) => ({ ...current, fabricId: event.target.value }))} required helperText={!reservationInput.fabricId ? requiredMessage('Kumaş') : ' '} fullWidth>
-                {fabrics.map((fabric) => <MenuItem key={fabric.id} value={fabric.id}>{fabric.fabricCode} - {fabric.fabricName} ({fabric.availableStockKg} Kg kullanılabilir)</MenuItem>)}
+              <TextField select label="KumaÅŸ" value={reservationInput.fabricId} onChange={(event) => setReservationInput((current) => ({ ...current, fabricId: event.target.value }))} required helperText={!reservationInput.fabricId ? requiredMessage('KumaÅŸ') : ' '} fullWidth>
+                {fabrics.map((fabric) => <MenuItem key={fabric.id} value={fabric.id}>{fabric.fabricCode} - {fabric.fabricName} ({fabric.availableStockKg} Kg kullanÄ±labilir)</MenuItem>)}
               </TextField>
-              <TextField label="Rezervasyon Numarası" value={reservationInput.reservationNumber} onChange={(event) => setReservationInput((current) => ({ ...current, reservationNumber: event.target.value }))} required helperText={!reservationInput.reservationNumber.trim() ? requiredMessage('Rezervasyon numarası') : ' '} fullWidth />
-              <TextField label="Üretim Referansı" value={reservationInput.productionReference} onChange={(event) => setReservationInput((current) => ({ ...current, productionReference: event.target.value }))} required fullWidth />
+              <TextField label="Rezervasyon Numarası" value={editingReservation ? reservationInput.reservationNumber : 'Otomatik oluşturulacaktır'} onChange={(event) => setReservationInput((current) => ({ ...current, reservationNumber: event.target.value }))} disabled helperText={editingReservation ? 'Oluşturulduktan sonra değiştirilemez.' : 'Kaydettiğinizde sistem tarafından verilir.'} fullWidth />
+              <TextField label="Ãœretim ReferansÄ±" value={reservationInput.productionReference} onChange={(event) => setReservationInput((current) => ({ ...current, productionReference: event.target.value }))} required fullWidth />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField label="Rezerve Miktar (Kg)" type="number" value={reservationInput.reservedQuantityKg} onChange={(event) => setReservationInput((current) => ({ ...current, reservedQuantityKg: Number(event.target.value) }))} required fullWidth />
                 <TextField label="Rezervasyon Tarihi" type="date" value={reservationInput.reservationDate} onChange={(event) => setReservationInput((current) => ({ ...current, reservationDate: event.target.value }))} required fullWidth slotProps={{ inputLabel: { shrink: true } }} />
