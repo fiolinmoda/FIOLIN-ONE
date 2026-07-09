@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Alert, Box, Button, MenuItem, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material'
@@ -38,12 +38,12 @@ export function ProductionDetailPage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
-    void getProducts('').then(setProducts).catch(() => setError('ÃœrÃ¼nler yÃ¼klenemedi.'))
+    void getProducts('').then(setProducts).catch(() => setError('Ürünler yüklenemedi.'))
   }, [])
 
   useEffect(() => {
     if (!order.productId) return
-    void getProductVariants(order.productId).then(setVariants).catch(() => setError('ÃœrÃ¼n varyantlarÄ± yÃ¼klenemedi.'))
+    void getProductVariants(order.productId).then(setVariants).catch(() => setError('Ürün varyantları yüklenemedi.'))
   }, [order.productId])
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export function ProductionDetailPage() {
           items: data.items.length > 0 ? data.items.map((item) => ({ productVariantId: item.productVariantId, plannedQuantity: item.plannedQuantity })) : emptyOrder.items,
         })
       })
-      .catch((exception) => setError(toUserMessage(exception, 'Ãœretim emri yÃ¼klenemedi.')))
+      .catch((exception) => setError(toUserMessage(exception, 'Üretim emri yüklenemedi.')))
   }, [id, isNew])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -76,14 +76,14 @@ export function ProductionDetailPage() {
       } else if (id) {
         await updateProductionOrder(id, order)
       }
-      setSuccess('Ãœretim emri kaydedildi.')
+      setSuccess('Üretim emri kaydedildi.')
       if (isNew && saveAndNew) {
         setOrder(emptyOrder)
       } else {
         navigate('/production/orders')
       }
     } catch (exception) {
-      setError(toUserMessage(exception, 'Ãœretim emri kaydedilemedi.'))
+      setError(toUserMessage(exception, 'Üretim emri kaydedilemedi.'))
     } finally {
       setSaving(false)
     }
@@ -101,11 +101,11 @@ export function ProductionDetailPage() {
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/production/orders')}>{commonText.back}</Button>
           <Box>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>{isNew ? 'Ãœretim Emri Ekle' : 'Ãœretim Emri DetayÄ±'}</Typography>
-            <Typography color="text.secondary">ÃœrÃ¼n, varyant daÄŸÄ±lÄ±mÄ± ve Ã¼retim durumunu yÃ¶netin.</Typography>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>{isNew ? 'Üretim Emri Ekle' : 'Üretim Emri Detayı'}</Typography>
+            <Typography color="text.secondary">Ürün, varyant dağılımı ve üretim durumunu yönetin.</Typography>
           </Box>
         </Stack>
-        {!isNew && <Button startIcon={<TimelineOutlinedIcon />} onClick={() => navigate(`/production/orders/${id}/timeline`)}>Zaman Ã‡izelgesi</Button>}
+        {!isNew && <Button startIcon={<TimelineOutlinedIcon />} onClick={() => navigate(`/production/orders/${id}/timeline`)}>Zaman Çizelgesi</Button>}
       </Stack>
       {error && <Alert severity="error">{error}</Alert>}
       <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 1 }}>
@@ -113,13 +113,13 @@ export function ProductionDetailPage() {
           <Stack spacing={3}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
               <TextField label="Üretim Numarası" value={isNew ? 'Otomatik oluşturulacaktır' : order.productionNumber} onChange={(event) => setOrder((current) => ({ ...current, productionNumber: event.target.value }))} disabled={isNew} helperText={isNew ? 'Kaydettiğinizde sistem tarafından verilir.' : (!order.productionNumber.trim() ? requiredMessage('Üretim numarası') : ' ')} fullWidth />
-              <TextField select label="ÃœrÃ¼n" value={order.productId} onChange={(event) => setOrder((current) => ({ ...current, productId: event.target.value, items: [{ productVariantId: '', plannedQuantity: current.plannedQuantity }] }))} required helperText={!order.productId ? requiredMessage('ÃœrÃ¼n') : ' '} fullWidth>
+              <TextField select label="Ürün" value={order.productId} onChange={(event) => setOrder((current) => ({ ...current, productId: event.target.value, items: [{ productVariantId: '', plannedQuantity: current.plannedQuantity }] }))} required helperText={!order.productId ? requiredMessage('Ürün') : ' '} fullWidth>
                 {products.map((product) => <MenuItem key={product.id} value={product.id}>{product.productCode} - {product.productName}</MenuItem>)}
               </TextField>
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
               <TextField label="Planlanan Miktar" type="number" value={order.plannedQuantity} onChange={(event) => setOrder((current) => ({ ...current, plannedQuantity: Number(event.target.value), items: [{ ...current.items[0], plannedQuantity: Number(event.target.value) }] }))} required fullWidth />
-              <TextField select label="Ãœretim Sebebi" value={order.productionReason} onChange={(event) => setOrder((current) => ({ ...current, productionReason: event.target.value }))} required fullWidth>{reasons.map((reason) => <MenuItem key={reason} value={reason}>{trStatus(reason)}</MenuItem>)}</TextField>
+              <TextField select label="Üretim Sebebi" value={order.productionReason} onChange={(event) => setOrder((current) => ({ ...current, productionReason: event.target.value }))} required fullWidth>{reasons.map((reason) => <MenuItem key={reason} value={reason}>{trStatus(reason)}</MenuItem>)}</TextField>
               <TextField select label="Durum" value={order.status} onChange={(event) => setOrder((current) => ({ ...current, status: event.target.value }))} required fullWidth>{statuses.map((status) => <MenuItem key={status} value={status}>{trStatus(status)}</MenuItem>)}</TextField>
             </Stack>
             <TextField select label="Varyant (Renk / Beden)" value={order.items[0]?.productVariantId ?? ''} onChange={(event) => setOrder((current) => ({ ...current, items: [{ ...current.items[0], productVariantId: event.target.value }] }))} required helperText={!order.items[0]?.productVariantId ? requiredMessage('Varyant') : ' '} fullWidth>
@@ -127,7 +127,7 @@ export function ProductionDetailPage() {
             </TextField>
             <TextField label="Notlar" value={order.notes} onChange={(event) => setOrder((current) => ({ ...current, notes: event.target.value }))} multiline minRows={3} fullWidth />
             <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end' }}>
-              {!isNew && <Button onClick={() => void handleIroningPackaging()}>ÃœtÃ¼ / Pakete GÃ¶nder</Button>}
+              {!isNew && <Button onClick={() => void handleIroningPackaging()}>Ütü / Pakete Gönder</Button>}
               <Button onClick={() => navigate('/production/orders')}>{commonText.cancel}</Button>
               {isNew && <Button type="submit" name="saveAndNew" variant="outlined" startIcon={<SaveOutlinedIcon />} disabled={saving}>Kaydet ve Yeni</Button>}
               <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />} disabled={saving}>{commonText.save}</Button>

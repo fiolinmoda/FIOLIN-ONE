@@ -88,6 +88,32 @@ public sealed class ProductionRepository(ApplicationDbContext dbContext) : IProd
         return dbContext.WorkshopShipments.FirstOrDefaultAsync(shipment => shipment.Id == id, cancellationToken);
     }
 
+    public Task<WorkshopShipment?> GetOpenWorkshopShipmentForOrderAsync(Guid productionOrderId, CancellationToken cancellationToken)
+    {
+        return dbContext.WorkshopShipments
+            .Where(shipment =>
+                shipment.ProductionOrderId == productionOrderId &&
+                !shipment.IsDeleted &&
+                shipment.Status != WorkshopShipmentStatuses.Returned)
+            .OrderByDescending(shipment => shipment.ShipmentDate)
+            .ThenByDescending(shipment => shipment.CreatedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<int> GetSentQuantityForOrderAsync(Guid productionOrderId, CancellationToken cancellationToken)
+    {
+        return dbContext.WorkshopShipments
+            .Where(shipment => shipment.ProductionOrderId == productionOrderId && !shipment.IsDeleted)
+            .SumAsync(shipment => shipment.SentQuantity, cancellationToken);
+    }
+
+    public Task<int> GetReturnedQuantityForOrderAsync(Guid productionOrderId, CancellationToken cancellationToken)
+    {
+        return dbContext.WorkshopReturns
+            .Where(workshopReturn => workshopReturn.ProductionOrderId == productionOrderId && !workshopReturn.IsDeleted)
+            .SumAsync(workshopReturn => workshopReturn.ReturnedQuantity + workshopReturn.ExtraQuantity, cancellationToken);
+    }
+
     public Task<int> GetReturnedQuantityForShipmentAsync(Guid workshopShipmentId, CancellationToken cancellationToken)
     {
         return dbContext.WorkshopReturns
@@ -108,6 +134,13 @@ public sealed class ProductionRepository(ApplicationDbContext dbContext) : IProd
     public Task<bool> WarehouseEntryExistsAsync(Guid productionOrderId, CancellationToken cancellationToken)
     {
         return dbContext.WarehouseEntries.AnyAsync(entry => entry.ProductionOrderId == productionOrderId && !entry.IsDeleted, cancellationToken);
+    }
+
+    public Task<int> GetWarehouseEntryQuantityForOrderAsync(Guid productionOrderId, CancellationToken cancellationToken)
+    {
+        return dbContext.WarehouseEntries
+            .Where(entry => entry.ProductionOrderId == productionOrderId && !entry.IsDeleted)
+            .SumAsync(entry => entry.ActualQuantity, cancellationToken);
     }
 
     public async Task AddTimelineAsync(ProductionTimelineEntry entry, CancellationToken cancellationToken)

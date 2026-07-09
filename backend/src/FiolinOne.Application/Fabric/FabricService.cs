@@ -128,12 +128,12 @@ public sealed class FabricService(
 
         if (fabric.SupplierId != request.SupplierId)
         {
-            throw new InvalidOperationException("Fabric can only be purchased from its assigned fabric supplier.");
+            throw new InvalidOperationException("Kumaş yalnızca tanımlı kumaş tedarikçisinden satın alınabilir.");
         }
 
         if (fabric.ColorId != request.ColorId)
         {
-            throw new InvalidOperationException("Selected color does not match the fabric card color.");
+            throw new InvalidOperationException("Seçilen renk kumaş kartındaki renkle eşleşmiyor.");
         }
 
         fabric.ApplyStockChange(request.TotalWeightKg);
@@ -286,14 +286,14 @@ public sealed class FabricService(
     private async Task<Domain.Fabric.Fabric> GetRequiredFabricAsync(Guid fabricId, CancellationToken cancellationToken)
     {
         return await fabricRepository.GetFabricByIdAsync(fabricId, cancellationToken)
-            ?? throw new InvalidOperationException("Fabric does not exist.");
+            ?? throw new InvalidOperationException("Kumaş bulunamadı.");
     }
 
     private async Task EnsureFabricCodeIsUniqueAsync(string fabricCode, Guid? excludedId, CancellationToken cancellationToken)
     {
         if (await fabricRepository.FabricCodeExistsAsync(fabricCode.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Fabric code already exists.");
+            throw new InvalidOperationException("Bu kumaş kodu zaten kullanılıyor.");
         }
     }
 
@@ -301,7 +301,7 @@ public sealed class FabricService(
     {
         if (supplierId.HasValue && !await fabricRepository.SupplierExistsAsync(supplierId.Value, cancellationToken))
         {
-            throw new InvalidOperationException("Supplier does not exist.");
+            throw new InvalidOperationException("Tedarikçi bulunamadı.");
         }
     }
 
@@ -309,7 +309,7 @@ public sealed class FabricService(
     {
         if (purchaseOrderId.HasValue && !await fabricRepository.PurchaseOrderExistsAsync(purchaseOrderId.Value, cancellationToken))
         {
-            throw new InvalidOperationException("Purchase order does not exist.");
+            throw new InvalidOperationException("Satın alma siparişi bulunamadı.");
         }
     }
 
@@ -317,7 +317,7 @@ public sealed class FabricService(
     {
         if (!await fabricRepository.ColorExistsAsync(colorId, cancellationToken))
         {
-            throw new InvalidOperationException("Color does not exist.");
+            throw new InvalidOperationException("Renk bulunamadı.");
         }
     }
 
@@ -325,7 +325,7 @@ public sealed class FabricService(
     {
         if (await fabricRepository.ReservationNumberExistsAsync(reservationNumber.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Reservation number already exists.");
+            throw new InvalidOperationException("Bu rezervasyon numarası zaten kullanılıyor.");
         }
     }
 
@@ -340,7 +340,7 @@ public sealed class FabricService(
 
         if (reservedQuantity > fabric.CurrentStockKg - otherReservedQuantity)
         {
-            throw new InvalidOperationException("Reservation cannot exceed available fabric stock.");
+            throw new InvalidOperationException("Rezervasyon miktarı kullanılabilir kumaş stok miktarını aşamaz.");
         }
     }
 
@@ -353,7 +353,7 @@ public sealed class FabricService(
             FabricMovementTypes.ManualAdjustment => quantityKg,
             FabricMovementTypes.InventoryCount => quantityKg,
             FabricMovementTypes.ProductionConsumption => -Math.Abs(quantityKg),
-            _ => throw new InvalidOperationException("Unsupported fabric movement type.")
+            _ => throw new InvalidOperationException("Desteklenmeyen kumaş hareket türü.")
         };
     }
 

@@ -127,6 +127,13 @@ public sealed class ProductionService(
     public async Task<WorkshopShipmentDto> CreateWorkshopShipmentAsync(CreateWorkshopShipmentRequest request, CancellationToken cancellationToken)
     {
         var order = await GetRequiredOrderAsync(request.ProductionOrderId, cancellationToken);
+        var sentBefore = await productionRepository.GetSentQuantityForOrderAsync(order.Id, cancellationToken);
+
+        if (sentBefore + request.SentQuantity > order.PlannedQuantity)
+        {
+            throw new InvalidOperationException("Atölyeye gönderilen toplam miktar planlanan üretim miktarını aşamaz.");
+        }
+
         order.SetStatus(ProductionStatuses.AtWorkshop);
         var shipmentDate = ToUtc(request.ShipmentDate);
         var shipment = new WorkshopShipment(request.ProductionOrderId, request.Workshop.Trim(), shipmentDate, ToUtc(request.ExpectedReturnDate), request.SentQuantity, NormalizeOptional(request.Notes), request.Status.Trim());
@@ -139,20 +146,47 @@ public sealed class ProductionService(
     public async Task<WorkshopReturnDto> CreateWorkshopReturnAsync(CreateWorkshopReturnRequest request, CancellationToken cancellationToken)
     {
         await GetRequiredOrderAsync(request.ProductionOrderId, cancellationToken);
-        var returnDate = ToUtc(request.ReturnDate);
-        var workshopReturn = new WorkshopReturn(request.ProductionOrderId, request.WorkshopShipmentId, request.ReturnedQuantity, request.ExtraQuantity, request.MissingQuantity, returnDate, NormalizeOptional(request.Notes));
-        await productionRepository.AddWorkshopReturnAsync(workshopReturn, cancellationToken);
-
-        if (request.WorkshopShipmentId.HasValue)
+        var shipmentId = request.WorkshopShipmentId;
+        if (!shipmentId.HasValue)
         {
-            var shipment = await productionRepository.GetWorkshopShipmentByIdAsync(request.WorkshopShipmentId.Value, cancellationToken)
+            shipmentId = (await productionRepository.GetOpenWorkshopShipmentForOrderAsync(request.ProductionOrderId, cancellationToken))?.Id;
+        }
+
+        var returnedQuantity = request.ReturnedQuantity + request.ExtraQuantity;
+        if (shipmentId.HasValue)
+        {
+            var shipment = await productionRepository.GetWorkshopShipmentByIdAsync(shipmentId.Value, cancellationToken)
                 ?? throw new InvalidOperationException("Atölye gönderimi bulunamadı.");
-            var previousReturnedQuantity = await productionRepository.GetReturnedQuantityForShipmentAsync(request.WorkshopShipmentId.Value, cancellationToken);
-            var totalReturnedQuantity = previousReturnedQuantity + request.ReturnedQuantity + request.ExtraQuantity;
+
+            if (shipment.ProductionOrderId != request.ProductionOrderId)
+            {
+                throw new InvalidOperationException("Atölye dönüşü seçilen üretim emrine ait değil.");
+            }
+
+            var previousReturnedQuantity = await productionRepository.GetReturnedQuantityForShipmentAsync(shipmentId.Value, cancellationToken);
+            var totalReturnedQuantity = previousReturnedQuantity + returnedQuantity;
+            if (totalReturnedQuantity > shipment.SentQuantity)
+            {
+                throw new InvalidOperationException("Atölye dönüş miktarı gönderilen miktarı aşamaz.");
+            }
+
             shipment.SetStatus(totalReturnedQuantity >= shipment.SentQuantity
                 ? WorkshopShipmentStatuses.Returned
                 : WorkshopShipmentStatuses.PartialReturn);
         }
+        else
+        {
+            var sentQuantity = await productionRepository.GetSentQuantityForOrderAsync(request.ProductionOrderId, cancellationToken);
+            var previousReturnedQuantity = await productionRepository.GetReturnedQuantityForOrderAsync(request.ProductionOrderId, cancellationToken);
+            if (previousReturnedQuantity + returnedQuantity > sentQuantity)
+            {
+                throw new InvalidOperationException("Atölye dönüş miktarı gönderilen miktarı aşamaz.");
+            }
+        }
+
+        var returnDate = ToUtc(request.ReturnDate);
+        var workshopReturn = new WorkshopReturn(request.ProductionOrderId, shipmentId, request.ReturnedQuantity, request.ExtraQuantity, request.MissingQuantity, returnDate, NormalizeOptional(request.Notes));
+        await productionRepository.AddWorkshopReturnAsync(workshopReturn, cancellationToken);
 
         await AddTimelineAsync(request.ProductionOrderId, "Workshop Return", $"Returned {request.ReturnedQuantity}, extra {request.ExtraQuantity}, missing {request.MissingQuantity}.", returnDate, cancellationToken);
         await productionRepository.SaveChangesAsync(cancellationToken);
@@ -182,6 +216,13 @@ public sealed class ProductionService(
             throw new InvalidOperationException("Bu üretim emri için depo girişi zaten yapılmış.");
         }
 
+        var returnedQuantity = await productionRepository.GetReturnedQuantityForOrderAsync(request.ProductionOrderId, cancellationToken);
+        var warehouseQuantity = await productionRepository.GetWarehouseEntryQuantityForOrderAsync(request.ProductionOrderId, cancellationToken);
+        if (warehouseQuantity + request.ActualQuantity > returnedQuantity)
+        {
+            throw new InvalidOperationException("Depo giriş miktarı atölyeden dönen miktarı aşamaz.");
+        }
+
         ApplyFinishedGoodsInventory(order, request.ActualQuantity);
         order.SetStatus(ProductionStatuses.Completed);
         var warehouseDate = ToUtc(request.WarehouseDate);
@@ -202,19 +243,19 @@ public sealed class ProductionService(
     {
         if (await productionRepository.ProductionNumberExistsAsync(productionNumber.Trim(), excludedId, cancellationToken))
         {
-            throw new InvalidOperationException("Production number already exists.");
+            throw new InvalidOperationException("Bu üretim numarası zaten kullanılıyor.");
         }
 
         if (!await productionRepository.ProductExistsAsync(productId, cancellationToken))
         {
-            throw new InvalidOperationException("Product does not exist.");
+            throw new InvalidOperationException("Ürün bulunamadı.");
         }
 
         foreach (var item in items)
         {
             if (!await productionRepository.VariantExistsAsync(item.ProductVariantId, productId, cancellationToken))
             {
-                throw new InvalidOperationException("Selected variant does not belong to the selected product.");
+                throw new InvalidOperationException("Seçilen varyant seçilen ürüne ait değil.");
             }
         }
     }
@@ -222,7 +263,7 @@ public sealed class ProductionService(
     private async Task<ProductionOrder> GetRequiredOrderAsync(Guid productionOrderId, CancellationToken cancellationToken)
     {
         return await productionRepository.GetOrderByIdAsync(productionOrderId, cancellationToken)
-            ?? throw new InvalidOperationException("Production order does not exist.");
+            ?? throw new InvalidOperationException("Üretim emri bulunamadı.");
     }
 
     private async Task AddTimelineAsync(Guid orderId, string eventType, string description, DateTime eventDate, CancellationToken cancellationToken)
