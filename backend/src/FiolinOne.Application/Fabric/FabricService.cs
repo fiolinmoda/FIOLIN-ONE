@@ -136,6 +136,23 @@ public sealed class FabricService(
             throw new InvalidOperationException("Seçilen renk kumaş kartındaki renkle eşleşmiyor.");
         }
 
+        var batchLot = NormalizeOptional(request.BatchLot);
+        var warehouse = request.Warehouse.Trim();
+        var arrivalDate = ToUtc(request.ArrivalDate);
+        var notes = NormalizeOptional(request.Notes);
+
+        await EnsureMovementDoesNotExistAsync(
+            request.FabricId,
+            FabricMovementTypes.Purchase,
+            request.TotalWeightKg,
+            request.SupplierId,
+            request.PurchaseOrderId,
+            batchLot,
+            warehouse,
+            arrivalDate,
+            notes,
+            cancellationToken);
+
         fabric.ApplyStockChange(request.TotalWeightKg);
         var movement = new FabricMovement(
             request.FabricId,
@@ -144,10 +161,10 @@ public sealed class FabricService(
             request.UnitPrice,
             request.SupplierId,
             request.PurchaseOrderId,
-            NormalizeOptional(request.BatchLot),
-            request.Warehouse.Trim(),
-            ToUtc(request.ArrivalDate),
-            NormalizeOptional(request.Notes));
+            batchLot,
+            warehouse,
+            arrivalDate,
+            notes);
 
         await fabricRepository.AddMovementAsync(movement, cancellationToken);
         await fabricRepository.SaveChangesAsync(cancellationToken);
@@ -185,6 +202,22 @@ public sealed class FabricService(
     public async Task<FabricMovementDto> ConsumeFabricAsync(CreateFabricConsumptionRequest request, CancellationToken cancellationToken)
     {
         var fabric = await GetRequiredFabricAsync(request.FabricId, cancellationToken);
+        var productionReference = request.ProductionReference.Trim();
+        var consumptionDate = ToUtc(request.ConsumptionDate);
+        var notes = NormalizeOptional($"{productionReference} {request.Notes}".Trim());
+
+        await EnsureMovementDoesNotExistAsync(
+            request.FabricId,
+            FabricMovementTypes.ProductionConsumption,
+            request.QuantityKg,
+            null,
+            null,
+            null,
+            "Production",
+            consumptionDate,
+            notes,
+            cancellationToken);
+
         fabric.ApplyStockChange(-request.QuantityKg);
 
         var movement = new FabricMovement(
@@ -196,8 +229,14 @@ public sealed class FabricService(
             null,
             null,
             "Production",
-            ToUtc(request.ConsumptionDate),
-            NormalizeOptional($"{request.ProductionReference} {request.Notes}".Trim()));
+            consumptionDate,
+            notes);
+
+        var reservations = await fabricRepository.GetActiveReservationsByReferenceAsync(request.FabricId, productionReference, cancellationToken);
+        foreach (var reservation in reservations)
+        {
+            reservation.Complete();
+        }
 
         await fabricRepository.AddMovementAsync(movement, cancellationToken);
         await fabricRepository.SaveChangesAsync(cancellationToken);
@@ -326,6 +365,36 @@ public sealed class FabricService(
         if (await fabricRepository.ReservationNumberExistsAsync(reservationNumber.Trim(), excludedId, cancellationToken))
         {
             throw new InvalidOperationException("Bu rezervasyon numarası zaten kullanılıyor.");
+        }
+    }
+
+    private async Task EnsureMovementDoesNotExistAsync(
+        Guid fabricId,
+        string movementType,
+        decimal quantityKg,
+        Guid? supplierId,
+        Guid? purchaseOrderId,
+        string? batchLot,
+        string warehouse,
+        DateTime movementDate,
+        string? notes,
+        CancellationToken cancellationToken)
+    {
+        var movementExists = await fabricRepository.MovementExistsAsync(
+            fabricId,
+            movementType,
+            quantityKg,
+            supplierId,
+            purchaseOrderId,
+            batchLot,
+            warehouse,
+            movementDate,
+            notes,
+            cancellationToken);
+
+        if (movementExists)
+        {
+            throw new InvalidOperationException("Bu stok hareketi daha önce kaydedilmiş.");
         }
     }
 

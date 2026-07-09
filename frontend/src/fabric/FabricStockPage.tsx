@@ -74,7 +74,16 @@ export function FabricStockPage() {
         <Stack spacing={2}>
           <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Kumaş stoku ara" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
           <Box sx={{ width: '100%', minHeight: 500 }}>
-            <DataGrid rows={fabrics} columns={columns} loading={loading} disableRowSelectionOnClick pageSizeOptions={[10, 25, 50]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }} />
+            <DataGrid
+              rows={fabrics}
+              columns={columns}
+              loading={loading}
+              disableRowSelectionOnClick
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+              localeText={{ noRowsLabel: search.trim() ? 'Aramanıza uygun kumaş stoğu bulunamadı.' : 'Henüz kumaş stoğu yok.' }}
+              sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }}
+            />
           </Box>
         </Stack>
       </Paper>

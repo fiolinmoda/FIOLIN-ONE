@@ -57,7 +57,7 @@ public sealed class FabricRepository(ApplicationDbContext dbContext) : IFabricRe
         return dbContext.FabricReservations
             .Where(reservation =>
                 reservation.FabricId == fabricId &&
-                reservation.Status != "Cancelled" &&
+                reservation.Status == "Active" &&
                 (!excludedReservationId.HasValue || reservation.Id != excludedReservationId.Value))
             .SumAsync(reservation => reservation.ReservedQuantityKg, cancellationToken);
     }
@@ -110,6 +110,32 @@ public sealed class FabricRepository(ApplicationDbContext dbContext) : IFabricRe
         await dbContext.FabricMovements.AddAsync(movement, cancellationToken);
     }
 
+    public Task<bool> MovementExistsAsync(
+        Guid fabricId,
+        string movementType,
+        decimal quantityKg,
+        Guid? supplierId,
+        Guid? purchaseOrderId,
+        string? batchLot,
+        string warehouse,
+        DateTime movementDate,
+        string? notes,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.FabricMovements.AnyAsync(
+            movement =>
+                movement.FabricId == fabricId &&
+                movement.MovementType == movementType &&
+                movement.QuantityKg == quantityKg &&
+                movement.SupplierId == supplierId &&
+                movement.PurchaseOrderId == purchaseOrderId &&
+                movement.BatchLot == batchLot &&
+                movement.Warehouse == warehouse &&
+                movement.MovementDate == movementDate &&
+                movement.Notes == notes,
+            cancellationToken);
+    }
+
     public async Task<PagedResult<FabricReservation>> GetReservationsAsync(QueryParameters query, CancellationToken cancellationToken)
     {
         var source = dbContext.FabricReservations
@@ -142,6 +168,19 @@ public sealed class FabricRepository(ApplicationDbContext dbContext) : IFabricRe
         return dbContext.FabricReservations
             .Include(reservation => reservation.Fabric)
             .FirstOrDefaultAsync(reservation => reservation.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<FabricReservation>> GetActiveReservationsByReferenceAsync(
+        Guid fabricId,
+        string productionReference,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.FabricReservations
+            .Where(reservation =>
+                reservation.FabricId == fabricId &&
+                reservation.ProductionReference == productionReference &&
+                reservation.Status == "Active")
+            .ToListAsync(cancellationToken);
     }
 
     public Task<bool> ReservationNumberExistsAsync(string reservationNumber, Guid? excludedId, CancellationToken cancellationToken)

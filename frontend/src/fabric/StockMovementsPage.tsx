@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, InputAdornment, MenuItem, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import RemoveIcon from '@mui/icons-material/Remove'
@@ -28,6 +28,7 @@ export function StockMovementsPage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [purchaseOpen, setPurchaseOpen] = useState(false)
   const [movementOpen, setMovementOpen] = useState(false)
   const [consumptionOpen, setConsumptionOpen] = useState(false)
@@ -51,16 +52,16 @@ export function StockMovementsPage() {
     }
   }, [search])
 
-  useEffect(() => {
-    async function loadLookups() {
-      const [fabricResult, supplierResult, orderResult] = await Promise.all([getFabrics(), getSuppliers(), getPurchaseOrders()])
-      setFabrics(fabricResult.items)
-      setSuppliers(supplierResult.items.filter((supplier) => supplier.active))
-      setOrders(orderResult.items)
-    }
-
-    void loadLookups().catch(() => setError('Kumaş hareketi seçim listeleri yüklenemedi.'))
+  const loadLookups = useCallback(async () => {
+    const [fabricResult, supplierResult, orderResult] = await Promise.all([getFabrics(), getSuppliers(), getPurchaseOrders()])
+    setFabrics(fabricResult.items)
+    setSuppliers(supplierResult.items.filter((supplier) => supplier.active))
+    setOrders(orderResult.items)
   }, [])
+
+  useEffect(() => {
+    void loadLookups().catch(() => setError('Kumaş hareketi seçim listeleri yüklenemedi.'))
+  }, [loadLookups])
 
   useEffect(() => {
     const handle = window.setTimeout(() => { void loadMovements() }, 250)
@@ -79,7 +80,8 @@ export function StockMovementsPage() {
     try {
       await createFabricPurchaseArrival({ ...purchaseInput, purchaseOrderId: purchaseInput.purchaseOrderId || null })
       setPurchaseOpen(false)
-      await loadMovements()
+      setSuccessMessage('Kumaş alışı kaydedildi ve stok güncellendi.')
+      await Promise.all([loadMovements(), loadLookups()])
     } catch (exception) {
       setError(toUserMessage(exception, 'Kumaş alışı kaydedilemedi.'))
     } finally {
@@ -94,7 +96,8 @@ export function StockMovementsPage() {
     try {
       await createFabricMovement({ ...movementInput, supplierId: movementInput.supplierId || null, purchaseOrderId: movementInput.purchaseOrderId || null })
       setMovementOpen(false)
-      await loadMovements()
+      setSuccessMessage('Stok hareketi kaydedildi ve miktarlar güncellendi.')
+      await Promise.all([loadMovements(), loadLookups()])
     } catch (exception) {
       setError(toUserMessage(exception, 'Stok hareketi kaydedilemedi.'))
     } finally {
@@ -109,7 +112,8 @@ export function StockMovementsPage() {
     try {
       await consumeFabric(consumptionInput)
       setConsumptionOpen(false)
-      await loadMovements()
+      setSuccessMessage('Üretim tüketimi kaydedildi ve kumaş stoğu güncellendi.')
+      await Promise.all([loadMovements(), loadLookups()])
     } catch (exception) {
       setError(toUserMessage(exception, 'Kumaş tüketimi kaydedilemedi.'))
     } finally {
@@ -148,7 +152,18 @@ export function StockMovementsPage() {
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
         <Stack spacing={2}>
           <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Stok hareketi ara" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
-          <Box sx={{ width: '100%', minHeight: 500 }}><DataGrid rows={movements} columns={columns} loading={loading} disableRowSelectionOnClick pageSizeOptions={[10, 25, 50]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }} /></Box>
+          <Box sx={{ width: '100%', minHeight: 500 }}>
+            <DataGrid
+              rows={movements}
+              columns={columns}
+              loading={loading}
+              disableRowSelectionOnClick
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+              localeText={{ noRowsLabel: search.trim() ? 'Aramanıza uygun stok hareketi bulunamadı.' : 'Henüz stok hareketi yok.' }}
+              sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }}
+            />
+          </Box>
         </Stack>
       </Paper>
 
@@ -176,10 +191,10 @@ export function StockMovementsPage() {
         </Box>
       </Dialog>
 
-      <Dialog open={movementOpen} onClose={() => setMovementOpen(false)} fullWidth maxWidth="md">
+      <Dialog open={movementOpen} onClose={() => setMovementOpen(false)} fullWidth maxWidth="md" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void submitMovement(event)}>
           <DialogTitle>Manuel Stok Hareketi</DialogTitle>
-          <DialogContent><Stack spacing={2.5} sx={{ pt: 1 }}>
+          <DialogContent sx={dialogContentSx}><Stack spacing={2.5} sx={{ pt: 1 }}>
             <TextField select label="Kumaş" value={movementInput.fabricId} onChange={(event) => setMovementInput((current) => ({ ...current, fabricId: event.target.value }))} required fullWidth>{fabrics.map((fabric) => <MenuItem key={fabric.id} value={fabric.id}>{fabric.fabricCode} - {fabric.fabricName}</MenuItem>)}</TextField>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
               <TextField select label="Hareket Tipi" value={movementInput.movementType} onChange={(event) => setMovementInput((current) => ({ ...current, movementType: event.target.value }))} required fullWidth>{movementTypes.map((type) => <MenuItem key={type} value={type}>{trStatus(type)}</MenuItem>)}</TextField>
@@ -195,10 +210,10 @@ export function StockMovementsPage() {
         </Box>
       </Dialog>
 
-      <Dialog open={consumptionOpen} onClose={() => setConsumptionOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={consumptionOpen} onClose={() => setConsumptionOpen(false)} fullWidth maxWidth="sm" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void submitConsumption(event)}>
           <DialogTitle>Üretim Tüketimi</DialogTitle>
-          <DialogContent><Stack spacing={2.5} sx={{ pt: 1 }}>
+          <DialogContent sx={dialogContentSx}><Stack spacing={2.5} sx={{ pt: 1 }}>
             <TextField select label="Kumaş" value={consumptionInput.fabricId} onChange={(event) => setConsumptionInput((current) => ({ ...current, fabricId: event.target.value }))} required fullWidth>{fabrics.map((fabric) => <MenuItem key={fabric.id} value={fabric.id}>{fabric.fabricCode} - {fabric.fabricName}</MenuItem>)}</TextField>
             <TextField label="Miktar (Kg)" type="number" value={consumptionInput.quantityKg} onChange={(event) => setConsumptionInput((current) => ({ ...current, quantityKg: Number(event.target.value) }))} required fullWidth />
             <TextField label="Üretim Referansı" value={consumptionInput.productionReference} onChange={(event) => setConsumptionInput((current) => ({ ...current, productionReference: event.target.value }))} required fullWidth />
@@ -208,6 +223,12 @@ export function StockMovementsPage() {
           <DialogActions><Button onClick={() => setConsumptionOpen(false)}>{commonText.cancel}</Button><Button type="submit" variant="contained" disabled={saving}>{commonText.save}</Button></DialogActions>
         </Box>
       </Dialog>
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={3500}
+        onClose={() => setSuccessMessage(null)}
+        message={successMessage}
+      />
     </Stack>
   )
 }

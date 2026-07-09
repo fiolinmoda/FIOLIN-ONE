@@ -12,10 +12,22 @@ public interface IFabricRepository
     Task AddFabricAsync(Domain.Fabric.Fabric fabric, CancellationToken cancellationToken);
 
     Task<PagedResult<FabricMovement>> GetMovementsAsync(QueryParameters query, Guid? fabricId, CancellationToken cancellationToken);
+    Task<bool> MovementExistsAsync(
+        Guid fabricId,
+        string movementType,
+        decimal quantityKg,
+        Guid? supplierId,
+        Guid? purchaseOrderId,
+        string? batchLot,
+        string warehouse,
+        DateTime movementDate,
+        string? notes,
+        CancellationToken cancellationToken);
     Task AddMovementAsync(FabricMovement movement, CancellationToken cancellationToken);
 
     Task<PagedResult<FabricReservation>> GetReservationsAsync(QueryParameters query, CancellationToken cancellationToken);
     Task<FabricReservation?> GetReservationByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<IReadOnlyList<FabricReservation>> GetActiveReservationsByReferenceAsync(Guid fabricId, string productionReference, CancellationToken cancellationToken);
     Task<bool> ReservationNumberExistsAsync(string reservationNumber, Guid? excludedId, CancellationToken cancellationToken);
     Task AddReservationAsync(FabricReservation reservation, CancellationToken cancellationToken);
 

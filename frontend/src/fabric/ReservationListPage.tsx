@@ -190,7 +190,16 @@ export function ReservationListPage() {
         <Stack spacing={2}>
           <TextField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rezervasyon ara" size="small" fullWidth slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> } }} />
           <Box sx={{ width: '100%', minHeight: 500 }}>
-            <DataGrid rows={reservations} columns={columns} loading={loading} disableRowSelectionOnClick pageSizeOptions={[10, 25, 50]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }} />
+            <DataGrid
+              rows={reservations}
+              columns={columns}
+              loading={loading}
+              disableRowSelectionOnClick
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+              localeText={{ noRowsLabel: search.trim() ? 'Aramanıza uygun rezervasyon bulunamadı.' : 'Henüz kumaş rezervasyonu yok.' }}
+              sx={{ border: 0, '& .MuiDataGrid-columnHeaders': { bgcolor: 'background.default' } }}
+            />
           </Box>
         </Stack>
       </Paper>

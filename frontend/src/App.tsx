@@ -59,6 +59,7 @@ import { PurchaseInvoicePage } from './purchasing/PurchaseInvoicePage'
 import { PurchaseOrderDetailPage } from './purchasing/PurchaseOrderDetailPage'
 import { PurchaseOrderListPage } from './purchasing/PurchaseOrderListPage'
 import { SupplierManagementPage } from './purchasing/SupplierManagementPage'
+import { ProductStockPage } from './warehouse/ProductStockPage'
 
 const expandedDrawerWidth = 312
 const collapsedDrawerWidth = 88
@@ -452,7 +453,7 @@ function App() {
               <Route path="/warehouse/fabric-stock" element={<FabricStockPage />} />
               <Route path="/fabric/movements" element={<StockMovementsPage />} />
               <Route path="/fabric/reservations" element={<ReservationListPage />} />
-              <Route path="/warehouse/product-stock" element={<WorkspacePlaceholder title="Ürün Stoğu" />} />
+              <Route path="/warehouse/product-stock" element={<ProductStockPage />} />
               <Route path="/warehouse/barcodes" element={<WorkspacePlaceholder title="Barkod" />} />
               <Route path="/warehouse/counting" element={<WorkspacePlaceholder title="Sayım" />} />
               <Route path="/production/orders" element={<ProductionListPage />} />

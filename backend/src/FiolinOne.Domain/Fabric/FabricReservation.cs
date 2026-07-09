@@ -60,6 +60,12 @@ public sealed class FabricReservation : AuditableEntity
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
+    public void Complete()
+    {
+        Status = "Completed";
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
     public void SoftDelete(string? deletedBy = null)
     {
         IsDeleted = true;
