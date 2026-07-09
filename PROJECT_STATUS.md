@@ -2,6 +2,48 @@
 
 ## Completed Sprint
 
+### Workspace & Navigation
+
+Status: Completed
+
+Completed work:
+
+- Navigation was reorganized around business workspaces:
+  - Ana Panel
+  - Ürün Yönetimi
+  - Satın Alma
+  - Üretim
+  - Depo
+  - Satış
+  - Raporlar
+  - Sistem Tanımları
+  - Ayarlar
+- Related pages were grouped under their business modules.
+- Sidebar collapsed state is now remembered locally.
+- Last selected page is remembered and reopened from the root route.
+- Current module and page are highlighted consistently.
+- Header now shows the active module title and breadcrumb.
+- Dashboard placeholder layout was added for:
+  - Yönetici
+  - Satın Alma
+  - Depo
+  - Üretim
+  - Muhasebe
+- System definitions were grouped under "Sistem Tanımları" and remain prepared for future role-based visibility.
+- Placeholder pages were added for future workspaces so navigation has no broken entries.
+
+Known workspace limitations:
+
+- Dashboard cards are placeholders only; KPI widgets are planned for later sprints.
+- Sales, Reports, Settings and some Warehouse pages have prepared layouts but no business transactions yet.
+- Mobile navigation uses the same drawer model, but detailed tablet/mobile UX should receive a separate pass.
+
+Next sprint recommendation:
+
+- Add real role-based menu visibility after authentication is implemented.
+- Add dashboard KPI widgets using existing transactional data.
+- Complete Warehouse product stock, barcode and counting workflows.
+
 ### Business Workflow Validation
 
 Status: Completed
