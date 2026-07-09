@@ -3,6 +3,7 @@ using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Purchasing;
 using FiolinOne.Domain.Fabric;
 using FiolinOne.Domain.Production;
+using FiolinOne.Domain.Sales;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -35,6 +36,8 @@ public interface IApplicationDbContext
     DbSet<WorkshopReturn> WorkshopReturns { get; }
     DbSet<WarehouseEntry> WarehouseEntries { get; }
     DbSet<ProductionTimelineEntry> ProductionTimelineEntries { get; }
+    DbSet<SalesOrder> SalesOrders { get; }
+    DbSet<SalesOrderItem> SalesOrderItems { get; }
 
     DatabaseFacade Database { get; }
 

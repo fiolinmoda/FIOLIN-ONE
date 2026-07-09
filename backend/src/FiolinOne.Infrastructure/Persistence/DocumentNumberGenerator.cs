@@ -13,7 +13,8 @@ public sealed class DocumentNumberGenerator(ApplicationDbContext dbContext) : ID
         [DocumentNumberTypes.GoodsReceipt] = "MK",
         [DocumentNumberTypes.PurchaseInvoice] = "FAT",
         [DocumentNumberTypes.ProductionOrder] = "URT",
-        [DocumentNumberTypes.FabricReservation] = "REZ"
+        [DocumentNumberTypes.FabricReservation] = "REZ",
+        [DocumentNumberTypes.SalesOrder] = "SIP"
     };
 
     public async Task<string> GenerateAsync(string documentType, CancellationToken cancellationToken)
@@ -48,4 +49,3 @@ public sealed class DocumentNumberGenerator(ApplicationDbContext dbContext) : ID
         return $"{prefix}-{year}-{nextNumber:000000}";
     }
 }
-

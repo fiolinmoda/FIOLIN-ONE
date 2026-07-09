@@ -4,6 +4,7 @@ using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Products;
 using FiolinOne.Domain.Production;
 using FiolinOne.Domain.Purchasing;
+using FiolinOne.Domain.Sales;
 using Microsoft.EntityFrameworkCore;
 
 namespace FiolinOne.Infrastructure.Persistence;
@@ -36,6 +37,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<WorkshopReturn> WorkshopReturns => Set<WorkshopReturn>();
     public DbSet<WarehouseEntry> WarehouseEntries => Set<WarehouseEntry>();
     public DbSet<ProductionTimelineEntry> ProductionTimelineEntries => Set<ProductionTimelineEntry>();
+    public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
+    public DbSet<SalesOrderItem> SalesOrderItems => Set<SalesOrderItem>();
     public DbSet<DocumentSequence> DocumentSequences => Set<DocumentSequence>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

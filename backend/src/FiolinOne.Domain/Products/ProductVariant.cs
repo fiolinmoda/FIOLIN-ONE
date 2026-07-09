@@ -67,4 +67,20 @@ public sealed class ProductVariant : Entity
         Stock += quantity;
         UpdatedAtUtc = DateTime.UtcNow;
     }
+
+    public void DecreaseStock(int quantity)
+    {
+        if (quantity < 0)
+        {
+            throw new InvalidOperationException("Stok düşüş miktarı negatif olamaz.");
+        }
+
+        if (Stock - quantity < 0)
+        {
+            throw new InvalidOperationException("Satış miktarı kullanılabilir stok miktarını aşamaz.");
+        }
+
+        Stock -= quantity;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 }

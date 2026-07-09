@@ -59,6 +59,8 @@ import { PurchaseInvoicePage } from './purchasing/PurchaseInvoicePage'
 import { PurchaseOrderDetailPage } from './purchasing/PurchaseOrderDetailPage'
 import { PurchaseOrderListPage } from './purchasing/PurchaseOrderListPage'
 import { SupplierManagementPage } from './purchasing/SupplierManagementPage'
+import { SalesOrderDetailPage } from './sales/SalesOrderDetailPage'
+import { SalesOrderListPage } from './sales/SalesOrderListPage'
 import { ProductStockPage } from './warehouse/ProductStockPage'
 
 const expandedDrawerWidth = 312
@@ -465,7 +467,8 @@ function App() {
               <Route path="/production/packaging" element={<WorkspacePlaceholder title="Paketleme" />} />
               <Route path="/production/warehouse-entry" element={<ProductionOperationPage kind="warehouse" />} />
               <Route path="/production/history" element={<WorkspacePlaceholder title="Süreç Geçmişi" />} />
-              <Route path="/sales" element={<WorkspacePlaceholder title="Satış" />} />
+              <Route path="/sales" element={<SalesOrderListPage />} />
+              <Route path="/sales/orders/:id" element={<SalesOrderDetailPage />} />
               <Route path="/reports" element={<WorkspacePlaceholder title="Raporlar" />} />
               <Route path="/settings" element={<WorkspacePlaceholder title="Ayarlar" />} />
             </Routes>

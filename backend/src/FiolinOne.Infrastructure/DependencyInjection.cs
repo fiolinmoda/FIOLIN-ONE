@@ -10,7 +10,9 @@ using FiolinOne.Infrastructure.Persistence;
 using FiolinOne.Infrastructure.Products;
 using FiolinOne.Infrastructure.Production;
 using FiolinOne.Infrastructure.Purchasing;
+using FiolinOne.Infrastructure.Sales;
 using FiolinOne.Infrastructure.Fabric;
+using FiolinOne.Application.Sales;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IPurchasingRepository, PurchasingRepository>();
         services.AddScoped<IFabricRepository, FabricRepository>();
         services.AddScoped<IProductionRepository, ProductionRepository>();
+        services.AddScoped<ISalesRepository, SalesRepository>();
 
         return services;
     }

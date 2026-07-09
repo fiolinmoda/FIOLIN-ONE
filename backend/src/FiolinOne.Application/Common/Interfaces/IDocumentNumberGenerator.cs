@@ -14,5 +14,5 @@ public static class DocumentNumberTypes
     public const string PurchaseInvoice = "PurchaseInvoice";
     public const string ProductionOrder = "ProductionOrder";
     public const string FabricReservation = "FabricReservation";
+    public const string SalesOrder = "SalesOrder";
 }
-

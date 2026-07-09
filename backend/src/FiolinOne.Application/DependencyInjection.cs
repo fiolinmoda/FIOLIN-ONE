@@ -5,6 +5,7 @@ using FiolinOne.Application.Products;
 using FiolinOne.Application.Products.Variants;
 using FiolinOne.Application.Production;
 using FiolinOne.Application.Purchasing;
+using FiolinOne.Application.Sales;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FiolinOne.Application;
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IPurchasingService, PurchasingService>();
         services.AddScoped<IFabricService, FabricService>();
         services.AddScoped<IProductionService, ProductionService>();
+        services.AddScoped<ISalesService, SalesService>();
 
         return services;
     }
