@@ -2,6 +2,65 @@
 
 ## Completed Sprint
 
+### Business Workflow Validation
+
+Status: Completed
+
+Validated workflow:
+
+- Supplier
+- Purchase Order
+- Goods Receipt
+- Fabric Inventory
+- Production Order
+- Cutting
+- Workshop Shipment
+- Workshop Return
+- Ironing
+- Packaging
+- Warehouse Entry
+- Finished Goods Inventory
+
+Completed work:
+
+- Verified that cutting consumes fabric and creates a fabric stock movement.
+- Warehouse entry now completes the production order and increases finished goods stock on product variants.
+- Warehouse entry can no longer be duplicated for the same production order.
+- Workshop return now updates the related workshop shipment as `PARTIAL_RETURN` or `RETURNED`.
+- Production timeline remains populated for production creation, fabric consumption, cutting, workshop shipment, workshop return, ironing/packaging and warehouse entry.
+- Barcode-ready fields on production order items were verified and covered by tests.
+- Business workflow tests were added for finished goods stock, workshop return status and barcode-ready fields.
+
+End-to-end example verified:
+
+- Example stamp: `20260709230906`
+- Purchase Order: `SAT-2026-000001`
+- Goods Receipt: `MK-2026-000001`
+- Purchase Invoice: `FAT-2026-000001`
+- Fabric Code: `KMS-2026-000001`
+- Product Code: `URN-2026-000001`
+- Production Order: `URT-2026-000001`
+- Fabric stock after purchase arrival: `50 Kg`
+- Fabric stock after cutting: `38 Kg`
+- Finished goods variant stock after warehouse entry: `20`
+- Final production status: `COMPLETED`
+- Workshop shipment status: `RETURNED`
+- Timeline entries: `7`
+- Search and completed-status filter verified through API.
+
+Known workflow limitations:
+
+- Goods Receipt and Fabric Inventory are still connected by a manual fabric purchase movement because goods receipt items do not yet reference a Fabric card directly.
+- Finished goods inventory currently updates Product Variant stock only; a dedicated warehouse/location inventory ledger is still future work.
+- Reports are currently covered by dashboards and list filters, not by a complete reporting module.
+
+Next sprint recommendation:
+
+- Connect Goods Receipt items directly to Fabric cards so accepted fabric can create inventory movement automatically.
+- Add a Warehouse Inventory ledger for finished goods, locations and movement history.
+- Add end-to-end integration tests using PostgreSQL/Testcontainers or Docker Compose.
+- Add workflow reports for purchase waiting, fabric stock, production status and finished goods inventory.
+
 ### ERP Usability & Smart Forms
 
 Status: Completed
@@ -44,4 +103,3 @@ Priorities:
 - Add focused integration tests for automatic document numbering.
 - Add frontend code splitting for large modules.
 - Complete a full Turkish copy and encoding review across all UI files.
-

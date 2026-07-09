@@ -33,6 +33,12 @@ public sealed class WorkshopShipment : AuditableEntity
     public ProductionOrder? ProductionOrder { get; private set; }
     public DateTime CreatedAt => CreatedAtUtc;
     public DateTime? UpdatedAt => UpdatedAtUtc;
+
+    public void SetStatus(string status)
+    {
+        Status = status;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 }
 
 public static class WorkshopShipmentStatuses

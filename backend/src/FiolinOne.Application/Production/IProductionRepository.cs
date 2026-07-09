@@ -15,8 +15,11 @@ public interface IProductionRepository
 
     Task AddCuttingRecordAsync(CuttingRecord record, CancellationToken cancellationToken);
     Task AddWorkshopShipmentAsync(WorkshopShipment shipment, CancellationToken cancellationToken);
+    Task<WorkshopShipment?> GetWorkshopShipmentByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<int> GetReturnedQuantityForShipmentAsync(Guid workshopShipmentId, CancellationToken cancellationToken);
     Task AddWorkshopReturnAsync(WorkshopReturn workshopReturn, CancellationToken cancellationToken);
     Task AddWarehouseEntryAsync(WarehouseEntry entry, CancellationToken cancellationToken);
+    Task<bool> WarehouseEntryExistsAsync(Guid productionOrderId, CancellationToken cancellationToken);
     Task AddTimelineAsync(ProductionTimelineEntry entry, CancellationToken cancellationToken);
     Task<IReadOnlyList<ProductionTimelineEntry>> GetTimelineAsync(Guid productionOrderId, CancellationToken cancellationToken);
     Task<ProductionDashboardDto> GetDashboardAsync(CancellationToken cancellationToken);

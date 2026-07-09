@@ -83,6 +83,18 @@ public sealed class ProductionRepository(ApplicationDbContext dbContext) : IProd
         await dbContext.WorkshopShipments.AddAsync(shipment, cancellationToken);
     }
 
+    public Task<WorkshopShipment?> GetWorkshopShipmentByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return dbContext.WorkshopShipments.FirstOrDefaultAsync(shipment => shipment.Id == id, cancellationToken);
+    }
+
+    public Task<int> GetReturnedQuantityForShipmentAsync(Guid workshopShipmentId, CancellationToken cancellationToken)
+    {
+        return dbContext.WorkshopReturns
+            .Where(workshopReturn => workshopReturn.WorkshopShipmentId == workshopShipmentId && !workshopReturn.IsDeleted)
+            .SumAsync(workshopReturn => workshopReturn.ReturnedQuantity + workshopReturn.ExtraQuantity, cancellationToken);
+    }
+
     public async Task AddWorkshopReturnAsync(WorkshopReturn workshopReturn, CancellationToken cancellationToken)
     {
         await dbContext.WorkshopReturns.AddAsync(workshopReturn, cancellationToken);
@@ -91,6 +103,11 @@ public sealed class ProductionRepository(ApplicationDbContext dbContext) : IProd
     public async Task AddWarehouseEntryAsync(WarehouseEntry entry, CancellationToken cancellationToken)
     {
         await dbContext.WarehouseEntries.AddAsync(entry, cancellationToken);
+    }
+
+    public Task<bool> WarehouseEntryExistsAsync(Guid productionOrderId, CancellationToken cancellationToken)
+    {
+        return dbContext.WarehouseEntries.AnyAsync(entry => entry.ProductionOrderId == productionOrderId && !entry.IsDeleted, cancellationToken);
     }
 
     public async Task AddTimelineAsync(ProductionTimelineEntry entry, CancellationToken cancellationToken)

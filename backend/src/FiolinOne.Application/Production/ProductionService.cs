@@ -142,6 +142,18 @@ public sealed class ProductionService(
         var returnDate = ToUtc(request.ReturnDate);
         var workshopReturn = new WorkshopReturn(request.ProductionOrderId, request.WorkshopShipmentId, request.ReturnedQuantity, request.ExtraQuantity, request.MissingQuantity, returnDate, NormalizeOptional(request.Notes));
         await productionRepository.AddWorkshopReturnAsync(workshopReturn, cancellationToken);
+
+        if (request.WorkshopShipmentId.HasValue)
+        {
+            var shipment = await productionRepository.GetWorkshopShipmentByIdAsync(request.WorkshopShipmentId.Value, cancellationToken)
+                ?? throw new InvalidOperationException("Atölye gönderimi bulunamadı.");
+            var previousReturnedQuantity = await productionRepository.GetReturnedQuantityForShipmentAsync(request.WorkshopShipmentId.Value, cancellationToken);
+            var totalReturnedQuantity = previousReturnedQuantity + request.ReturnedQuantity + request.ExtraQuantity;
+            shipment.SetStatus(totalReturnedQuantity >= shipment.SentQuantity
+                ? WorkshopShipmentStatuses.Returned
+                : WorkshopShipmentStatuses.PartialReturn);
+        }
+
         await AddTimelineAsync(request.ProductionOrderId, "Workshop Return", $"Returned {request.ReturnedQuantity}, extra {request.ExtraQuantity}, missing {request.MissingQuantity}.", returnDate, cancellationToken);
         await productionRepository.SaveChangesAsync(cancellationToken);
         return ToDto(workshopReturn);
@@ -164,6 +176,13 @@ public sealed class ProductionService(
     public async Task<WarehouseEntryDto> CreateWarehouseEntryAsync(CreateWarehouseEntryRequest request, CancellationToken cancellationToken)
     {
         var order = await GetRequiredOrderAsync(request.ProductionOrderId, cancellationToken);
+
+        if (await productionRepository.WarehouseEntryExistsAsync(request.ProductionOrderId, cancellationToken))
+        {
+            throw new InvalidOperationException("Bu üretim emri için depo girişi zaten yapılmış.");
+        }
+
+        ApplyFinishedGoodsInventory(order, request.ActualQuantity);
         order.SetStatus(ProductionStatuses.Completed);
         var warehouseDate = ToUtc(request.WarehouseDate);
         var entry = new WarehouseEntry(request.ProductionOrderId, request.ActualQuantity, warehouseDate, NormalizeOptional(request.Notes));
@@ -209,6 +228,62 @@ public sealed class ProductionService(
     private async Task AddTimelineAsync(Guid orderId, string eventType, string description, DateTime eventDate, CancellationToken cancellationToken)
     {
         await productionRepository.AddTimelineAsync(new ProductionTimelineEntry(orderId, eventType, description, eventDate), cancellationToken);
+    }
+
+    private static void ApplyFinishedGoodsInventory(ProductionOrder order, int actualQuantity)
+    {
+        if (actualQuantity <= 0)
+        {
+            return;
+        }
+
+        var items = order.Items
+            .Where(item => !item.IsDeleted)
+            .OrderByDescending(item => item.PlannedQuantity)
+            .ToList();
+
+        if (items.Count == 0)
+        {
+            throw new InvalidOperationException("Depo girişi için üretim varyant dağılımı bulunamadı.");
+        }
+
+        var totalPlannedQuantity = items.Sum(item => item.PlannedQuantity);
+        if (totalPlannedQuantity <= 0)
+        {
+            throw new InvalidOperationException("Depo girişi için planlanan miktar sıfırdan büyük olmalıdır.");
+        }
+
+        var remainingQuantity = actualQuantity;
+        foreach (var item in items)
+        {
+            var allocatedQuantity = (int)Math.Floor(actualQuantity * (item.PlannedQuantity / (decimal)totalPlannedQuantity));
+            if (allocatedQuantity > remainingQuantity)
+            {
+                allocatedQuantity = remainingQuantity;
+            }
+
+            if (item.ProductVariant is null)
+            {
+                throw new InvalidOperationException("Üretim varyantı bulunamadı.");
+            }
+
+            item.ProductVariant.IncreaseStock(allocatedQuantity);
+            remainingQuantity -= allocatedQuantity;
+        }
+
+        var itemIndex = 0;
+        while (remainingQuantity > 0)
+        {
+            var variant = items[itemIndex % items.Count].ProductVariant;
+            if (variant is null)
+            {
+                throw new InvalidOperationException("Üretim varyantı bulunamadı.");
+            }
+
+            variant.IncreaseStock(1);
+            remainingQuantity--;
+            itemIndex++;
+        }
     }
 
     private static IReadOnlyList<ProductionOrderItem> ToItems(Guid orderId, IReadOnlyList<ProductionOrderItemRequest> items)
