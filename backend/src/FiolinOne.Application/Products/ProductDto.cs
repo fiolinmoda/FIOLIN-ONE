@@ -12,5 +12,25 @@ public sealed record ProductDto(
     string? Season,
     string Status,
     string? ImageUrl,
+    int ColorCount,
+    int SizeCount,
+    int VariantCount,
+    int TotalStock,
+    IReadOnlyList<ProductColorGroupDto> ColorGroups,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
+
+public sealed record ProductColorGroupDto(
+    Guid ColorId,
+    string Color,
+    int TotalStock,
+    IReadOnlyList<ProductSizeVariantDto> Sizes);
+
+public sealed record ProductSizeVariantDto(
+    Guid VariantId,
+    Guid SizeId,
+    string Size,
+    string Barcode,
+    int Stock,
+    decimal PurchasePrice,
+    decimal SalesPrice);

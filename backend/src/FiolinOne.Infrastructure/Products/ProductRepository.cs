@@ -13,7 +13,11 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
             .AsNoTracking()
             .Include(product => product.Brand)
             .Include(product => product.Category)
-            .Include(product => product.Season);
+            .Include(product => product.Season)
+            .Include(product => product.Variants)
+                .ThenInclude(variant => variant.Color)
+            .Include(product => product.Variants)
+                .ThenInclude(variant => variant.Size);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -25,6 +29,9 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
                 (product.Brand != null && product.Brand.Name.ToLower().Contains(term)) ||
                 (product.Category != null && product.Category.Name.ToLower().Contains(term)) ||
                 (product.Season != null && product.Season.Name.ToLower().Contains(term)) ||
+                product.Variants.Any(variant =>
+                    (variant.Color != null && variant.Color.Name.ToLower().Contains(term)) ||
+                    (variant.Size != null && variant.Size.Name.ToLower().Contains(term))) ||
                 product.Status.ToLower().Contains(term));
         }
 
@@ -39,6 +46,10 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
             .Include(product => product.Brand)
             .Include(product => product.Category)
             .Include(product => product.Season)
+            .Include(product => product.Variants)
+                .ThenInclude(variant => variant.Color)
+            .Include(product => product.Variants)
+                .ThenInclude(variant => variant.Size)
             .FirstOrDefaultAsync(product => product.Id == id, cancellationToken);
     }
 

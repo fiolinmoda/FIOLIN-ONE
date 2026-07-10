@@ -6,7 +6,9 @@ public sealed record CreateProductVariantRequest(
     string Barcode,
     string? TrendyolSku,
     int Stock,
-    string Status);
+    string Status,
+    decimal? PurchasePrice = null,
+    decimal? SalesPrice = null);
 
 public sealed record UpdateProductVariantRequest(
     Guid ColorId,
@@ -14,4 +16,6 @@ public sealed record UpdateProductVariantRequest(
     string Barcode,
     string? TrendyolSku,
     int Stock,
-    string Status);
+    string Status,
+    decimal? PurchasePrice = null,
+    decimal? SalesPrice = null);

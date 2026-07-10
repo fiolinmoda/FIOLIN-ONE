@@ -16,7 +16,9 @@ public sealed class ProductVariant : Entity
         string barcode,
         string? trendyolSku,
         int stock,
-        string status)
+        string status,
+        decimal purchasePrice = 0,
+        decimal salesPrice = 0)
     {
         ProductId = productId;
         ColorId = colorId;
@@ -25,6 +27,8 @@ public sealed class ProductVariant : Entity
         TrendyolSku = trendyolSku;
         Stock = stock;
         Status = status;
+        PurchasePrice = purchasePrice;
+        SalesPrice = salesPrice;
     }
 
     public Guid ProductId { get; private set; }
@@ -33,6 +37,8 @@ public sealed class ProductVariant : Entity
     public string Barcode { get; private set; } = string.Empty;
     public string? TrendyolSku { get; private set; }
     public int Stock { get; private set; }
+    public decimal PurchasePrice { get; private set; }
+    public decimal SalesPrice { get; private set; }
     public string Status { get; private set; } = string.Empty;
     public Product? Product { get; private set; }
     public Color? Color { get; private set; }
@@ -46,7 +52,9 @@ public sealed class ProductVariant : Entity
         string barcode,
         string? trendyolSku,
         int stock,
-        string status)
+        string status,
+        decimal purchasePrice = 0,
+        decimal salesPrice = 0)
     {
         ColorId = colorId;
         SizeId = sizeId;
@@ -54,6 +62,8 @@ public sealed class ProductVariant : Entity
         TrendyolSku = trendyolSku;
         Stock = stock;
         Status = status;
+        PurchasePrice = purchasePrice;
+        SalesPrice = salesPrice;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 

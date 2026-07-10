@@ -50,7 +50,9 @@ public sealed class ProductVariantService(
             request.Barcode.Trim(),
             NormalizeOptional(request.TrendyolSku),
             request.Stock,
-            request.Status.Trim());
+            request.Status.Trim(),
+            request.PurchasePrice ?? 0,
+            request.SalesPrice ?? 0);
 
         await productVariantRepository.AddAsync(variant, cancellationToken);
         await productVariantRepository.SaveChangesAsync(cancellationToken);
@@ -91,7 +93,9 @@ public sealed class ProductVariantService(
             request.Barcode.Trim(),
             NormalizeOptional(request.TrendyolSku),
             request.Stock,
-            request.Status.Trim());
+            request.Status.Trim(),
+            request.PurchasePrice ?? variant.PurchasePrice,
+            request.SalesPrice ?? variant.SalesPrice);
 
         await productVariantRepository.SaveChangesAsync(cancellationToken);
 
@@ -168,6 +172,8 @@ public sealed class ProductVariantService(
             variant.Barcode,
             variant.TrendyolSku,
             variant.Stock,
+            variant.PurchasePrice,
+            variant.SalesPrice,
             variant.Status,
             variant.CreatedAt,
             variant.UpdatedAt);

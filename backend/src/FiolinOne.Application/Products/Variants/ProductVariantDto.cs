@@ -10,6 +10,8 @@ public sealed record ProductVariantDto(
     string Barcode,
     string? TrendyolSku,
     int Stock,
+    decimal PurchasePrice,
+    decimal SalesPrice,
     string Status,
     DateTime CreatedAt,
     DateTime? UpdatedAt);

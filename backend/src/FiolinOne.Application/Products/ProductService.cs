@@ -122,6 +122,33 @@ public sealed class ProductService(
 
     private static ProductDto ToDto(Product product)
     {
+        var variants = product.Variants
+            .OrderBy(variant => variant.Color?.Name)
+            .ThenBy(variant => variant.Size?.SortOrder)
+            .ThenBy(variant => variant.Size?.Name)
+            .ToList();
+
+        var colorGroups = variants
+            .GroupBy(variant => new { variant.ColorId, Color = variant.Color?.Name ?? string.Empty })
+            .OrderBy(group => group.Key.Color)
+            .Select(group => new ProductColorGroupDto(
+                group.Key.ColorId,
+                group.Key.Color,
+                group.Sum(variant => variant.Stock),
+                group
+                    .OrderBy(variant => variant.Size?.SortOrder)
+                    .ThenBy(variant => variant.Size?.Name)
+                    .Select(variant => new ProductSizeVariantDto(
+                        variant.Id,
+                        variant.SizeId,
+                        variant.Size?.Name ?? string.Empty,
+                        variant.Barcode,
+                        variant.Stock,
+                        variant.PurchasePrice,
+                        variant.SalesPrice))
+                    .ToList()))
+            .ToList();
+
         return new ProductDto(
             product.Id,
             product.ProductCode,
@@ -134,6 +161,11 @@ public sealed class ProductService(
             product.Season?.Name,
             product.Status,
             product.ImageUrl,
+            variants.Select(variant => variant.ColorId).Distinct().Count(),
+            variants.Select(variant => variant.SizeId).Distinct().Count(),
+            variants.Count,
+            variants.Sum(variant => variant.Stock),
+            colorGroups,
             product.CreatedAt,
             product.UpdatedAt);
     }

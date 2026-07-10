@@ -37,8 +37,11 @@ public sealed class Product : Entity
     public Brand? Brand { get; private set; }
     public Category? Category { get; private set; }
     public Season? Season { get; private set; }
+    public IReadOnlyCollection<ProductVariant> Variants => variants;
     public DateTime CreatedAt => CreatedAtUtc;
     public DateTime? UpdatedAt => UpdatedAtUtc;
+
+    private readonly List<ProductVariant> variants = [];
 
     public void Update(
         string productCode,

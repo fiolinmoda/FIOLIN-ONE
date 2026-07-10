@@ -68,6 +68,11 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(product => product.SeasonId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasMany(product => product.Variants)
+            .WithOne(variant => variant.Product)
+            .HasForeignKey(variant => variant.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Ignore(product => product.CreatedAt);
         builder.Ignore(product => product.UpdatedAt);
     }

@@ -94,7 +94,9 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
                     CreateBarcode(row.ModelCode, row.ColorName, row.SizeName),
                     null,
                     row.Stock,
-                    "Active"));
+                    "Active",
+                    row.PurchasePrice,
+                    row.SalesPrice));
             }
         }
 
@@ -185,6 +187,8 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
                 SizeName = GetValue(row, mapping.Size),
                 FabricTypeName = GetValue(row, mapping.FabricType),
                 ImageUrl = GetValue(row, mapping.ImageUrl),
+                PurchasePrice = ParseMoney(GetValue(row, mapping.PurchasePrice)),
+                SalesPrice = ParseMoney(GetValue(row, mapping.SalesPrice)),
                 Stock = ParseStock(GetValue(row, mapping.Stock))
             };
 
@@ -426,6 +430,18 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             : 0;
     }
 
+    private static decimal ParseMoney(string value)
+    {
+        if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var invariantValue))
+        {
+            return Math.Max(0, invariantValue);
+        }
+
+        return decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out var currentValue)
+            ? Math.Max(0, currentValue)
+            : 0;
+    }
+
     private static string CreateCode(string value)
     {
         var normalized = Regex.Replace(Normalize(value).ToUpperInvariant(), "[^A-Z0-9]", string.Empty);
@@ -505,6 +521,8 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         public string SizeName { get; set; } = string.Empty;
         public string FabricTypeName { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
+        public decimal PurchasePrice { get; set; }
+        public decimal SalesPrice { get; set; }
         public int Stock { get; set; }
         public Guid? BrandId { get; set; }
         public Guid? CategoryId { get; set; }

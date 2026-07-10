@@ -40,6 +40,16 @@ public sealed class ProductVariantConfiguration : IEntityTypeConfiguration<Produ
             .HasColumnName("stock")
             .IsRequired();
 
+        builder.Property(variant => variant.PurchasePrice)
+            .HasColumnName("purchase_price")
+            .HasPrecision(18, 4)
+            .IsRequired();
+
+        builder.Property(variant => variant.SalesPrice)
+            .HasColumnName("sales_price")
+            .HasPrecision(18, 4)
+            .IsRequired();
+
         builder.Property(variant => variant.Status)
             .HasColumnName("status")
             .HasMaxLength(50)
@@ -53,7 +63,7 @@ public sealed class ProductVariantConfiguration : IEntityTypeConfiguration<Produ
             .HasColumnName("updated_at");
 
         builder.HasOne(variant => variant.Product)
-            .WithMany()
+            .WithMany(product => product.Variants)
             .HasForeignKey(variant => variant.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 

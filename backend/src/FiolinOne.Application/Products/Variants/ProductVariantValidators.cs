@@ -28,6 +28,16 @@ public sealed class CreateProductVariantRequestValidator : AbstractValidator<Cre
             .GreaterThanOrEqualTo(0)
             .WithMessage("Stok negatif olamaz.");
 
+        RuleFor(request => request.PurchasePrice)
+            .GreaterThanOrEqualTo(0)
+            .When(request => request.PurchasePrice.HasValue)
+            .WithMessage("Alış fiyatı negatif olamaz.");
+
+        RuleFor(request => request.SalesPrice)
+            .GreaterThanOrEqualTo(0)
+            .When(request => request.SalesPrice.HasValue)
+            .WithMessage("Satış fiyatı negatif olamaz.");
+
         RuleFor(request => request.Status)
             .NotEmpty()
             .WithMessage("Durum zorunludur.")
@@ -61,6 +71,16 @@ public sealed class UpdateProductVariantRequestValidator : AbstractValidator<Upd
         RuleFor(request => request.Stock)
             .GreaterThanOrEqualTo(0)
             .WithMessage("Stok negatif olamaz.");
+
+        RuleFor(request => request.PurchasePrice)
+            .GreaterThanOrEqualTo(0)
+            .When(request => request.PurchasePrice.HasValue)
+            .WithMessage("Alış fiyatı negatif olamaz.");
+
+        RuleFor(request => request.SalesPrice)
+            .GreaterThanOrEqualTo(0)
+            .When(request => request.SalesPrice.HasValue)
+            .WithMessage("Satış fiyatı negatif olamaz.");
 
         RuleFor(request => request.Status)
             .NotEmpty()
