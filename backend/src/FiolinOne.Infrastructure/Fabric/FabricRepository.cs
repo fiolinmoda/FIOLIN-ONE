@@ -57,7 +57,7 @@ public sealed class FabricRepository(ApplicationDbContext dbContext) : IFabricRe
         return dbContext.FabricReservations
             .Where(reservation =>
                 reservation.FabricId == fabricId &&
-                reservation.Status == "Active" &&
+                (reservation.Status == "Active" || reservation.Status == "Open") &&
                 (!excludedReservationId.HasValue || reservation.Id != excludedReservationId.Value))
             .SumAsync(reservation => reservation.ReservedQuantityKg, cancellationToken);
     }
@@ -179,7 +179,7 @@ public sealed class FabricRepository(ApplicationDbContext dbContext) : IFabricRe
             .Where(reservation =>
                 reservation.FabricId == fabricId &&
                 reservation.ProductionReference == productionReference &&
-                reservation.Status == "Active")
+                (reservation.Status == "Active" || reservation.Status == "Open"))
             .ToListAsync(cancellationToken);
     }
 

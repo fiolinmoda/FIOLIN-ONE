@@ -1,7 +1,6 @@
 import type {
   CuttingInput,
   PagedResult,
-  ProductionDashboard,
   ProductionOrder,
   ProductionOrderInput,
   ProductionTimeline,
@@ -18,10 +17,6 @@ function query(search: string, status = '', pageSize = 100): string {
   if (search.trim()) params.set('search', search.trim())
   if (status.trim()) params.set('status', status.trim())
   return params.toString()
-}
-
-export async function getProductionDashboard(): Promise<ProductionDashboard> {
-  return request<ProductionDashboard>('/api/production-orders/dashboard')
 }
 
 export async function getProductionOrders(search = '', status = ''): Promise<PagedResult<ProductionOrder>> {

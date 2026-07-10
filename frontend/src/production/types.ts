@@ -37,14 +37,6 @@ export type ProductionOrderInput = {
   items: Array<{ productVariantId: string; plannedQuantity: number }>
 }
 
-export type ProductionDashboard = {
-  productionPlanned: number
-  inCutting: number
-  atWorkshop: number
-  ironingPackaging: number
-  completed: number
-}
-
 export type CuttingInput = {
   productionOrderId: string
   fabricId: string

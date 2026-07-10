@@ -46,6 +46,12 @@ public sealed class ReportsService(IApplicationDbContext dbContext) : IReportsSe
             .Where(order => (!dateFrom.HasValue || order.OrderDate >= dateFrom.Value) && (!dateToExclusive.HasValue || order.OrderDate < dateToExclusive.Value))
             .ToListAsync(cancellationToken);
 
+        var goodsReceipts = await dbContext.GoodsReceipts
+            .AsNoTracking()
+            .Include(receipt => receipt.Items)
+            .Where(receipt => (!dateFrom.HasValue || receipt.ReceiptDate >= dateFrom.Value) && (!dateToExclusive.HasValue || receipt.ReceiptDate < dateToExclusive.Value))
+            .ToListAsync(cancellationToken);
+
         var purchaseInvoices = await dbContext.PurchaseInvoices
             .AsNoTracking()
             .Where(invoice => (!dateFrom.HasValue || invoice.InvoiceDate >= dateFrom.Value) && (!dateToExclusive.HasValue || invoice.InvoiceDate < dateToExclusive.Value))
@@ -87,11 +93,16 @@ public sealed class ReportsService(IApplicationDbContext dbContext) : IReportsSe
             .GroupBy(invoice => invoice.PurchaseOrderId!.Value)
             .ToDictionary(group => group.Key, group => group.Sum(invoice => invoice.InvoiceAmount));
 
+        var receivedQuantitiesByOrderId = goodsReceipts
+            .Where(receipt => receipt.PurchaseOrderId.HasValue)
+            .GroupBy(receipt => receipt.PurchaseOrderId!.Value)
+            .ToDictionary(group => group.Key, group => group.Sum(receipt => receipt.Items.Sum(item => item.ReceivedQuantity)));
+
         var purchasingRows = purchaseOrders
             .Select(order =>
             {
                 var orderedQuantity = order.Items.Sum(item => item.Quantity);
-                var receivedQuantity = order.Items.Sum(item => item.ReceivedQuantity);
+                var receivedQuantity = receivedQuantitiesByOrderId.GetValueOrDefault(order.Id);
                 var totalAmount = order.Items.Sum(item => item.Quantity * item.UnitPrice);
 
                 return new PurchasingReportRowDto(
