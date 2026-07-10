@@ -40,6 +40,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import WarehouseOutlinedIcon from '@mui/icons-material/WarehouseOutlined'
 import { DashboardPage } from './dashboard/DashboardPage'
 import { FabricDetailPage } from './fabric/FabricDetailPage'
@@ -49,6 +50,7 @@ import { ReservationListPage } from './fabric/ReservationListPage'
 import { StockMovementsPage } from './fabric/StockMovementsPage'
 import { MasterDataPage } from './masterData/MasterDataPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
+import { ProductImportPage } from './products/ProductImportPage'
 import { ProductListPage } from './products/ProductListPage'
 import { ProductionDetailPage } from './production/ProductionDetailPage'
 import { ProductionListPage } from './production/ProductionListPage'
@@ -114,6 +116,7 @@ const navigationGroups: NavigationGroup[] = [
     icon: <CategoryOutlinedIcon />,
     pages: [
       { title: 'Ürünler', path: '/products', icon: <CategoryOutlinedIcon /> },
+      { title: "Excel'den Ürün Aktar", path: '/products/import', icon: <UploadFileOutlinedIcon />, roles: ['Administrator'] },
       { title: 'Varyantlar', path: '/product-variants', icon: <DatasetOutlinedIcon /> },
     ],
   },
@@ -214,6 +217,10 @@ function getRouteMeta(pathname: string): RouteMeta {
   }
 
   if (pathname.startsWith('/products/')) {
+    if (pathname === '/products/import') {
+      return { moduleTitle: 'Ürün Yönetimi', pageTitle: "Excel'den Ürün Aktar" }
+    }
+
     return { moduleTitle: 'Ürün Yönetimi', pageTitle: 'Ürün Detayı' }
   }
 
@@ -442,6 +449,7 @@ function App() {
               <Route path={dashboardPath} element={<DashboardPage />} />
               <Route path="/production/dashboard" element={<Navigate to={dashboardPath} replace />} />
               <Route path="/products" element={<ProductListPage />} />
+              <Route path="/products/import" element={<ProductImportPage />} />
               <Route path="/products/:id" element={<ProductDetailPage />} />
               <Route path="/product-variants" element={<WorkspacePlaceholder title="Varyantlar" />} />
               <Route path="/master-data/:type" element={<MasterDataPage />} />

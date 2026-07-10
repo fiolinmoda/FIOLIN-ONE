@@ -14,6 +14,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 {
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<ProductImportHistory> ProductImportHistories => Set<ProductImportHistory>();
+    public DbSet<ProductImportProfile> ProductImportProfiles => Set<ProductImportProfile>();
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Season> Seasons => Set<Season>();

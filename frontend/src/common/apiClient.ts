@@ -107,6 +107,42 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   return response.json()
 }
 
+export async function apiFormRequest<T>(path: string, formData: FormData, init?: RequestInit): Promise<T> {
+  const token = window.localStorage.getItem('fiolin-one-token')
+  let response: Response
+
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      method: init?.method ?? 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init?.headers,
+      },
+      body: formData,
+    })
+  } catch (exception) {
+    throw new Error(translateNetworkError(exception))
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as ApiErrorBody | null
+    const validationErrors = flattenValidationErrors(body?.errors)
+    const fallback = body?.message ?? body?.title ?? 'Request failed.'
+    const message = validationErrors.length > 0
+      ? validationErrors.join('\n')
+      : translateKnownMessage(fallback, response.status)
+
+    throw new Error(message)
+  }
+
+  if (response.status === 204) {
+    return undefined as T
+  }
+
+  return response.json()
+}
+
 export function toUserMessage(exception: unknown, fallback: string): string {
   return exception instanceof Error && exception.message ? exception.message : fallback
 }

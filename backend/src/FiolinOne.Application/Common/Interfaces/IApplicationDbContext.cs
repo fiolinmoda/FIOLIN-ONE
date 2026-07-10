@@ -13,6 +13,8 @@ public interface IApplicationDbContext
 {
     DbSet<Product> Products { get; }
     DbSet<ProductVariant> ProductVariants { get; }
+    DbSet<ProductImportHistory> ProductImportHistories { get; }
+    DbSet<ProductImportProfile> ProductImportProfiles { get; }
     DbSet<Brand> Brands { get; }
     DbSet<Category> Categories { get; }
     DbSet<Season> Seasons { get; }
