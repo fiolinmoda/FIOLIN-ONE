@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
 using FiolinOne.Application.Products.Import;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FiolinOne.Api.Controllers;
@@ -9,7 +8,6 @@ namespace FiolinOne.Api.Controllers;
 [ApiController]
 [Route("api/products/import")]
 [Produces("application/json")]
-[Authorize(Roles = "Administrator")]
 public sealed class ProductImportController(IProductImportService productImportService) : ControllerBase
 {
     /// <summary>
@@ -42,6 +40,7 @@ public sealed class ProductImportController(IProductImportService productImportS
     /// Onaylanan Excel içe aktarma işlemini çalıştırır.
     /// </summary>
     [HttpPost]
+    [HttpPost("import")]
     [ProducesResponseType(typeof(ProductImportResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Import([FromForm] IFormFile file, [FromForm] string options, CancellationToken cancellationToken)
