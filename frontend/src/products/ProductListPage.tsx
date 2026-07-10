@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Accordion,
@@ -17,11 +17,6 @@ import {
   Paper,
   Snackbar,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Tooltip,
   Typography,
@@ -80,7 +75,7 @@ export function ProductListPage() {
       setProducts(data)
       setPage(1)
     } catch (exception) {
-      setError(toUserMessage(exception, 'Ürünler yüklenemedi. Lütfen tekrar deneyiniz.'))
+      setError(toUserMessage(exception, 'ÃœrÃ¼nler yÃ¼klenemedi. LÃ¼tfen tekrar deneyiniz.'))
     } finally {
       setLoading(false)
     }
@@ -112,10 +107,10 @@ export function ProductListPage() {
 
       try {
         await deleteProduct(product.id)
-        setSuccess('Ürün silindi.')
+        setSuccess('ÃœrÃ¼n silindi.')
         await loadProducts()
       } catch (exception) {
-        setError(toUserMessage(exception, 'Ürün silinemedi. Ürün üretim veya stok kayıtlarında kullanılıyor olabilir.'))
+        setError(toUserMessage(exception, 'ÃœrÃ¼n silinemedi. ÃœrÃ¼n Ã¼retim veya stok kayÄ±tlarÄ±nda kullanÄ±lÄ±yor olabilir.'))
       }
     },
     [loadProducts],
@@ -130,13 +125,13 @@ export function ProductListPage() {
       >
         <Box>
           <Typography variant="h5" component="h2" sx={{ fontWeight: 800 }}>
-            Ürünler
+            ÃœrÃ¼nler
           </Typography>
-          <Typography color="text.secondary">Model kartları, renk-beden dağılımı ve toplam stok görünümü.</Typography>
+          <Typography color="text.secondary">Model kartlarÄ±, renk-beden daÄŸÄ±lÄ±mÄ± ve toplam stok gÃ¶rÃ¼nÃ¼mÃ¼.</Typography>
         </Box>
 
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/products/new')}>
-          Ürün Ekle
+          ÃœrÃ¼n Ekle
         </Button>
       </Stack>
 
@@ -147,8 +142,8 @@ export function ProductListPage() {
           <TextField
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Model kodu, ürün adı, marka, kategori, renk veya beden ara"
-            label="Hızlı Arama"
+            placeholder="Model kodu, Ã¼rÃ¼n adÄ±, marka, kategori, renk veya beden ara"
+            label="HÄ±zlÄ± Arama"
             size="small"
             fullWidth
             slotProps={{
@@ -165,14 +160,14 @@ export function ProductListPage() {
           {loading ? (
             <Stack sx={{ minHeight: 280, alignItems: 'center', justifyContent: 'center' }} spacing={2}>
               <CircularProgress size={32} />
-              <Typography color="text.secondary">Ürün kartları yükleniyor...</Typography>
+              <Typography color="text.secondary">ÃœrÃ¼n kartlarÄ± yÃ¼kleniyor...</Typography>
             </Stack>
           ) : visibleProducts.length === 0 ? (
             <Stack sx={{ minHeight: 280, alignItems: 'center', justifyContent: 'center' }} spacing={1}>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                {search.trim() ? 'Aramanıza uygun ürün bulunamadı.' : 'Henüz ürün kaydı yok.'}
+                {search.trim() ? 'AramanÄ±za uygun Ã¼rÃ¼n bulunamadÄ±.' : 'HenÃ¼z Ã¼rÃ¼n kaydÄ± yok.'}
               </Typography>
-              <Typography color="text.secondary">Yeni bir ürün kartı oluşturarak başlayabilirsiniz.</Typography>
+              <Typography color="text.secondary">Yeni bir Ã¼rÃ¼n kartÄ± oluÅŸturarak baÅŸlayabilirsiniz.</Typography>
             </Stack>
           ) : (
             <Stack spacing={1.5}>
@@ -190,7 +185,7 @@ export function ProductListPage() {
           {products.length > pageSize && (
             <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary">
-                {numberText(products.length)} ürün kartı
+                {numberText(products.length)} Ã¼rÃ¼n kartÄ±
               </Typography>
               <Pagination count={pageCount} page={page} onChange={(_, value) => setPage(value)} color="primary" />
             </Stack>
@@ -258,19 +253,19 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
           </Box>
 
           <Stack direction="row" spacing={0.5} sx={{ justifyContent: { xs: 'flex-end', md: 'center' } }}>
-            <Tooltip title="Ürünü düzenle">
+            <Tooltip title="ÃœrÃ¼nÃ¼ dÃ¼zenle">
               <IconButton
                 size="small"
                 onClick={(event) => {
                   event.stopPropagation()
                   onEdit()
                 }}
-                aria-label="Ürünü düzenle"
+                aria-label="ÃœrÃ¼nÃ¼ dÃ¼zenle"
               >
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Ürünü sil">
+            <Tooltip title="ÃœrÃ¼nÃ¼ sil">
               <IconButton
                 size="small"
                 color="error"
@@ -278,7 +273,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
                   event.stopPropagation()
                   onDelete()
                 }}
-                aria-label="Ürünü sil"
+                aria-label="ÃœrÃ¼nÃ¼ sil"
               >
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
@@ -290,7 +285,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
         <Divider />
         {product.colorGroups.length === 0 ? (
           <Typography sx={{ p: 2 }} color="text.secondary">
-            Bu ürün için henüz varyant yok.
+            Bu Ã¼rÃ¼n iÃ§in henÃ¼z varyant yok.
           </Typography>
         ) : (
           <Stack spacing={1} sx={{ p: { xs: 1.5, md: 2 } }}>
@@ -298,41 +293,49 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
               <Accordion key={group.colorId} variant="outlined" disableGutters sx={{ borderRadius: 1, '&:before': { display: 'none' } }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', width: '100%' }}>
-                    <Typography sx={{ fontWeight: 800, flex: 1 }}>{group.color || 'Renk yok'}</Typography>
+                    <Typography sx={{ fontWeight: 800, flex: 1 }}>
+                      {group.color || 'Renk yok'} (Toplam {numberText(group.totalStock)})
+                    </Typography>
                     <Chip label={`${group.sizes.length} beden`} size="small" />
-                    <Chip label={`${numberText(group.totalStock)} stok`} size="small" color="primary" variant="outlined" />
                   </Stack>
                 </AccordionSummary>
                 <AccordionDetails sx={{ pt: 0 }}>
-                  <Box sx={{ overflowX: 'auto' }}>
-                    <Table size="small" sx={{ minWidth: 680 }}>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Beden</TableCell>
-                          <TableCell>Barkod</TableCell>
-                          <TableCell align="right">Stok</TableCell>
-                          <TableCell align="right">Alış Fiyatı</TableCell>
-                          <TableCell align="right">Satış Fiyatı</TableCell>
-                          <TableCell align="right">İşlem</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {group.sizes.map((variant) => (
-                          <TableRow key={variant.variantId} hover>
-                            <TableCell sx={{ fontWeight: 700 }}>{variant.size}</TableCell>
-                            <TableCell>{variant.barcode || '-'}</TableCell>
-                            <TableCell align="right">{numberText(variant.stock)}</TableCell>
-                            <TableCell align="right">{moneyText(variant.purchasePrice)}</TableCell>
-                            <TableCell align="right">{moneyText(variant.salesPrice)}</TableCell>
-                            <TableCell align="right">
-                              <Button size="small" onClick={onEdit}>
-                                Varyantı Düzenle
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gap: 1,
+                      gridTemplateColumns: {
+                        xs: '1fr',
+                        sm: 'repeat(2, minmax(0, 1fr))',
+                        lg: 'repeat(3, minmax(0, 1fr))',
+                      },
+                    }}
+                  >
+                    {group.sizes.map((variant) => (
+                      <Box
+                        key={variant.variantId}
+                        sx={{
+                          border: 1,
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          bgcolor: 'background.paper',
+                          p: 1.25,
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Chip label={variant.size || 'Beden yok'} size="small" color="primary" />
+                          <Typography sx={{ fontWeight: 900 }}>{numberText(variant.stock)} stok</Typography>
+                        </Stack>
+                        <Stack spacing={0.5} sx={{ mt: 1 }}>
+                          <VariantInfo label="Alış Fiyatı" value={moneyText(variant.purchasePrice)} />
+                          <VariantInfo label="Satış Fiyatı" value={moneyText(variant.salesPrice)} />
+                          <VariantInfo label="Barkod" value={variant.barcode || '-'} />
+                        </Stack>
+                        <Button size="small" onClick={onEdit} sx={{ mt: 1 }}>
+                          Varyantı Düzenle
+                        </Button>
+                      </Box>
+                    ))}
                   </Box>
                 </AccordionDetails>
               </Accordion>
@@ -341,6 +344,19 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
         )}
       </AccordionDetails>
     </Accordion>
+  )
+}
+
+function VariantInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body2" sx={{ fontWeight: 700, textAlign: 'right', overflowWrap: 'anywhere' }}>
+        {value}
+      </Typography>
+    </Stack>
   )
 }
 

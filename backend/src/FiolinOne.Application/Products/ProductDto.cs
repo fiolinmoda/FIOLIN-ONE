@@ -34,3 +34,28 @@ public sealed record ProductSizeVariantDto(
     int Stock,
     decimal PurchasePrice,
     decimal SalesPrice);
+
+public sealed record ProductListRowDto(
+    Guid ProductId,
+    string ProductCode,
+    string ProductName,
+    Guid? BrandId,
+    string? Brand,
+    Guid? CategoryId,
+    string? Category,
+    Guid? SeasonId,
+    string? Season,
+    string Status,
+    string? ImageUrl,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt,
+    Guid? VariantId,
+    Guid? ColorId,
+    string? Color,
+    Guid? SizeId,
+    string? Size,
+    int? SizeSortOrder,
+    string? Barcode,
+    int Stock,
+    decimal PurchasePrice,
+    decimal SalesPrice);
