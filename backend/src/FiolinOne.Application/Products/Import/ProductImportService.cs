@@ -37,6 +37,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         var mapping = request.Mapping ?? (savedProfile is null ? SuggestMapping(workbook.Headers) : DeserializeMapping(savedProfile.MappingJson));
         var rows = await AnalyzeRowsAsync(workbook, mapping, request.MissingMasterDataMode, false, cancellationToken);
         var summary = BuildSummary(rows);
+        var missingMasterData = BuildMissingMasterData(rows);
 
         return new ProductImportPreviewDto(
             fileName,
@@ -45,6 +46,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             mapping,
             savedProfile is null ? null : ToDto(savedProfile),
             summary,
+            missingMasterData,
             rows.Take(100).Select(row => new ProductImportPreviewRowDto(row.RowNumber, row.ModelCode, row.ProductName, row.Status, row.Errors)).ToList());
     }
 
@@ -61,11 +63,12 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         var workbook = XlsxWorkbook.Read(bytes);
         var signature = CreateSignature(workbook.Headers);
         var rows = await AnalyzeRowsAsync(workbook, request.Mapping, request.MissingMasterDataMode, true, cancellationToken);
+        var createdMasterData = BuildCreatedMasterData(rows);
 
         if (request.MissingMasterDataMode.Equals("Cancel", StringComparison.OrdinalIgnoreCase)
-            && rows.Any(row => row.Errors.Any(error => error.Contains("bulunamadı", StringComparison.CurrentCultureIgnoreCase))))
+            && rows.Any(row => row.MissingMasterData.Count > 0))
         {
-            throw new InvalidOperationException("Eksik sistem tanımları bulundu. Lütfen tanımları oluşturun veya içe aktarma seçeneğini değiştirin.");
+            throw new InvalidOperationException("Eksik sistem tanımları bulunduğu için içe aktarma iptal edildi.");
         }
 
         var insertableRows = rows
@@ -79,7 +82,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
 
         foreach (var row in insertableRows)
         {
-            var product = new Product(row.ModelCode, row.ProductName, row.BrandId, row.CategoryId, row.SeasonId, "Active");
+            var product = new Product(row.ModelCode, row.ProductName, row.BrandId, row.CategoryId, row.SeasonId, "Active", row.ImageUrl);
             products.Add(product);
 
             if (row.ColorId.HasValue && row.SizeId.HasValue)
@@ -125,7 +128,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         await dbContext.ProductImportHistories.AddAsync(history, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return new ProductImportResultDto(summary, insertableRows.Count, summary.ExistingProducts, summary.Skipped, summary.Error, (int)stopwatch.ElapsedMilliseconds, errorRows);
+        return new ProductImportResultDto(summary, insertableRows.Count, summary.ExistingProducts, summary.Skipped, summary.Error, createdMasterData, (int)stopwatch.ElapsedMilliseconds, errorRows);
     }
 
     public async Task<IReadOnlyList<ProductImportHistoryDto>> GetHistoryAsync(CancellationToken cancellationToken)
@@ -181,6 +184,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
                 ColorName = GetValue(row, mapping.Color),
                 SizeName = GetValue(row, mapping.Size),
                 FabricTypeName = GetValue(row, mapping.FabricType),
+                ImageUrl = GetValue(row, mapping.ImageUrl),
                 Stock = ParseStock(GetValue(row, mapping.Stock))
             };
 
@@ -239,12 +243,12 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         string mode,
         bool allowCreate)
     {
-        row.BrandId = Resolve(row.BrandName, brands, dbContext.Brands, name => new Brand(name, CreateCode(name), true, 0), mode, allowCreate, row.Errors, "Marka");
-        row.CategoryId = Resolve(row.CategoryName, categories, dbContext.Categories, name => new Category(name, CreateCode(name), true, 0), mode, allowCreate, row.Errors, "Kategori");
-        row.SeasonId = Resolve(row.SeasonName, seasons, dbContext.Seasons, name => new Season(name, CreateCode(name), true, 0), mode, allowCreate, row.Errors, "Sezon");
-        row.ColorId = Resolve(row.ColorName, colors, dbContext.Colors, name => new Color(name, CreateCode(name), true, 0), mode, allowCreate, row.Errors, "Renk");
-        row.SizeId = Resolve(row.SizeName, sizes, dbContext.Sizes, name => new Size(name, CreateCode(name), true, 0), mode, allowCreate, row.Errors, "Beden");
-        _ = Resolve(row.FabricTypeName, fabricTypes, dbContext.FabricTypes, name => new FabricType(name, CreateCode(name), true, 0), mode, allowCreate, row.Errors, "Kumaş Tipi");
+        row.BrandId = Resolve(row.BrandName, brands, dbContext.Brands, name => new Brand(name, CreateUniqueCode(name, brands), true, 0), mode, allowCreate, row, "Marka");
+        row.CategoryId = Resolve(row.CategoryName, categories, dbContext.Categories, name => new Category(name, CreateUniqueCode(name, categories), true, 0), mode, allowCreate, row, "Kategori");
+        row.SeasonId = Resolve(row.SeasonName, seasons, dbContext.Seasons, name => new Season(name, CreateUniqueCode(name, seasons), true, 0), mode, allowCreate, row, "Sezon");
+        row.ColorId = Resolve(row.ColorName, colors, dbContext.Colors, name => new Color(name, CreateUniqueCode(name, colors), true, 0), mode, allowCreate, row, "Renk");
+        row.SizeId = Resolve(row.SizeName, sizes, dbContext.Sizes, name => new Size(name, CreateUniqueCode(name, sizes), true, 0), mode, allowCreate, row, "Beden");
+        _ = Resolve(row.FabricTypeName, fabricTypes, dbContext.FabricTypes, name => new FabricType(name, CreateUniqueCode(name, fabricTypes), true, 0), mode, allowCreate, row, "Kumaş Tipi");
     }
 
     private static Guid? Resolve<T>(
@@ -254,7 +258,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         Func<string, T> create,
         string mode,
         bool allowCreate,
-        List<string> errors,
+        AnalyzedRow row,
         string label)
         where T : MasterDataEntity
     {
@@ -263,9 +267,10 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             return null;
         }
 
+        var normalizedValue = Normalize(value);
         var existing = items.FirstOrDefault(item =>
-            string.Equals(item.Name, value.Trim(), StringComparison.CurrentCultureIgnoreCase) ||
-            string.Equals(item.Code, value.Trim(), StringComparison.CurrentCultureIgnoreCase));
+            Normalize(item.Name) == normalizedValue ||
+            Normalize(item.Code) == normalizedValue);
 
         if (existing is not null)
         {
@@ -274,7 +279,8 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
 
         if (mode.Equals("Create", StringComparison.OrdinalIgnoreCase) && !allowCreate)
         {
-            return Guid.Empty;
+            row.MissingMasterData.Add(new MissingMasterDataItem(label, value.Trim()));
+            return null;
         }
 
         if (mode.Equals("Create", StringComparison.OrdinalIgnoreCase) && allowCreate)
@@ -282,10 +288,12 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             var created = create(value.Trim());
             items.Add(created);
             dbSet.Add(created);
+            row.CreatedMasterData.Add(new MissingMasterDataItem(label, value.Trim()));
             return created.Id;
         }
 
-        errors.Add($"{label} sistemde bulunamadı: {value}");
+        row.MissingMasterData.Add(new MissingMasterDataItem(label, value.Trim()));
+        row.Errors.Add($"{label} sistemde bulunamadı: {value}");
         return null;
     }
 
@@ -320,6 +328,49 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             rows.Count(row => row.Status == ProductImportRowStatus.Skipped));
     }
 
+    private static ProductImportMissingMasterDataDto BuildMissingMasterData(IReadOnlyList<AnalyzedRow> rows)
+    {
+        return new ProductImportMissingMasterDataDto(
+            MissingValues(rows, "Marka"),
+            MissingValues(rows, "Kategori"),
+            MissingValues(rows, "Sezon"),
+            MissingValues(rows, "Renk"),
+            MissingValues(rows, "Beden"),
+            MissingValues(rows, "Kumaş Tipi"));
+    }
+
+    private static ProductImportCreatedMasterDataDto BuildCreatedMasterData(IReadOnlyList<AnalyzedRow> rows)
+    {
+        return new ProductImportCreatedMasterDataDto(
+            CreatedCount(rows, "Marka"),
+            CreatedCount(rows, "Kategori"),
+            CreatedCount(rows, "Sezon"),
+            CreatedCount(rows, "Renk"),
+            CreatedCount(rows, "Beden"),
+            CreatedCount(rows, "Kumaş Tipi"));
+    }
+
+    private static IReadOnlyList<string> MissingValues(IReadOnlyList<AnalyzedRow> rows, string type)
+    {
+        return rows
+            .SelectMany(row => row.MissingMasterData)
+            .Where(item => item.Type == type)
+            .GroupBy(item => Normalize(item.Value))
+            .Select(group => group.First().Value.Trim())
+            .OrderBy(value => value)
+            .ToList();
+    }
+
+    private static int CreatedCount(IReadOnlyList<AnalyzedRow> rows, string type)
+    {
+        return rows
+            .SelectMany(row => row.CreatedMasterData)
+            .Where(item => item.Type == type)
+            .Select(item => Normalize(item.Value))
+            .Distinct()
+            .Count();
+    }
+
     private static ProductImportMapping SuggestMapping(IReadOnlyList<string> headers)
     {
         return new ProductImportMapping(
@@ -333,7 +384,8 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             Find(headers, "kumaş", "kumas", "fabric"),
             Find(headers, "alış", "alis", "purchase"),
             Find(headers, "satış", "satis", "sale"),
-            Find(headers, "stok", "stock"));
+            Find(headers, "stok", "stock"),
+            Find(headers, "görsel", "gorsel", "resim", "image", "photo", "url"));
     }
 
     private static string? Find(IReadOnlyList<string> headers, params string[] candidates)
@@ -380,6 +432,25 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         return string.IsNullOrWhiteSpace(normalized) ? Guid.NewGuid().ToString("N")[..8].ToUpperInvariant() : normalized[..Math.Min(normalized.Length, 40)];
     }
 
+    private static string CreateUniqueCode<T>(string value, IReadOnlyCollection<T> items)
+        where T : MasterDataEntity
+    {
+        var baseCode = CreateCode(value);
+        var code = baseCode;
+        var suffix = 1;
+        var existingCodes = items.Select(item => Normalize(item.Code)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        while (existingCodes.Contains(Normalize(code)))
+        {
+            var suffixText = suffix.ToString(CultureInfo.InvariantCulture);
+            var maxBaseLength = Math.Max(1, 40 - suffixText.Length);
+            code = $"{baseCode[..Math.Min(baseCode.Length, maxBaseLength)]}{suffixText}";
+            suffix++;
+        }
+
+        return code;
+    }
+
     private static string CreateBarcode(string modelCode, string color, string size)
     {
         var barcode = CreateCode($"{modelCode}{color}{size}");
@@ -388,7 +459,12 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
 
     private static ProductImportMapping DeserializeMapping(string mappingJson)
     {
-        return JsonSerializer.Deserialize<ProductImportMapping>(mappingJson, JsonOptions) ?? new ProductImportMapping(null, null, null, null, null, null, null, null, null, null, null);
+        return JsonSerializer.Deserialize<ProductImportMapping>(mappingJson, JsonOptions) ?? EmptyMapping();
+    }
+
+    private static ProductImportMapping EmptyMapping()
+    {
+        return new ProductImportMapping(null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static ProductImportProfileDto ToDto(ProductImportProfile profile)
@@ -428,6 +504,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         public string ColorName { get; set; } = string.Empty;
         public string SizeName { get; set; } = string.Empty;
         public string FabricTypeName { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
         public int Stock { get; set; }
         public Guid? BrandId { get; set; }
         public Guid? CategoryId { get; set; }
@@ -436,7 +513,11 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         public Guid? SizeId { get; set; }
         public string Status { get; set; } = ProductImportRowStatus.New;
         public List<string> Errors { get; } = [];
+        public List<MissingMasterDataItem> MissingMasterData { get; } = [];
+        public List<MissingMasterDataItem> CreatedMasterData { get; } = [];
     }
+
+    private sealed record MissingMasterDataItem(string Type, string Value);
 
     private static class ProductImportRowStatus
     {

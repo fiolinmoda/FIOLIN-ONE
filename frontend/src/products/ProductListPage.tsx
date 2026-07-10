@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   IconButton,
@@ -90,6 +91,23 @@ export function ProductListPage() {
 
   const columns = useMemo<GridColDef<Product>[]>(
     () => [
+      {
+        field: 'imageUrl',
+        headerName: 'Görsel',
+        width: 86,
+        sortable: false,
+        filterable: false,
+        renderCell: ({ row }) => (
+          <Avatar
+            variant="rounded"
+            src={row.imageUrl ?? undefined}
+            alt={row.productName}
+            sx={{ width: 44, height: 44, fontSize: 14, bgcolor: 'grey.100', color: 'text.secondary' }}
+          >
+            {row.productName.slice(0, 1).toLocaleUpperCase('tr-TR')}
+          </Avatar>
+        ),
+      },
       { field: 'productCode', headerName: 'Ürün Kodu', minWidth: 150, flex: 0.7 },
       { field: 'productName', headerName: 'Ürün Adı', minWidth: 240, flex: 1.2 },
       { field: 'brand', headerName: 'Marka', minWidth: 140, flex: 0.8, valueGetter: (_, row) => row.brand ?? '-' },

@@ -10,6 +10,7 @@ export type ProductImportMapping = {
   purchasePrice: string | null
   salesPrice: string | null
   stock: string | null
+  imageUrl: string | null
 }
 
 export type MissingMasterDataMode = 'Create' | 'Skip' | 'Cancel'
@@ -22,6 +23,24 @@ export type ProductImportSummary = {
   newProducts: number
   existingProducts: number
   skipped: number
+}
+
+export type ProductImportMissingMasterData = {
+  brands: string[]
+  categories: string[]
+  seasons: string[]
+  colors: string[]
+  sizes: string[]
+  fabricTypes: string[]
+}
+
+export type ProductImportCreatedMasterData = {
+  brands: number
+  categories: number
+  seasons: number
+  colors: number
+  sizes: number
+  fabricTypes: number
 }
 
 export type ProductImportPreviewRow = {
@@ -48,6 +67,7 @@ export type ProductImportPreview = {
   suggestedMapping: ProductImportMapping
   savedProfile: ProductImportProfile | null
   summary: ProductImportSummary
+  missingMasterData: ProductImportMissingMasterData
   rows: ProductImportPreviewRow[]
 }
 
@@ -64,6 +84,7 @@ export type ProductImportResult = {
   existing: number
   skipped: number
   error: number
+  createdMasterData: ProductImportCreatedMasterData
   durationMilliseconds: number
   errorRows: ProductImportErrorRow[]
 }

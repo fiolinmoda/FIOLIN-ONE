@@ -9,6 +9,7 @@ export type Product = {
   seasonId: string | null
   season: string | null
   status: string
+  imageUrl: string | null
   createdAt: string
   updatedAt: string | null
 }

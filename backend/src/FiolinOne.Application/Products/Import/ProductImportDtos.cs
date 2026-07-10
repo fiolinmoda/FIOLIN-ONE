@@ -11,7 +11,8 @@ public sealed record ProductImportMapping(
     string? FabricType,
     string? PurchasePrice,
     string? SalesPrice,
-    string? Stock);
+    string? Stock,
+    string? ImageUrl);
 
 public sealed record ProductImportPreviewRequest(
     ProductImportMapping? Mapping,
@@ -30,6 +31,7 @@ public sealed record ProductImportPreviewDto(
     ProductImportMapping SuggestedMapping,
     ProductImportProfileDto? SavedProfile,
     ProductImportSummaryDto Summary,
+    ProductImportMissingMasterDataDto MissingMasterData,
     IReadOnlyList<ProductImportPreviewRowDto> Rows);
 
 public sealed record ProductImportSummaryDto(
@@ -40,6 +42,22 @@ public sealed record ProductImportSummaryDto(
     int NewProducts,
     int ExistingProducts,
     int Skipped);
+
+public sealed record ProductImportMissingMasterDataDto(
+    IReadOnlyList<string> Brands,
+    IReadOnlyList<string> Categories,
+    IReadOnlyList<string> Seasons,
+    IReadOnlyList<string> Colors,
+    IReadOnlyList<string> Sizes,
+    IReadOnlyList<string> FabricTypes);
+
+public sealed record ProductImportCreatedMasterDataDto(
+    int Brands,
+    int Categories,
+    int Seasons,
+    int Colors,
+    int Sizes,
+    int FabricTypes);
 
 public sealed record ProductImportPreviewRowDto(
     int RowNumber,
@@ -54,6 +72,7 @@ public sealed record ProductImportResultDto(
     int Existing,
     int Skipped,
     int Error,
+    ProductImportCreatedMasterDataDto CreatedMasterData,
     int DurationMilliseconds,
     IReadOnlyList<ProductImportErrorRowDto> ErrorRows);
 

@@ -42,6 +42,10 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasMaxLength(50)
             .IsRequired();
 
+        builder.Property(product => product.ImageUrl)
+            .HasColumnName("image_url")
+            .HasMaxLength(1000);
+
         builder.Property(product => product.CreatedAtUtc)
             .HasColumnName("created_at")
             .IsRequired();

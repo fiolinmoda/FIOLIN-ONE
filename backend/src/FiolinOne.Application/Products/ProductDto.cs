@@ -11,5 +11,6 @@ public sealed record ProductDto(
     Guid? SeasonId,
     string? Season,
     string Status,
+    string? ImageUrl,
     DateTime CreatedAt,
     DateTime? UpdatedAt);

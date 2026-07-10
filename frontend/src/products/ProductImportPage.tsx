@@ -6,10 +6,14 @@ import {
   Button,
   Checkbox,
   Divider,
+  FormControl,
   FormControlLabel,
+  FormLabel,
   LinearProgress,
   MenuItem,
   Paper,
+  Radio,
+  RadioGroup,
   Snackbar,
   Stack,
   TextField,
@@ -44,6 +48,7 @@ const emptyMapping: ProductImportMapping = {
   purchasePrice: null,
   salesPrice: null,
   stock: null,
+  imageUrl: null,
 }
 
 const mappingFields: Array<{ key: MappingKey; label: string; required?: boolean }> = [
@@ -58,13 +63,23 @@ const mappingFields: Array<{ key: MappingKey; label: string; required?: boolean 
   { key: 'purchasePrice', label: 'Alış Fiyatı' },
   { key: 'salesPrice', label: 'Satış Fiyatı' },
   { key: 'stock', label: 'Stok' },
+  { key: 'imageUrl', label: 'Görsel URL' },
 ]
 
 const modeLabels: Record<MissingMasterDataMode, string> = {
-  Create: 'Eksik tanımları oluştur',
-  Skip: 'Eksik tanımlı satırları atla',
-  Cancel: 'Eksik tanım varsa kayıt yapma',
+  Create: 'Otomatik oluştur',
+  Skip: 'Eksik kayıt bulunan satırları atla',
+  Cancel: 'İçe aktarmayı iptal et',
 }
+
+const missingMasterDataLabels = [
+  ['Marka', 'brands'],
+  ['Kategori', 'categories'],
+  ['Sezon', 'seasons'],
+  ['Renk', 'colors'],
+  ['Beden', 'sizes'],
+  ['Kumaş Tipi', 'fabricTypes'],
+] as const
 
 function numberText(value: number) {
   return value.toLocaleString('tr-TR')
@@ -104,7 +119,7 @@ export function ProductImportPage() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<ProductImportPreview | null>(null)
   const [mapping, setMapping] = useState<ProductImportMapping>(emptyMapping)
-  const [mode, setMode] = useState<MissingMasterDataMode>('Cancel')
+  const [mode, setMode] = useState<MissingMasterDataMode>('Create')
   const [saveProfile, setSaveProfile] = useState(true)
   const [profileName, setProfileName] = useState('Fiolin Ürün Stok Sistemi')
   const [history, setHistory] = useState<ProductImportHistory[]>([])
@@ -217,6 +232,14 @@ export function ProductImportPage() {
 
   function updateMapping(key: MappingKey, value: string) {
     setMapping((current) => ({ ...current, [key]: value || null }))
+  }
+
+  function handleModeChange(value: MissingMasterDataMode) {
+    setMode(value)
+
+    if (file && preview) {
+      void runPreview(file, mapping, value)
+    }
   }
 
   async function handleRefreshPreview() {
@@ -354,20 +377,17 @@ export function ProductImportPage() {
               <Divider />
 
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <TextField
-                  select
-                  size="small"
-                  label="Eksik sistem tanımı olduğunda"
-                  value={mode}
-                  onChange={(event) => setMode(event.target.value as MissingMasterDataMode)}
-                  fullWidth
-                >
-                  {Object.entries(modeLabels).map(([value, label]) => (
-                    <MenuItem key={value} value={value}>
-                      {label}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <FormControl sx={{ flex: 1 }}>
+                  <FormLabel>Eksik sistem tanımı olduğunda</FormLabel>
+                  <RadioGroup
+                    value={mode}
+                    onChange={(event) => handleModeChange(event.target.value as MissingMasterDataMode)}
+                  >
+                    {Object.entries(modeLabels).map(([value, label]) => (
+                      <FormControlLabel key={value} value={value} control={<Radio />} label={label} />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
                 <TextField
                   size="small"
                   label="Profil adı"
@@ -384,6 +404,8 @@ export function ProductImportPage() {
               />
             </Stack>
           </Paper>
+
+          <MissingMasterDataPanel preview={preview} mode={mode} />
 
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
             <Stack spacing={2}>
@@ -434,11 +456,17 @@ export function ProductImportPage() {
 
       {result && (
         <SummaryPanel title="İşlem Sonucu" items={[
-          ['Toplam', result.summary.total],
-          ['Eklenen', result.inserted],
-          ['Zaten mevcut', result.existing],
-          ['Atlanan', result.skipped],
-          ['Hatalı', result.error],
+          ['Toplam ürün', result.summary.total],
+          ['Eklenen ürün', result.inserted],
+          ['Mevcut ürün', result.existing],
+          ['Atlanan ürün', result.skipped],
+          ['Oluşturulan marka', result.createdMasterData.brands],
+          ['Oluşturulan kategori', result.createdMasterData.categories],
+          ['Oluşturulan sezon', result.createdMasterData.seasons],
+          ['Oluşturulan renk', result.createdMasterData.colors],
+          ['Oluşturulan beden', result.createdMasterData.sizes],
+          ['Oluşturulan kumaş tipi', result.createdMasterData.fabricTypes],
+          ['Hatalı satırlar', result.error],
         ]} />
       )}
 
@@ -486,6 +514,60 @@ function SummaryPanel({ title, items }: { title: string; items: Array<[string, n
               <Typography variant="h5" sx={{ fontWeight: 800 }}>
                 {numberText(value)}
               </Typography>
+            </Box>
+          ))}
+        </Box>
+      </Stack>
+    </Paper>
+  )
+}
+
+function MissingMasterDataPanel({ preview, mode }: { preview: ProductImportPreview; mode: MissingMasterDataMode }) {
+  const groups = missingMasterDataLabels
+    .map(([label, key]) => ({ label, values: preview.missingMasterData[key] }))
+    .filter((group) => group.values.length > 0)
+
+  if (groups.length === 0) {
+    return (
+      <Alert severity="success">
+        Eksik sistem tanımı bulunmadı. İçe aktarma mevcut tanımlarla devam edebilir.
+      </Alert>
+    )
+  }
+
+  const explanation: Record<MissingMasterDataMode, string> = {
+    Create: 'İçe Aktar dediğinizde aşağıdaki eksik tanımlar otomatik oluşturulacak ve işlem aynı dosya ile devam edecek.',
+    Skip: 'İçe Aktar dediğinizde aşağıdaki eksik tanımları içeren satırlar atlanacak.',
+    Cancel: 'İçe Aktar dediğinizde eksik tanımlar bulunduğu için işlem kayıt yapmadan iptal edilecek.',
+  }
+
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 1 }}>
+      <Stack spacing={2}>
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+            Eksik Sistem Tanımları
+          </Typography>
+          <Typography color="text.secondary">{explanation[mode]}</Typography>
+        </Box>
+        <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' } }}>
+          {groups.map((group) => (
+            <Box key={group.label} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
+                {group.label}
+              </Typography>
+              <Stack spacing={0.75}>
+                {group.values.slice(0, 8).map((value) => (
+                  <Typography key={value} variant="body2">
+                    {value}
+                  </Typography>
+                ))}
+                {group.values.length > 8 && (
+                  <Typography variant="body2" color="text.secondary">
+                    +{group.values.length - 8} kayıt daha
+                  </Typography>
+                )}
+              </Stack>
             </Box>
           ))}
         </Box>

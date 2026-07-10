@@ -133,6 +133,7 @@ public sealed class ProductService(
             product.SeasonId,
             product.Season?.Name,
             product.Status,
+            product.ImageUrl,
             product.CreatedAt,
             product.UpdatedAt);
     }
