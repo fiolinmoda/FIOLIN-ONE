@@ -17,6 +17,35 @@ function Write-Step {
     Write-Host $Message -ForegroundColor $Color
 }
 
+function Write-LogOutput {
+    param(
+        [Parameter(ValueFromPipeline = $true)]$InputObject,
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+
+    process {
+        if ($null -ne $InputObject) {
+            Add-Content -Path $LogPath -Value ([string]$InputObject) -Encoding UTF8
+        }
+    }
+}
+
+function Invoke-LoggedCommand {
+    param(
+        [Parameter(Mandatory = $true)][scriptblock]$Command,
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & $Command 2>&1 | Write-LogOutput -LogPath $LogPath
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+}
+
 function Run-Step {
     param(
         [Parameter(Mandatory = $true)][string]$Message,
@@ -24,7 +53,7 @@ function Run-Step {
     )
 
     Write-Step $Message
-    & $Command 1>> $UpdateLog 2>> $UpdateLog
+    Invoke-LoggedCommand -LogPath $UpdateLog -Command $Command
     if ($LASTEXITCODE -ne 0) {
         throw "$Message basarisiz oldu. Ayrintilar icin logs klasorundeki update log dosyasina bakin."
     }

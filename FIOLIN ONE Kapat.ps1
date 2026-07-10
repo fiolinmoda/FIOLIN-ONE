@@ -19,6 +19,35 @@ function Write-Step {
     Write-Host $Message -ForegroundColor $Color
 }
 
+function Write-LogOutput {
+    param(
+        [Parameter(ValueFromPipeline = $true)]$InputObject,
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+
+    process {
+        if ($null -ne $InputObject) {
+            Add-Content -Path $LogPath -Value ([string]$InputObject) -Encoding UTF8
+        }
+    }
+}
+
+function Invoke-LoggedCommand {
+    param(
+        [Parameter(Mandatory = $true)][scriptblock]$Command,
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & $Command 2>&1 | Write-LogOutput -LogPath $LogPath
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+}
+
 function Stop-ProcessTree {
     param([Nullable[int]]$ProcessId)
 
@@ -31,7 +60,9 @@ function Stop-ProcessTree {
         return
     }
 
-    taskkill /PID $ProcessId /T /F 1>> $ShutdownLog 2>> $ShutdownLog
+    Invoke-LoggedCommand -LogPath $ShutdownLog -Command {
+        taskkill /PID $ProcessId /T /F
+    }
 }
 
 Write-Host ""
@@ -51,7 +82,9 @@ if ($args -contains "--docker") {
     Write-Step "Docker konteynerleri durduruluyor..."
     Push-Location $Root
     try {
-        docker compose stop 1>> $ShutdownLog 2>> $ShutdownLog
+        Invoke-LoggedCommand -LogPath $ShutdownLog -Command {
+            docker compose stop
+        }
     }
     finally {
         Pop-Location

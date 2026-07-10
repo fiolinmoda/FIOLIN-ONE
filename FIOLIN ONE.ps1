@@ -23,6 +23,35 @@ function Write-Step {
     Write-Host $Message -ForegroundColor $Color
 }
 
+function Write-LogOutput {
+    param(
+        [Parameter(ValueFromPipeline = $true)]$InputObject,
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+
+    process {
+        if ($null -ne $InputObject) {
+            Add-Content -Path $LogPath -Value ([string]$InputObject) -Encoding UTF8
+        }
+    }
+}
+
+function Invoke-LoggedCommand {
+    param(
+        [Parameter(Mandatory = $true)][scriptblock]$Command,
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & $Command 2>&1 | Write-LogOutput -LogPath $LogPath
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+}
+
 function Fail {
     param([Parameter(Mandatory = $true)][string]$Message)
     Write-Step "HATA: $Message" Red
@@ -129,7 +158,9 @@ function Start-DockerDesktop {
 
 function Wait-Postgres {
     Write-Step "PostgreSQL hazirlaniyor..."
-    docker compose up -d postgres 1>> $StartupLog 2>> $StartupLog
+    Invoke-LoggedCommand -LogPath $StartupLog -Command {
+        docker compose up -d postgres
+    }
 
     Wait-Until -TimeoutSeconds 180 -FailureMessage "PostgreSQL konteyneri saglikli duruma gecmedi." -Condition {
         $status = docker inspect -f "{{.State.Health.Status}}" fiolin-one-postgres 2>$null
