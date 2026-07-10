@@ -6,5 +6,6 @@ public interface IMasterDataService
     Task<MasterDataDto?> GetItemAsync(string type, Guid id, CancellationToken cancellationToken);
     Task<MasterDataDto> CreateItemAsync(string type, CreateMasterDataRequest request, CancellationToken cancellationToken);
     Task<MasterDataDto?> UpdateItemAsync(string type, Guid id, UpdateMasterDataRequest request, CancellationToken cancellationToken);
+    Task<IReadOnlyList<MasterDataDto>> ReorderItemsAsync(string type, ReorderMasterDataRequest request, CancellationToken cancellationToken);
     Task<bool> DeleteItemAsync(string type, Guid id, CancellationToken cancellationToken);
 }

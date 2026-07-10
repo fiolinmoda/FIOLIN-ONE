@@ -35,14 +35,18 @@ public sealed class MasterDataService(IMasterDataRepository masterDataRepository
 
     public async Task<MasterDataDto> CreateItemAsync(string type, CreateMasterDataRequest request, CancellationToken cancellationToken)
     {
-        await EnsureCodeIsUniqueAsync(type, request.Code, null, cancellationToken);
+        var name = request.Name.Trim();
+        await EnsureNameIsUniqueAsync(type, name, null, cancellationToken);
+
+        var code = await ResolveCodeAsync(type, request.Code, null, cancellationToken);
+        var sortOrder = request.SortOrder ?? await GetNextSortOrderAsync(type, cancellationToken);
 
         var item = await masterDataRepository.CreateAsync(
             type,
-            request.Name.Trim(),
-            request.Code.Trim(),
+            name,
+            code,
             request.IsActive,
-            request.SortOrder,
+            sortOrder,
             cancellationToken);
 
         await masterDataRepository.SaveChangesAsync(cancellationToken);
@@ -63,12 +67,51 @@ public sealed class MasterDataService(IMasterDataRepository masterDataRepository
             return null;
         }
 
-        await EnsureCodeIsUniqueAsync(type, request.Code, id, cancellationToken);
+        var name = request.Name.Trim();
+        await EnsureNameIsUniqueAsync(type, name, id, cancellationToken);
 
-        item.Update(request.Name.Trim(), request.Code.Trim(), request.IsActive, request.SortOrder);
+        var code = await ResolveCodeAsync(type, request.Code, id, cancellationToken, item.Code);
+        var sortOrder = request.SortOrder ?? item.SortOrder;
+
+        item.Update(name, code, request.IsActive, sortOrder);
         await masterDataRepository.SaveChangesAsync(cancellationToken);
 
         return ToDto(item);
+    }
+
+    public async Task<IReadOnlyList<MasterDataDto>> ReorderItemsAsync(
+        string type,
+        ReorderMasterDataRequest request,
+        CancellationToken cancellationToken)
+    {
+        var currentItemIds = await masterDataRepository.Query(type)
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.Name)
+            .Select(item => item.Id)
+            .ToListAsync(cancellationToken);
+
+        if (currentItemIds.Count != request.ItemIds.Count || request.ItemIds.Except(currentItemIds).Any())
+        {
+            throw new InvalidOperationException("Sıralama kaydedilemedi. Lütfen listeyi yenileyip tekrar deneyin.");
+        }
+
+        var items = await masterDataRepository.GetByIdsAsync(type, request.ItemIds, cancellationToken);
+
+        if (items.Count != request.ItemIds.Count)
+        {
+            throw new InvalidOperationException("Sıralama kaydedilemedi. Bazı kayıtlar bulunamadı.");
+        }
+
+        var lookup = items.ToDictionary(item => item.Id);
+
+        for (var index = 0; index < request.ItemIds.Count; index++)
+        {
+            lookup[request.ItemIds[index]].ChangeSortOrder(index);
+        }
+
+        await masterDataRepository.SaveChangesAsync(cancellationToken);
+
+        return (await GetItemsAsync(type, null, cancellationToken)).ToList();
     }
 
     public async Task<bool> DeleteItemAsync(string type, Guid id, CancellationToken cancellationToken)
@@ -86,18 +129,96 @@ public sealed class MasterDataService(IMasterDataRepository masterDataRepository
         return true;
     }
 
+    private async Task<string> ResolveCodeAsync(
+        string type,
+        string? requestedCode,
+        Guid? excludedId,
+        CancellationToken cancellationToken,
+        string? existingCode = null)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedCode))
+        {
+            var code = requestedCode.Trim();
+            await EnsureCodeIsUniqueAsync(type, code, excludedId, cancellationToken);
+            return code;
+        }
+
+        if (!string.IsNullOrWhiteSpace(existingCode))
+        {
+            return existingCode;
+        }
+
+        return await GenerateCodeAsync(type, cancellationToken);
+    }
+
+    private async Task<string> GenerateCodeAsync(string type, CancellationToken cancellationToken)
+    {
+        var prefix = CodePrefix(type);
+        var sequence = await masterDataRepository.Query(type).CountAsync(cancellationToken) + 1;
+
+        while (true)
+        {
+            var code = $"{prefix}-{sequence:000000}";
+
+            if (!await masterDataRepository.CodeExistsAsync(type, code, null, cancellationToken))
+            {
+                return code;
+            }
+
+            sequence++;
+        }
+    }
+
+    private async Task<int> GetNextSortOrderAsync(string type, CancellationToken cancellationToken)
+    {
+        var lastSortOrder = await masterDataRepository.Query(type)
+            .OrderByDescending(item => item.SortOrder)
+            .Select(item => (int?)item.SortOrder)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return (lastSortOrder ?? -1) + 1;
+    }
+
     private async Task EnsureCodeIsUniqueAsync(
         string type,
         string code,
         Guid? excludedId,
         CancellationToken cancellationToken)
     {
-        var exists = await masterDataRepository.CodeExistsAsync(type, code.Trim(), excludedId, cancellationToken);
+        var exists = await masterDataRepository.CodeExistsAsync(type, code, excludedId, cancellationToken);
 
         if (exists)
         {
-            throw new InvalidOperationException("Code already exists.");
+            throw new InvalidOperationException("Aynı kodda kayıt mevcut.");
         }
+    }
+
+    private async Task EnsureNameIsUniqueAsync(
+        string type,
+        string name,
+        Guid? excludedId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await masterDataRepository.NameExistsAsync(type, name, excludedId, cancellationToken);
+
+        if (exists)
+        {
+            throw new InvalidOperationException("Aynı isimde kayıt mevcut.");
+        }
+    }
+
+    private static string CodePrefix(string type)
+    {
+        return type.Trim().ToLowerInvariant() switch
+        {
+            "brands" => "BRD",
+            "categories" => "CAT",
+            "seasons" => "SEA",
+            "colors" => "CLR",
+            "sizes" => "SIZ",
+            "fabric-types" => "FBT",
+            _ => throw new ArgumentOutOfRangeException(nameof(type), "Desteklenmeyen master data tipi.")
+        };
     }
 
     private static MasterDataDto ToDto(MasterDataEntity item)

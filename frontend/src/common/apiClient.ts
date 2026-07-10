@@ -47,6 +47,16 @@ function translateKnownMessage(message: string, status: number): string {
   return normalized
 }
 
+function translateNetworkError(exception: unknown): string {
+  const message = exception instanceof Error ? exception.message : String(exception)
+
+  if (message === 'Failed to fetch' || message.includes('fetch')) {
+    return 'Sunucuya bağlanılamadı. FIOLIN ONE servisinin çalıştığını ve bağlantınızı kontrol edin.'
+  }
+
+  return 'Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edip tekrar deneyin.'
+}
+
 function flattenValidationErrors(errors: ApiErrorBody['errors']): string[] {
   if (!errors) {
     return []
@@ -64,14 +74,20 @@ function flattenValidationErrors(errors: ApiErrorBody['errors']): string[] {
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const token = window.localStorage.getItem('fiolin-one-token')
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init?.headers,
-    },
-    ...init,
-  })
+  let response: Response
+
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init?.headers,
+      },
+      ...init,
+    })
+  } catch (exception) {
+    throw new Error(translateNetworkError(exception))
+  }
 
   if (!response.ok) {
     const body = await response.json().catch(() => null) as ApiErrorBody | null

@@ -108,6 +108,34 @@ public sealed class MasterDataController(IMasterDataService masterDataService) :
     }
 
     /// <summary>
+    /// Reorders master data items by type.
+    /// </summary>
+    [HttpPut("reorder")]
+    [ProducesResponseType(typeof(IReadOnlyList<MasterDataDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ReorderItems(
+        string type,
+        [FromBody] ReorderMasterDataRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var items = await masterDataService.ReorderItemsAsync(type, request, cancellationToken);
+
+            return Ok(items);
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { message = exception.Message });
+        }
+    }
+
+    /// <summary>
     /// Deletes a master data item.
     /// </summary>
     [HttpDelete("{id:guid}")]

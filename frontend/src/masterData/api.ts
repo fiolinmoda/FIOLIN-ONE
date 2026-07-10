@@ -38,3 +38,13 @@ export async function deleteMasterDataItem(type: MasterDataType, id: string): Pr
     method: 'DELETE',
   })
 }
+
+export async function reorderMasterDataItems(
+  type: MasterDataType,
+  itemIds: string[],
+): Promise<MasterDataItem[]> {
+  return request<MasterDataItem[]>(`/api/master-data/${type}/reorder`, {
+    method: 'PUT',
+    body: JSON.stringify({ itemIds }),
+  })
+}

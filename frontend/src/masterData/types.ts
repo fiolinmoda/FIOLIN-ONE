@@ -12,9 +12,7 @@ export type MasterDataItem = {
 
 export type MasterDataInput = {
   name: string
-  code: string
   isActive: boolean
-  sortOrder: number
 }
 
 export const masterDataLabels: Record<MasterDataType, string> = {
@@ -24,4 +22,13 @@ export const masterDataLabels: Record<MasterDataType, string> = {
   colors: 'Renkler',
   sizes: 'Bedenler',
   'fabric-types': 'Kumaş Tipleri',
+}
+
+export const masterDataSingularLabels: Record<MasterDataType, string> = {
+  brands: 'Marka',
+  categories: 'Kategori',
+  seasons: 'Sezon',
+  colors: 'Renk',
+  sizes: 'Beden',
+  'fabric-types': 'Kumaş Tipi',
 }

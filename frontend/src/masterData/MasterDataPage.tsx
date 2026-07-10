@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { DragEvent, FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
-import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import {
   Alert,
   Box,
@@ -16,33 +15,54 @@ import {
   InputAdornment,
   Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import {
   createMasterDataItem,
   deleteMasterDataItem,
   getMasterDataItems,
+  reorderMasterDataItems,
   updateMasterDataItem,
 } from './api'
 import type { MasterDataInput, MasterDataItem, MasterDataType } from './types'
-import { masterDataLabels } from './types'
+import { masterDataLabels, masterDataSingularLabels } from './types'
 import { commonText, confirmDelete, dialogContentSx, dialogPaperSx, requiredMessage } from '../common/uiText'
 import { toUserMessage } from '../common/apiClient'
 
 const emptyItem: MasterDataInput = {
   name: '',
-  code: '',
   isActive: true,
-  sortOrder: 0,
 }
 
 const masterDataTypes = Object.keys(masterDataLabels) as MasterDataType[]
+
+function moveItem(items: MasterDataItem[], draggedId: string, targetId: string): MasterDataItem[] {
+  const fromIndex = items.findIndex((item) => item.id === draggedId)
+  const toIndex = items.findIndex((item) => item.id === targetId)
+
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+    return items
+  }
+
+  const nextItems = [...items]
+  const [draggedItem] = nextItems.splice(fromIndex, 1)
+  nextItems.splice(toIndex, 0, draggedItem)
+
+  return nextItems
+}
 
 export function MasterDataPage() {
   const { type } = useParams()
@@ -50,28 +70,41 @@ export function MasterDataPage() {
     ? (type as MasterDataType)
     : 'brands'
   const title = masterDataLabels[masterDataType]
+  const singularTitle = masterDataSingularLabels[masterDataType]
+  const nameLabel = `${singularTitle} Adı`
   const [items, setItems] = useState<MasterDataItem[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [reordering, setReordering] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MasterDataItem | null>(null)
   const [itemInput, setItemInput] = useState<MasterDataInput>(emptyItem)
+  const [draggedId, setDraggedId] = useState<string | null>(null)
 
-  const loadItems = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const canReorder = useMemo(
+    () => !search.trim() && items.length > 1 && !loading && !reordering,
+    [items.length, loading, reordering, search],
+  )
 
-    try {
-      const data = await getMasterDataItems(masterDataType, search)
-      setItems(data)
-    } catch (exception) {
-      setError(toUserMessage(exception, `${title} yüklenemedi.`))
-    } finally {
-      setLoading(false)
-    }
-  }, [masterDataType, search, title])
+  const loadItems = useCallback(
+    async (nextSearch?: string) => {
+      const activeSearch = nextSearch ?? search
+      setLoading(true)
+      setError(null)
+
+      try {
+        const data = await getMasterDataItems(masterDataType, activeSearch)
+        setItems(data)
+      } catch (exception) {
+        setError(toUserMessage(exception, `${title} yüklenemedi.`))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [masterDataType, search, title],
+  )
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -84,6 +117,7 @@ export function MasterDataPage() {
   function openAddDialog() {
     setEditingItem(null)
     setItemInput(emptyItem)
+    setError(null)
     setDialogOpen(true)
   }
 
@@ -91,10 +125,9 @@ export function MasterDataPage() {
     setEditingItem(item)
     setItemInput({
       name: item.name,
-      code: item.code,
       isActive: item.isActive,
-      sortOrder: item.sortOrder,
     })
+    setError(null)
     setDialogOpen(true)
   }
 
@@ -112,10 +145,10 @@ export function MasterDataPage() {
         await deleteMasterDataItem(masterDataType, item.id)
         await loadItems()
       } catch (exception) {
-        setError(toUserMessage(exception, `${title} silinemedi.`))
+        setError(toUserMessage(exception, `${singularTitle} silinemedi.`))
       }
     },
-    [loadItems, masterDataType, title],
+    [loadItems, masterDataType, singularTitle],
   )
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -123,59 +156,85 @@ export function MasterDataPage() {
     setSaving(true)
     setError(null)
 
+    const trimmedName = itemInput.name.trim()
+
+    if (!trimmedName) {
+      setError(requiredMessage(nameLabel))
+      setSaving(false)
+      return
+    }
+
+    const payload: MasterDataInput = {
+      name: trimmedName,
+      isActive: itemInput.isActive,
+    }
+
     try {
       if (editingItem) {
-        await updateMasterDataItem(masterDataType, editingItem.id, itemInput)
+        await updateMasterDataItem(masterDataType, editingItem.id, payload)
       } else {
-        await createMasterDataItem(masterDataType, itemInput)
+        await createMasterDataItem(masterDataType, payload)
+        setSearch('')
       }
 
       setDialogOpen(false)
-      await loadItems()
+      setItemInput(emptyItem)
+      await loadItems(editingItem ? undefined : '')
     } catch (exception) {
-      setError(toUserMessage(exception, `${title} kaydedilemedi.`))
+      setError(toUserMessage(exception, `${singularTitle} kaydedilemedi.`))
     } finally {
       setSaving(false)
     }
   }
 
-  const columns = useMemo<GridColDef<MasterDataItem>[]>(
-    () => [
-      { field: 'code', headerName: 'Kod', minWidth: 140, flex: 0.7 },
-      { field: 'name', headerName: 'Ad', minWidth: 220, flex: 1.2 },
-      { field: 'sortOrder', headerName: 'Sıra', type: 'number', minWidth: 100, flex: 0.4 },
-      {
-        field: 'isActive',
-        headerName: 'Aktif',
-        minWidth: 110,
-        flex: 0.4,
-        valueFormatter: (value: boolean) => (value ? commonText.yes : commonText.no),
-      },
-      {
-        field: 'actions',
-        headerName: '',
-        sortable: false,
-        filterable: false,
-        width: 112,
-        align: 'right',
-        renderCell: ({ row }) => (
-          <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end', width: '100%' }}>
-            <Tooltip title={commonText.edit}>
-              <IconButton size="small" onClick={() => openEditDialog(row)}>
-                <EditOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={commonText.delete}>
-              <IconButton size="small" color="error" onClick={() => void handleDelete(row)}>
-                <DeleteOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        ),
-      },
-    ],
-    [handleDelete],
-  )
+  function handleDragStart(event: DragEvent<HTMLTableRowElement>, id: string) {
+    if (!canReorder) {
+      event.preventDefault()
+      return
+    }
+
+    event.dataTransfer.effectAllowed = 'move'
+    setDraggedId(id)
+  }
+
+  function handleDragOver(event: DragEvent<HTMLTableRowElement>) {
+    if (canReorder) {
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+    }
+  }
+
+  async function handleDrop(event: DragEvent<HTMLTableRowElement>, targetId: string) {
+    event.preventDefault()
+
+    if (!draggedId || draggedId === targetId || !canReorder) {
+      setDraggedId(null)
+      return
+    }
+
+    const previousItems = items
+    const nextItems = moveItem(items, draggedId, targetId)
+
+    if (nextItems === items) {
+      setDraggedId(null)
+      return
+    }
+
+    setItems(nextItems)
+    setDraggedId(null)
+    setReordering(true)
+    setError(null)
+
+    try {
+      const savedItems = await reorderMasterDataItems(masterDataType, nextItems.map((item) => item.id))
+      setItems(savedItems)
+    } catch (exception) {
+      setItems(previousItems)
+      setError(toUserMessage(exception, 'Sıralama kaydedilemedi.'))
+    } finally {
+      setReordering(false)
+    }
+  }
 
   return (
     <Stack spacing={3}>
@@ -215,66 +274,94 @@ export function MasterDataPage() {
               },
             }}
           />
-          <Box sx={{ width: '100%', minHeight: 460 }}>
-            <DataGrid
-              rows={items}
-              columns={columns}
-              loading={loading}
-              disableRowSelectionOnClick
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10 },
-                },
-              }}
-              sx={{
-                border: 0,
-                '& .MuiDataGrid-columnHeaders': {
-                  bgcolor: 'background.default',
-                },
-              }}
-            />
-          </Box>
+          <TableContainer sx={{ minHeight: 420 }}>
+            <Table size="small" aria-label={title}>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ width: 56 }} />
+                  <TableCell>Ad</TableCell>
+                  <TableCell sx={{ width: 120 }}>Aktif</TableCell>
+                  <TableCell align="right" sx={{ width: 120 }} />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow
+                    key={item.id}
+                    draggable={canReorder}
+                    hover
+                    onDragStart={(event) => handleDragStart(event, item.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(event) => void handleDrop(event, item.id)}
+                    onDragEnd={() => setDraggedId(null)}
+                    sx={{
+                      cursor: canReorder ? 'grab' : 'default',
+                      opacity: draggedId === item.id ? 0.55 : 1,
+                    }}
+                  >
+                    <TableCell>
+                      <Tooltip title="Sırala">
+                        <Box
+                          component="span"
+                          sx={{
+                            color: canReorder ? 'text.secondary' : 'action.disabled',
+                            display: 'inline-flex',
+                            pt: 0.5,
+                          }}
+                        >
+                          <DragIndicatorIcon fontSize="small" />
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 700 }}>{item.name}</Typography>
+                    </TableCell>
+                    <TableCell>{item.isActive ? commonText.yes : commonText.no}</TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+                        <Tooltip title={commonText.edit}>
+                          <IconButton size="small" onClick={() => openEditDialog(item)}>
+                            <EditOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={commonText.delete}>
+                          <IconButton size="small" color="error" onClick={() => void handleDelete(item)}>
+                            <DeleteOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!loading && items.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4}>
+                      <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+                        Henüz kayıt yok.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Stack>
       </Paper>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm" slotProps={{ paper: { sx: dialogPaperSx } }}>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="xs" slotProps={{ paper: { sx: dialogPaperSx } }}>
         <Box component="form" onSubmit={(event) => void handleSubmit(event)}>
-          <DialogTitle>{editingItem ? `${title} Düzenle` : `${title} Ekle`}</DialogTitle>
+          <DialogTitle>{editingItem ? `${singularTitle} Düzenle` : `${singularTitle} Ekle`}</DialogTitle>
           <DialogContent sx={dialogContentSx}>
             {error && <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>{error}</Alert>}
             <Stack spacing={2.5} sx={{ pt: 1 }}>
               <TextField
-                label="Ad"
+                label={nameLabel}
                 value={itemInput.name}
                 onChange={(event) => setItemInput((current) => ({ ...current, name: event.target.value }))}
                 required
-                helperText={!itemInput.name.trim() ? requiredMessage('Ad') : ' '}
+                autoFocus
+                helperText={!itemInput.name.trim() ? requiredMessage(nameLabel) : ' '}
                 fullWidth
-              />
-              <TextField
-                label="Kod"
-                value={itemInput.code}
-                onChange={(event) => setItemInput((current) => ({ ...current, code: event.target.value }))}
-                required
-                helperText={!itemInput.code.trim() ? requiredMessage('Kod') : ' '}
-                fullWidth
-              />
-              <TextField
-                label="Sıra"
-                type="number"
-                value={itemInput.sortOrder}
-                onChange={(event) =>
-                  setItemInput((current) => ({ ...current, sortOrder: Number(event.target.value) }))
-                }
-                required
-                helperText={itemInput.sortOrder < 0 ? 'Sıra negatif olamaz.' : ' '}
-                fullWidth
-                slotProps={{
-                  htmlInput: {
-                    min: 0,
-                  },
-                }}
               />
               <FormControlLabel
                 control={

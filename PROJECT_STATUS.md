@@ -126,6 +126,31 @@ Completed work:
 - Navigation model prepared for future role-based menu visibility.
 - Turkish FluentValidation messages added for the most important smart-form validation paths.
 
+### Master Data UX Polish
+
+Status: Completed
+
+Completed work:
+
+- Brand, Category, Season, Color, Size and Fabric Type forms were simplified.
+- User-facing "Kod" and "Sıra" inputs were removed from Master Data create/edit dialogs.
+- Backend now generates Master Data codes automatically when the UI does not provide one.
+- New Master Data records are automatically appended to the end of the list.
+- Master Data lists now support drag-and-drop ordering and save the new order immediately.
+- Duplicate names are rejected per Master Data type with a Turkish user-facing message.
+- Empty names are rejected before save.
+- Generic fetch failures are translated to Turkish connection errors instead of showing "Failed to fetch".
+- Save/delete/reorder failures now prefer backend error messages when available.
+- Successful creates refresh the list and clear search so the new record is visible.
+
+Validated with:
+
+- `dotnet build`
+- `dotnet test`
+- `npm run build`
+- `npm run lint`
+- Real PostgreSQL API verification for brands, categories, seasons, colors, sizes and fabric-types.
+
 ## Known Issues
 
 - Frontend bundle is larger than Vite's default recommended chunk size. Code splitting should be planned.

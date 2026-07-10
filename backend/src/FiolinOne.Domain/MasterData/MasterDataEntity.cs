@@ -31,4 +31,10 @@ public abstract class MasterDataEntity : Entity, IMasterDataEntity
         SortOrder = sortOrder;
         UpdatedAtUtc = DateTime.UtcNow;
     }
+
+    public void ChangeSortOrder(int sortOrder)
+    {
+        SortOrder = sortOrder;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 }

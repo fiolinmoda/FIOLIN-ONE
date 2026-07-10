@@ -19,6 +19,16 @@ public sealed class MasterDataRepository(ApplicationDbContext dbContext) : IMast
         return await Set(type).FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<MasterDataEntity>> GetByIdsAsync(
+        string type,
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken)
+    {
+        return await Set(type)
+            .Where(item => ids.Contains(item.Id))
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<bool> ExistsAsync(string type, Guid id, CancellationToken cancellationToken)
     {
         return Set(type).AnyAsync(item => item.Id == id, cancellationToken);
@@ -28,6 +38,15 @@ public sealed class MasterDataRepository(ApplicationDbContext dbContext) : IMast
     {
         return Set(type).AnyAsync(
             item => item.Code == code && (!excludedId.HasValue || item.Id != excludedId.Value),
+            cancellationToken);
+    }
+
+    public Task<bool> NameExistsAsync(string type, string name, Guid? excludedId, CancellationToken cancellationToken)
+    {
+        var normalizedName = name.Trim().ToLower();
+
+        return Set(type).AnyAsync(
+            item => item.Name.ToLower() == normalizedName && (!excludedId.HasValue || item.Id != excludedId.Value),
             cancellationToken);
     }
 
