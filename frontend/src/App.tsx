@@ -6,7 +6,6 @@ import {
   Chip,
   Collapse,
   Container,
-  Divider,
   Drawer,
   IconButton,
   List,
@@ -42,6 +41,7 @@ import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
 import WarehouseOutlinedIcon from '@mui/icons-material/WarehouseOutlined'
+import { DashboardPage } from './dashboard/DashboardPage'
 import { FabricDetailPage } from './fabric/FabricDetailPage'
 import { FabricListPage } from './fabric/FabricListPage'
 import { FabricStockPage } from './fabric/FabricStockPage'
@@ -439,7 +439,7 @@ function App() {
             </Box>
             <Routes>
               <Route path="/" element={<Navigate to={getLastPage()} replace />} />
-              <Route path={dashboardPath} element={<WorkspaceDashboard />} />
+              <Route path={dashboardPath} element={<DashboardPage />} />
               <Route path="/production/dashboard" element={<Navigate to={dashboardPath} replace />} />
               <Route path="/products" element={<ProductListPage />} />
               <Route path="/products/:id" element={<ProductDetailPage />} />
@@ -477,64 +477,6 @@ function App() {
         </Container>
       </Box>
     </Box>
-  )
-}
-
-function WorkspaceDashboard() {
-  const dashboards = ['Yönetici', 'Satın Alma', 'Depo', 'Üretim', 'Muhasebe']
-
-  return (
-    <Stack spacing={2.5}>
-      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
-          <DashboardOutlinedIcon color="primary" />
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              Ana Panel
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Rol bazlı çalışma panelleri için temel yerleşim hazır.
-            </Typography>
-          </Box>
-        </Stack>
-      </Paper>
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 2,
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, minmax(0, 1fr))',
-            lg: 'repeat(3, minmax(0, 1fr))',
-          },
-        }}
-      >
-        {dashboards.map((dashboard) => (
-          <Paper key={dashboard} variant="outlined" sx={{ p: 2.5, borderRadius: 2, minHeight: 160 }}>
-            <Stack spacing={1.5} sx={{ height: '100%' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                {dashboard}
-              </Typography>
-              <Divider />
-              <Box
-                sx={{
-                  flex: 1,
-                  display: 'grid',
-                  placeItems: 'center',
-                  borderRadius: 2,
-                  bgcolor: 'action.hover',
-                  color: 'text.secondary',
-                  px: 2,
-                  textAlign: 'center',
-                }}
-              >
-                <Typography variant="body2">Panel yerleşimi hazır.</Typography>
-              </Box>
-            </Stack>
-          </Paper>
-        ))}
-      </Box>
-    </Stack>
   )
 }
 

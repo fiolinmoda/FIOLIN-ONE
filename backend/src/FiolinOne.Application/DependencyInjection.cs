@@ -1,4 +1,5 @@
 using FluentValidation;
+using FiolinOne.Application.Dashboard;
 using FiolinOne.Application.Fabric;
 using FiolinOne.Application.MasterData;
 using FiolinOne.Application.Products;
@@ -20,6 +21,7 @@ public static class DependencyInjection
         services.AddMediatR(configuration => configuration.RegisterServicesFromAssembly(assembly));
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IMasterDataService, MasterDataService>();
+        services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IProductVariantService, ProductVariantService>();
         services.AddScoped<IPurchasingService, PurchasingService>();
