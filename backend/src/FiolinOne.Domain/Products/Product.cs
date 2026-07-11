@@ -10,6 +10,7 @@ public sealed class Product : Entity
     }
 
     public Product(
+        string modelCode,
         string productCode,
         string productName,
         Guid? brandId,
@@ -18,6 +19,7 @@ public sealed class Product : Entity
         string status,
         string? imageUrl = null)
     {
+        ModelCode = modelCode;
         ProductCode = productCode;
         ProductName = productName;
         BrandId = brandId;
@@ -27,6 +29,7 @@ public sealed class Product : Entity
         ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim();
     }
 
+    public string ModelCode { get; private set; } = string.Empty;
     public string ProductCode { get; private set; } = string.Empty;
     public string ProductName { get; private set; } = string.Empty;
     public Guid? BrandId { get; private set; }
@@ -44,6 +47,7 @@ public sealed class Product : Entity
     private readonly List<ProductVariant> variants = [];
 
     public void Update(
+        string modelCode,
         string productCode,
         string productName,
         Guid? brandId,
@@ -52,6 +56,7 @@ public sealed class Product : Entity
         string status,
         string? imageUrl = null)
     {
+        ModelCode = modelCode;
         ProductCode = productCode;
         ProductName = productName;
         BrandId = brandId;

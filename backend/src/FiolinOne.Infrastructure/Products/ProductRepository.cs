@@ -24,6 +24,7 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
             var term = search.Trim().ToLower();
 
             query = query.Where(product =>
+                product.ModelCode.ToLower().Contains(term) ||
                 product.ProductCode.ToLower().Contains(term) ||
                 product.ProductName.ToLower().Contains(term) ||
                 (product.Brand != null && product.Brand.Name.ToLower().Contains(term)) ||
@@ -49,6 +50,7 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
                 product => product.Variants.DefaultIfEmpty(),
                 (product, variant) => new ProductListRowDto(
                     product.Id,
+                    product.ModelCode,
                     product.ProductCode,
                     product.ProductName,
                     product.BrandId,
@@ -91,6 +93,13 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
     {
         return dbContext.Products.AnyAsync(
             product => product.ProductCode == productCode && (!excludedId.HasValue || product.Id != excludedId.Value),
+            cancellationToken);
+    }
+
+    public Task<bool> ExistsByModelCodeAsync(string modelCode, Guid? excludedId, CancellationToken cancellationToken)
+    {
+        return dbContext.Products.AnyAsync(
+            product => product.ModelCode == modelCode && (!excludedId.HasValue || product.Id != excludedId.Value),
             cancellationToken);
     }
 

@@ -34,7 +34,9 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             .OrderByDescending(profile => profile.UpdatedAtUtc ?? profile.CreatedAtUtc)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var mapping = request.Mapping ?? (savedProfile is null ? SuggestMapping(workbook.Headers) : DeserializeMapping(savedProfile.MappingJson));
+        var mapping = SanitizeMapping(
+            request.Mapping ?? (savedProfile is null ? SuggestMapping(workbook.Headers) : DeserializeMapping(savedProfile.MappingJson)),
+            workbook.Headers);
         var rows = await AnalyzeRowsAsync(workbook, mapping, request.MissingMasterDataMode, false, cancellationToken);
         var summary = BuildSummary(rows);
         var missingMasterData = BuildMissingMasterData(rows);
@@ -62,7 +64,8 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         var bytes = await ReadBytesAsync(fileStream, cancellationToken);
         var workbook = XlsxWorkbook.Read(bytes);
         var signature = CreateSignature(workbook.Headers);
-        var rows = await AnalyzeRowsAsync(workbook, request.Mapping, request.MissingMasterDataMode, true, cancellationToken);
+        var mapping = SanitizeMapping(request.Mapping, workbook.Headers);
+        var rows = await AnalyzeRowsAsync(workbook, mapping, request.MissingMasterDataMode, true, cancellationToken);
         var createdMasterData = BuildCreatedMasterData(rows);
 
         if (request.MissingMasterDataMode.Equals("Cancel", StringComparison.OrdinalIgnoreCase)
@@ -71,26 +74,39 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             throw new InvalidOperationException("Eksik sistem tanımları bulunduğu için içe aktarma iptal edildi.");
         }
 
-        var insertableRows = rows
+        var insertableGroups = rows
             .Where(row => row.Status == ProductImportRowStatus.New)
             .GroupBy(row => row.ModelCode, StringComparer.CurrentCultureIgnoreCase)
-            .Select(group => group.First())
             .ToList();
+        var existingProductCodes = await dbContext.Products.AsNoTracking().Select(product => product.ProductCode).ToListAsync(cancellationToken);
+        var usedProductCodes = existingProductCodes.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
 
-        var products = new List<Product>(insertableRows.Count);
-        var variants = new List<ProductVariant>(insertableRows.Count);
+        var products = new List<Product>(insertableGroups.Count);
+        var variants = new List<ProductVariant>(rows.Count(row => row.Status == ProductImportRowStatus.New));
 
-        foreach (var row in insertableRows)
+        foreach (var group in insertableGroups)
         {
-            var product = new Product(row.ModelCode, row.ProductName, row.BrandId, row.CategoryId, row.SeasonId, "Active", row.ImageUrl);
+            var representative = group.First();
+            var product = new Product(
+                representative.ModelCode,
+                CreateUniqueProductCode(representative.ModelCode, usedProductCodes),
+                representative.ProductName,
+                representative.BrandId,
+                representative.CategoryId,
+                representative.SeasonId,
+                "Active",
+                representative.ImageUrl);
             products.Add(product);
 
-            if (row.ColorId.HasValue && row.SizeId.HasValue)
+            foreach (var row in group
+                .Where(row => row.ColorId.HasValue && row.SizeId.HasValue)
+                .GroupBy(row => new { row.ColorId, row.SizeId })
+                .Select(variantGroup => variantGroup.First()))
             {
                 variants.Add(new ProductVariant(
                     product.Id,
-                    row.ColorId.Value,
-                    row.SizeId.Value,
+                    row.ColorId!.Value,
+                    row.SizeId!.Value,
                     CreateBarcode(row.ModelCode, row.ColorName, row.SizeName),
                     null,
                     row.Stock,
@@ -105,7 +121,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
 
         if (request.SaveProfile)
         {
-            await SaveProfileAsync(signature, request.ProfileName, request.Mapping, userName, cancellationToken);
+            await SaveProfileAsync(signature, request.ProfileName, mapping, userName, cancellationToken);
         }
 
         stopwatch.Stop();
@@ -119,7 +135,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             string.IsNullOrWhiteSpace(userName) ? DefaultUser : userName,
             fileName,
             summary.Total,
-            insertableRows.Count,
+            insertableGroups.Count,
             summary.ExistingProducts,
             summary.Skipped,
             summary.Error,
@@ -130,7 +146,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         await dbContext.ProductImportHistories.AddAsync(history, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return new ProductImportResultDto(summary, insertableRows.Count, summary.ExistingProducts, summary.Skipped, summary.Error, createdMasterData, (int)stopwatch.ElapsedMilliseconds, errorRows);
+        return new ProductImportResultDto(summary, insertableGroups.Count, summary.ExistingProducts, summary.Skipped, summary.Error, createdMasterData, (int)stopwatch.ElapsedMilliseconds, errorRows);
     }
 
     public async Task<IReadOnlyList<ProductImportHistoryDto>> GetHistoryAsync(CancellationToken cancellationToken)
@@ -162,15 +178,14 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         bool allowCreateMasterData,
         CancellationToken cancellationToken)
     {
-        var products = await dbContext.Products.AsNoTracking().Select(product => product.ProductCode).ToListAsync(cancellationToken);
-        var existingProductCodes = products.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+        var products = await dbContext.Products.AsNoTracking().Select(product => product.ModelCode).ToListAsync(cancellationToken);
+        var existingModelCodes = products.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
         var brands = await dbContext.Brands.ToListAsync(cancellationToken);
         var categories = await dbContext.Categories.ToListAsync(cancellationToken);
         var seasons = await dbContext.Seasons.ToListAsync(cancellationToken);
         var colors = await dbContext.Colors.ToListAsync(cancellationToken);
         var sizes = await dbContext.Sizes.ToListAsync(cancellationToken);
         var fabricTypes = await dbContext.FabricTypes.ToListAsync(cancellationToken);
-        var localCodes = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
         var analyzedRows = new List<AnalyzedRow>(workbook.Rows.Count);
         var mode = string.IsNullOrWhiteSpace(missingMasterDataMode) ? "Cancel" : missingMasterDataMode.Trim();
 
@@ -207,16 +222,10 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
                 analyzed.Errors.Add("Stok negatif olamaz.");
             }
 
-            if (!string.IsNullOrWhiteSpace(analyzed.ModelCode) && existingProductCodes.Contains(analyzed.ModelCode))
+            if (!string.IsNullOrWhiteSpace(analyzed.ModelCode) && existingModelCodes.Contains(analyzed.ModelCode))
             {
                 analyzed.Status = ProductImportRowStatus.Existing;
             }
-            else if (!string.IsNullOrWhiteSpace(analyzed.ModelCode) && !localCodes.Add(analyzed.ModelCode))
-            {
-                analyzed.Status = ProductImportRowStatus.Skipped;
-                analyzed.Errors.Add("Dosya içinde aynı Model Kodu tekrar ediyor.");
-            }
-
             ResolveMasterData(analyzed, brands, categories, seasons, colors, sizes, fabricTypes, mode, allowCreateMasterData);
 
             if (analyzed.Errors.Count > 0 && analyzed.Status != ProductImportRowStatus.Existing)
@@ -392,6 +401,32 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             Find(headers, "görsel", "gorsel", "resim", "image", "photo", "url"));
     }
 
+    private static ProductImportMapping SanitizeMapping(ProductImportMapping mapping, IReadOnlyList<string> headers)
+    {
+        var modelCode = IsForbiddenModelCodeHeader(mapping.ModelCode)
+            ? Find(headers, "model kodu", "model code", "model")
+            : mapping.ModelCode;
+
+        return mapping with { ModelCode = modelCode };
+    }
+
+    private static bool IsForbiddenModelCodeHeader(string? header)
+    {
+        if (string.IsNullOrWhiteSpace(header))
+        {
+            return false;
+        }
+
+        var normalized = Normalize(header);
+        return normalized.Contains("barkod", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("barcode", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("sku", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("stok kodu", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("ürün kodu", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("urun kodu", StringComparison.OrdinalIgnoreCase) ||
+            normalized == "kod";
+    }
+
     private static string? Find(IReadOnlyList<string> headers, params string[] candidates)
     {
         return headers.FirstOrDefault(header => candidates.Any(candidate => Normalize(header).Contains(Normalize(candidate), StringComparison.OrdinalIgnoreCase)));
@@ -460,6 +495,23 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         {
             var suffixText = suffix.ToString(CultureInfo.InvariantCulture);
             var maxBaseLength = Math.Max(1, 40 - suffixText.Length);
+            code = $"{baseCode[..Math.Min(baseCode.Length, maxBaseLength)]}{suffixText}";
+            suffix++;
+        }
+
+        return code;
+    }
+
+    private static string CreateUniqueProductCode(string modelCode, HashSet<string> usedProductCodes)
+    {
+        var baseCode = CreateCode(modelCode);
+        var code = baseCode;
+        var suffix = 1;
+
+        while (!usedProductCodes.Add(code))
+        {
+            var suffixText = suffix.ToString(CultureInfo.InvariantCulture);
+            var maxBaseLength = Math.Max(1, 50 - suffixText.Length);
             code = $"{baseCode[..Math.Min(baseCode.Length, maxBaseLength)]}{suffixText}";
             suffix++;
         }

@@ -1,7 +1,6 @@
 using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Application.MasterData;
 using FiolinOne.Domain.Products;
-using System.Text.RegularExpressions;
 
 namespace FiolinOne.Application.Products;
 
@@ -27,12 +26,14 @@ public sealed class ProductService(
     public async Task<ProductDto> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
     {
         var productCode = await GetDocumentNumberAsync(request.ProductCode, DocumentNumberTypes.Product, cancellationToken);
+        await EnsureModelCodeIsUniqueAsync(request.ModelCode, null, cancellationToken);
         await EnsureProductCodeIsUniqueAsync(productCode, null, cancellationToken);
         await EnsureMasterDataExistsAsync(request.BrandId, "brands", cancellationToken);
         await EnsureMasterDataExistsAsync(request.CategoryId, "categories", cancellationToken);
         await EnsureMasterDataExistsAsync(request.SeasonId, "seasons", cancellationToken);
 
         var product = new Product(
+            request.ModelCode.Trim(),
             productCode,
             request.ProductName.Trim(),
             request.BrandId,
@@ -55,12 +56,17 @@ public sealed class ProductService(
             return null;
         }
 
+        if (!product.ModelCode.Equals(request.ModelCode.Trim(), StringComparison.CurrentCultureIgnoreCase))
+        {
+            await EnsureModelCodeIsUniqueAsync(request.ModelCode, id, cancellationToken);
+        }
         await EnsureProductCodeIsUniqueAsync(request.ProductCode, id, cancellationToken);
         await EnsureMasterDataExistsAsync(request.BrandId, "brands", cancellationToken);
         await EnsureMasterDataExistsAsync(request.CategoryId, "categories", cancellationToken);
         await EnsureMasterDataExistsAsync(request.SeasonId, "seasons", cancellationToken);
 
         product.Update(
+            request.ModelCode.Trim(),
             request.ProductCode.Trim(),
             request.ProductName.Trim(),
             request.BrandId,
@@ -98,6 +104,19 @@ public sealed class ProductService(
         if (exists)
         {
             throw new InvalidOperationException("Bu ürün kodu zaten kullanılıyor.");
+        }
+    }
+
+    private async Task EnsureModelCodeIsUniqueAsync(
+        string modelCode,
+        Guid? excludedId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await productRepository.ExistsByModelCodeAsync(modelCode.Trim(), excludedId, cancellationToken);
+
+        if (exists)
+        {
+            throw new InvalidOperationException("Bu model kodu zaten kullanılıyor.");
         }
     }
 
@@ -152,6 +171,7 @@ public sealed class ProductService(
 
         return new ProductDto(
             product.Id,
+            product.ModelCode,
             product.ProductCode,
             product.ProductName,
             product.BrandId,
@@ -177,7 +197,7 @@ public sealed class ProductService(
     {
         var groups = rows
             .GroupBy(row => new ModelGroupKey(
-                InferModelCode(row.ProductCode),
+                row.ModelCode,
                 row.BrandId,
                 row.CategoryId,
                 row.SeasonId))
@@ -225,6 +245,7 @@ public sealed class ProductService(
         return new ProductDto(
             representative.ProductId,
             group.Key.ModelCode,
+            representative.ProductCode,
             representative.ProductName,
             representative.BrandId,
             representative.Brand,
@@ -274,40 +295,6 @@ public sealed class ProductService(
     private static bool Contains(string? value, string term)
     {
         return value?.Contains(term, StringComparison.CurrentCultureIgnoreCase) == true;
-    }
-
-    private static string InferModelCode(string productCode)
-    {
-        var code = productCode.Trim();
-
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            return code;
-        }
-
-        var compactCode = Regex.Replace(code, @"[\s_\-]+", string.Empty);
-        var leadingDigits = Regex.Match(compactCode, @"^\d{3,6}(?=[A-Za-z])");
-
-        if (leadingDigits.Success)
-        {
-            return leadingDigits.Value;
-        }
-
-        var numericSize = Regex.Match(compactCode, @"^(?<model>.+?[A-Za-z])(?<size>\d{2,3}(?:[,.]0)?)$", RegexOptions.IgnoreCase);
-
-        if (numericSize.Success && numericSize.Groups["model"].Value.Length >= 3)
-        {
-            return numericSize.Groups["model"].Value;
-        }
-
-        var alphaSize = Regex.Match(compactCode, @"^(?<model>.+\d.*?)(?<size>XXS|XS|S|M|L|XL|XXL|2XL|3XL|4XL|5XL)$", RegexOptions.IgnoreCase);
-
-        if (alphaSize.Success && alphaSize.Groups["model"].Value.Length >= 3)
-        {
-            return alphaSize.Groups["model"].Value;
-        }
-
-        return compactCode;
     }
 
     private sealed record ModelGroupKey(

@@ -30,6 +30,7 @@ import { commonText, requiredMessage, trStatus } from '../common/uiText'
 import { toUserMessage } from '../common/apiClient'
 
 const emptyProduct: ProductInput = {
+  modelCode: '',
   productCode: '',
   productName: '',
   brandId: null,
@@ -44,6 +45,7 @@ export function ProductDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isNew = id === 'new'
+  const modelCodeRef = useRef<HTMLInputElement>(null)
   const productNameRef = useRef<HTMLInputElement>(null)
   const [product, setProduct] = useState<ProductInput>({ ...emptyProduct })
   const [loading, setLoading] = useState(!isNew)
@@ -74,7 +76,7 @@ export function ProductDetailPage() {
 
   useEffect(() => {
     if (isNew || !id) {
-      window.setTimeout(() => productNameRef.current?.focus(), 100)
+      window.setTimeout(() => modelCodeRef.current?.focus(), 100)
       return
     }
 
@@ -85,6 +87,7 @@ export function ProductDetailPage() {
       try {
         const data = await getProduct(id!)
         setProduct({
+          modelCode: data.modelCode,
           productCode: data.productCode,
           productName: data.productName,
           brandId: data.brandId,
@@ -103,14 +106,21 @@ export function ProductDetailPage() {
   }, [id, isNew])
 
   const title = useMemo(() => (isNew ? 'Ürün Ekle' : 'Ürün Düzenle'), [isNew])
+  const modelCodeError = submitted && !product.modelCode.trim()
   const productNameError = submitted && !product.productName.trim()
 
   function updateField(field: keyof ProductInput, value: string | null) {
     setProduct((current) => ({ ...current, [field]: value }))
   }
 
-  function validateProduct() {
+    function validateProduct() {
     setSubmitted(true)
+
+    if (!product.modelCode.trim()) {
+      setError(requiredMessage('Model kodu'))
+      window.setTimeout(() => modelCodeRef.current?.focus(), 50)
+      return false
+    }
 
     if (!product.productName.trim()) {
       setError(requiredMessage('Ürün adı'))
@@ -136,6 +146,7 @@ export function ProductDetailPage() {
       const saveAndNew = submitter?.name === 'saveAndNew'
       const payload = {
         ...product,
+        modelCode: product.modelCode.trim(),
         productName: product.productName.trim(),
       }
 
@@ -149,7 +160,7 @@ export function ProductDetailPage() {
         setSuccess('Ürün kaydedildi. Yeni ürün için form hazır.')
         setProduct({ ...emptyProduct })
         setSubmitted(false)
-        window.setTimeout(() => productNameRef.current?.focus(), 50)
+        window.setTimeout(() => modelCodeRef.current?.focus(), 50)
       } else {
         navigate('/products', {
           state: { message: isNew ? 'Ürün oluşturuldu.' : 'Ürün güncellendi.' },
@@ -200,6 +211,15 @@ export function ProductDetailPage() {
               <Box component="form" onSubmit={(event) => void handleSubmit(event)} noValidate sx={{ p: { xs: 2, md: 3 } }}>
                 <Stack spacing={2.5}>
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <TextField
+                      label="Model Kodu *"
+                      value={product.modelCode}
+                      onChange={(event) => updateField('modelCode', event.target.value)}
+                      error={modelCodeError}
+                      helperText={modelCodeError ? requiredMessage('Model kodu') : 'Hazır giyim model kodunu giriniz.'}
+                      inputRef={modelCodeRef}
+                      fullWidth
+                    />
                     <TextField
                       label="Ürün Adı *"
                       value={product.productName}

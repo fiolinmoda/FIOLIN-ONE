@@ -97,7 +97,7 @@ export function ProductListPage() {
 
   const handleDelete = useCallback(
     async (product: Product) => {
-      const confirmed = confirmDelete(`${product.productCode} - ${product.productName}`)
+      const confirmed = confirmDelete(`${product.modelCode} - ${product.productName}`)
 
       if (!confirmed) {
         return
@@ -234,7 +234,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: Product; onEdit: 
           <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
-                {product.productCode}
+                {product.modelCode}
               </Typography>
               <Typography sx={{ fontWeight: 700 }}>{product.productName}</Typography>
             </Box>

@@ -15,6 +15,13 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(product => product.Id)
             .HasColumnName("id");
 
+        builder.Property(product => product.ModelCode)
+            .HasColumnName("model_code")
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.HasIndex(product => product.ModelCode);
+
         builder.Property(product => product.ProductCode)
             .HasColumnName("product_code")
             .HasMaxLength(50)

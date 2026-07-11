@@ -2,6 +2,7 @@ namespace FiolinOne.Application.Products;
 
 public sealed record ProductDto(
     Guid Id,
+    string ModelCode,
     string ProductCode,
     string ProductName,
     Guid? BrandId,
@@ -37,6 +38,7 @@ public sealed record ProductSizeVariantDto(
 
 public sealed record ProductListRowDto(
     Guid ProductId,
+    string ModelCode,
     string ProductCode,
     string ProductName,
     Guid? BrandId,

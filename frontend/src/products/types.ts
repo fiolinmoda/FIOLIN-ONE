@@ -1,5 +1,6 @@
 export type Product = {
   id: string
+  modelCode: string
   productCode: string
   productName: string
   brandId: string | null
@@ -37,6 +38,7 @@ export type ProductSizeVariant = {
 }
 
 export type ProductInput = {
+  modelCode: string
   productCode: string
   productName: string
   brandId: string | null

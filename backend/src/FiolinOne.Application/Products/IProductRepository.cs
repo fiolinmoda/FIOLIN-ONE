@@ -7,6 +7,7 @@ public interface IProductRepository
     Task<IReadOnlyList<Product>> GetAllAsync(string? search, CancellationToken cancellationToken);
     Task<IReadOnlyList<ProductListRowDto>> GetListRowsAsync(CancellationToken cancellationToken);
     Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> ExistsByModelCodeAsync(string modelCode, Guid? excludedId, CancellationToken cancellationToken);
     Task<bool> ExistsByCodeAsync(string productCode, Guid? excludedId, CancellationToken cancellationToken);
     Task AddAsync(Product product, CancellationToken cancellationToken);
     void Delete(Product product);

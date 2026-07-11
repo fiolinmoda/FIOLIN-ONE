@@ -6,6 +6,12 @@ public sealed class CreateProductRequestValidator : AbstractValidator<CreateProd
 {
     public CreateProductRequestValidator()
     {
+        RuleFor(request => request.ModelCode)
+            .NotEmpty()
+            .WithMessage("Model kodu zorunludur.")
+            .MaximumLength(50)
+            .WithMessage("Model kodu en fazla 50 karakter olabilir.");
+
         RuleFor(request => request.ProductCode)
             .MaximumLength(50)
             .WithMessage("Ürün kodu en fazla 50 karakter olabilir.");
@@ -28,6 +34,12 @@ public sealed class UpdateProductRequestValidator : AbstractValidator<UpdateProd
 {
     public UpdateProductRequestValidator()
     {
+        RuleFor(request => request.ModelCode)
+            .NotEmpty()
+            .WithMessage("Model kodu zorunludur.")
+            .MaximumLength(50)
+            .WithMessage("Model kodu en fazla 50 karakter olabilir.");
+
         RuleFor(request => request.ProductCode)
             .NotEmpty()
             .WithMessage("Ürün kodu zorunludur.")
