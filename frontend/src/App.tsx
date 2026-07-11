@@ -54,6 +54,7 @@ import { StockMovementsPage } from './fabric/StockMovementsPage'
 import { MasterDataPage } from './masterData/MasterDataPage'
 import { BarcodePrintPage } from './operations/BarcodePrintPage'
 import { GoodsReceiptOperationPage } from './operations/GoodsReceiptOperationPage'
+import { OrderPickingPage } from './operations/OrderPickingPage'
 import { WorkspaceFoundationPage } from './operations/WorkspaceFoundationPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
 import { ProductImportPage } from './products/ProductImportPage'
@@ -509,13 +510,7 @@ function App() {
               />
               <Route
                 path="/operations/order-picking"
-                element={
-                  <WorkspaceFoundationPage
-                    title="Sipariş Toplama"
-                    description="Sipariş toplama süreci için V2 çalışma alanı hazır. Toplama listesi ve paketleme akışı sonraki adımda kurulacak."
-                    icon={<ShoppingCartCheckoutOutlinedIcon color="primary" />}
-                  />
-                }
+                element={<OrderPickingPage />}
               />
               <Route path="/operations/barcode-print" element={<BarcodePrintPage />} />
               <Route
