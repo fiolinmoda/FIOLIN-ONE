@@ -1,6 +1,7 @@
 using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Domain.Fabric;
 using FiolinOne.Domain.MasterData;
+using FiolinOne.Domain.Operations;
 using FiolinOne.Domain.Products;
 using FiolinOne.Domain.Production;
 using FiolinOne.Domain.Purchasing;
@@ -42,6 +43,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
     public DbSet<SalesOrderItem> SalesOrderItems => Set<SalesOrderItem>();
     public DbSet<DocumentSequence> DocumentSequences => Set<DocumentSequence>();
+    public DbSet<GoodsReceiptOperation> GoodsReceiptOperations => Set<GoodsReceiptOperation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -51,6 +51,7 @@ import { FabricStockPage } from './fabric/FabricStockPage'
 import { ReservationListPage } from './fabric/ReservationListPage'
 import { StockMovementsPage } from './fabric/StockMovementsPage'
 import { MasterDataPage } from './masterData/MasterDataPage'
+import { GoodsReceiptOperationPage } from './operations/GoodsReceiptOperationPage'
 import { WorkspaceFoundationPage } from './operations/WorkspaceFoundationPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
 import { ProductImportPage } from './products/ProductImportPage'
@@ -491,13 +492,7 @@ function App() {
               <Route path="/production/dashboard" element={<Navigate to={dashboardPath} replace />} />
               <Route
                 path="/operations/goods-receipt"
-                element={
-                  <WorkspaceFoundationPage
-                    title="Mal Kabul"
-                    description="FIOLIN ONE V2 mal kabul çalışma alanı hazır. Akış detayları sonraki sprintte eklenecek."
-                    icon={<Inventory2OutlinedIcon color="primary" />}
-                  />
-                }
+                element={<GoodsReceiptOperationPage />}
               />
               <Route
                 path="/operations/warehouse"

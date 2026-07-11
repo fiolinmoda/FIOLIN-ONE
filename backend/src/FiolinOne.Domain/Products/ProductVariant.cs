@@ -1,5 +1,6 @@
 using FiolinOne.Domain.Common;
 using FiolinOne.Domain.MasterData;
+using FiolinOne.Domain.Purchasing;
 
 namespace FiolinOne.Domain.Products;
 
@@ -39,10 +40,14 @@ public sealed class ProductVariant : Entity
     public int Stock { get; private set; }
     public decimal PurchasePrice { get; private set; }
     public decimal SalesPrice { get; private set; }
+    public Guid? LastSupplierId { get; private set; }
+    public string? Shelf { get; private set; }
+    public string? Box { get; private set; }
     public string Status { get; private set; } = string.Empty;
     public Product? Product { get; private set; }
     public Color? Color { get; private set; }
     public Size? Size { get; private set; }
+    public Supplier? LastSupplier { get; private set; }
     public DateTime CreatedAt => CreatedAtUtc;
     public DateTime? UpdatedAt => UpdatedAtUtc;
 
@@ -75,6 +80,16 @@ public sealed class ProductVariant : Entity
         }
 
         Stock += quantity;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void RegisterGoodsReceipt(int quantity, decimal purchasePrice, Guid supplierId, string? shelf, string? box)
+    {
+        IncreaseStock(quantity);
+        PurchasePrice = purchasePrice;
+        LastSupplierId = supplierId;
+        Shelf = string.IsNullOrWhiteSpace(shelf) ? null : shelf.Trim();
+        Box = string.IsNullOrWhiteSpace(box) ? null : box.Trim();
         UpdatedAtUtc = DateTime.UtcNow;
     }
 

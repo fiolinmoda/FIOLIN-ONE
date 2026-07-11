@@ -50,6 +50,17 @@ public sealed class ProductVariantConfiguration : IEntityTypeConfiguration<Produ
             .HasPrecision(18, 4)
             .IsRequired();
 
+        builder.Property(variant => variant.LastSupplierId)
+            .HasColumnName("last_supplier_id");
+
+        builder.Property(variant => variant.Shelf)
+            .HasColumnName("shelf")
+            .HasMaxLength(80);
+
+        builder.Property(variant => variant.Box)
+            .HasColumnName("box")
+            .HasMaxLength(80);
+
         builder.Property(variant => variant.Status)
             .HasColumnName("status")
             .HasMaxLength(50)
@@ -77,6 +88,11 @@ public sealed class ProductVariantConfiguration : IEntityTypeConfiguration<Produ
             .HasForeignKey(variant => variant.SizeId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(variant => variant.LastSupplier)
+            .WithMany()
+            .HasForeignKey(variant => variant.LastSupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(variant => new { variant.ProductId, variant.ColorId, variant.SizeId })
             .IsUnique();
 
@@ -85,6 +101,8 @@ public sealed class ProductVariantConfiguration : IEntityTypeConfiguration<Produ
 
         builder.HasIndex(variant => variant.TrendyolSku)
             .IsUnique();
+
+        builder.HasIndex(variant => variant.LastSupplierId);
 
         builder.Ignore(variant => variant.CreatedAt);
         builder.Ignore(variant => variant.UpdatedAt);

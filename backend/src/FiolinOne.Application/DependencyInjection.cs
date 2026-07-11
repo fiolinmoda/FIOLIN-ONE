@@ -2,6 +2,7 @@ using FluentValidation;
 using FiolinOne.Application.Dashboard;
 using FiolinOne.Application.Fabric;
 using FiolinOne.Application.MasterData;
+using FiolinOne.Application.Operations;
 using FiolinOne.Application.Products;
 using FiolinOne.Application.Products.Import;
 using FiolinOne.Application.Products.Variants;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IProductImportService, ProductImportService>();
         services.AddScoped<IProductVariantService, ProductVariantService>();
+        services.AddScoped<IGoodsReceiptOperationService, GoodsReceiptOperationService>();
         services.AddScoped<IPurchasingService, PurchasingService>();
         services.AddScoped<IFabricService, FabricService>();
         services.AddScoped<IProductionService, ProductionService>();

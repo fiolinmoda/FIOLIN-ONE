@@ -2,6 +2,7 @@ using FiolinOne.Domain.Products;
 using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Purchasing;
 using FiolinOne.Domain.Fabric;
+using FiolinOne.Domain.Operations;
 using FiolinOne.Domain.Production;
 using FiolinOne.Domain.Sales;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ public interface IApplicationDbContext
     DbSet<ProductionTimelineEntry> ProductionTimelineEntries { get; }
     DbSet<SalesOrder> SalesOrders { get; }
     DbSet<SalesOrderItem> SalesOrderItems { get; }
+    DbSet<GoodsReceiptOperation> GoodsReceiptOperations { get; }
 
     DatabaseFacade Database { get; }
 
