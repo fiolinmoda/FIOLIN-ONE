@@ -165,7 +165,9 @@ public sealed class ProductService(
                         variant.Barcode,
                         variant.Stock,
                         variant.PurchasePrice,
-                        variant.SalesPrice))
+                        variant.SalesPrice,
+                        variant.Shelf,
+                        variant.Box))
                     .ToList()))
             .ToList();
 
@@ -238,7 +240,9 @@ public sealed class ProductService(
                         row.Barcode ?? string.Empty,
                         row.Stock,
                         row.PurchasePrice,
-                        row.SalesPrice))
+                        row.SalesPrice,
+                        row.Shelf,
+                        row.Box))
                     .ToList()))
             .ToList();
 
@@ -289,7 +293,8 @@ public sealed class ProductService(
                 Contains(row.Category, term) ||
                 Contains(row.Season, term) ||
                 Contains(row.Color, term) ||
-                Contains(row.Size, term));
+                Contains(row.Size, term) ||
+                Contains(row.Barcode, term));
     }
 
     private static bool Contains(string? value, string term)

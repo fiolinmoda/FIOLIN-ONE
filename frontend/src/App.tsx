@@ -33,6 +33,7 @@ import FactoryOutlinedIcon from '@mui/icons-material/FactoryOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined'
+import LocalPrintshopOutlinedIcon from '@mui/icons-material/LocalPrintshopOutlined'
 import MenuOpenOutlinedIcon from '@mui/icons-material/MenuOpenOutlined'
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined'
 import PriceCheckOutlinedIcon from '@mui/icons-material/PriceCheckOutlined'
@@ -51,6 +52,7 @@ import { FabricStockPage } from './fabric/FabricStockPage'
 import { ReservationListPage } from './fabric/ReservationListPage'
 import { StockMovementsPage } from './fabric/StockMovementsPage'
 import { MasterDataPage } from './masterData/MasterDataPage'
+import { BarcodePrintPage } from './operations/BarcodePrintPage'
 import { GoodsReceiptOperationPage } from './operations/GoodsReceiptOperationPage'
 import { WorkspaceFoundationPage } from './operations/WorkspaceFoundationPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
@@ -123,6 +125,7 @@ const navigationGroups: NavigationGroup[] = [
       { title: 'Mal Kabul', path: '/operations/goods-receipt', icon: <Inventory2OutlinedIcon /> },
       { title: 'Depo', path: '/operations/warehouse', icon: <WarehouseOutlinedIcon /> },
       { title: 'Sipariş Toplama', path: '/operations/order-picking', icon: <ShoppingCartCheckoutOutlinedIcon /> },
+      { title: 'Barkod Yazdırma', path: '/operations/barcode-print', icon: <LocalPrintshopOutlinedIcon /> },
     ],
   },
   {
@@ -514,6 +517,7 @@ function App() {
                   />
                 }
               />
+              <Route path="/operations/barcode-print" element={<BarcodePrintPage />} />
               <Route
                 path="/channels/trendyol"
                 element={

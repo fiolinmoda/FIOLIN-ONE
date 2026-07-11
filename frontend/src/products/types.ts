@@ -35,6 +35,8 @@ export type ProductSizeVariant = {
   stock: number
   purchasePrice: number
   salesPrice: number
+  shelf: string | null
+  box: string | null
 }
 
 export type ProductInput = {

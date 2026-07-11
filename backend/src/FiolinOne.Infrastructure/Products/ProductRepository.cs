@@ -72,7 +72,9 @@ public sealed class ProductRepository(ApplicationDbContext dbContext) : IProduct
                     variant == null ? null : variant.Barcode,
                     variant == null ? 0 : variant.Stock,
                     variant == null ? 0 : variant.PurchasePrice,
-                    variant == null ? 0 : variant.SalesPrice))
+                    variant == null ? 0 : variant.SalesPrice,
+                    variant == null ? null : variant.Shelf,
+                    variant == null ? null : variant.Box))
             .ToListAsync(cancellationToken);
     }
 

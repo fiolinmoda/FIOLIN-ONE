@@ -34,7 +34,9 @@ public sealed record ProductSizeVariantDto(
     string Barcode,
     int Stock,
     decimal PurchasePrice,
-    decimal SalesPrice);
+    decimal SalesPrice,
+    string? Shelf,
+    string? Box);
 
 public sealed record ProductListRowDto(
     Guid ProductId,
@@ -60,4 +62,6 @@ public sealed record ProductListRowDto(
     string? Barcode,
     int Stock,
     decimal PurchasePrice,
-    decimal SalesPrice);
+    decimal SalesPrice,
+    string? Shelf,
+    string? Box);
