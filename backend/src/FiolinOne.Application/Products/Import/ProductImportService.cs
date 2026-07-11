@@ -107,7 +107,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
                     product.Id,
                     row.ColorId!.Value,
                     row.SizeId!.Value,
-                    CreateBarcode(row.ModelCode, row.ColorName, row.SizeName),
+                    row.Barcode.Trim(),
                     null,
                     row.Stock,
                     "Active",
@@ -180,6 +180,8 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
     {
         var products = await dbContext.Products.AsNoTracking().Select(product => product.ModelCode).ToListAsync(cancellationToken);
         var existingModelCodes = products.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+        var existingBarcodes = await dbContext.ProductVariants.AsNoTracking().Select(variant => variant.Barcode).ToListAsync(cancellationToken);
+        var usedBarcodes = existingBarcodes.ToHashSet(StringComparer.CurrentCultureIgnoreCase);
         var brands = await dbContext.Brands.ToListAsync(cancellationToken);
         var categories = await dbContext.Categories.ToListAsync(cancellationToken);
         var seasons = await dbContext.Seasons.ToListAsync(cancellationToken);
@@ -194,6 +196,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             var analyzed = new AnalyzedRow(row.RowNumber)
             {
                 ModelCode = GetValue(row, mapping.ModelCode),
+                Barcode = GetValue(row, mapping.Barcode),
                 ProductName = GetValue(row, mapping.ProductName),
                 BrandName = GetValue(row, mapping.Brand),
                 CategoryName = GetValue(row, mapping.Category),
@@ -215,6 +218,15 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
             if (string.IsNullOrWhiteSpace(analyzed.ProductName))
             {
                 analyzed.Errors.Add("Ürün Adı zorunludur.");
+            }
+
+            if (string.IsNullOrWhiteSpace(analyzed.Barcode))
+            {
+                analyzed.Errors.Add("Barkod zorunludur.");
+            }
+            else if (!usedBarcodes.Add(analyzed.Barcode))
+            {
+                analyzed.Errors.Add($"Barkod zaten kullanılıyor: {analyzed.Barcode}");
             }
 
             if (analyzed.Stock < 0)
@@ -388,6 +400,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
     {
         return new ProductImportMapping(
             Find(headers, "model", "model kodu", "ürün kodu", "kod"),
+            Find(headers, "barkod", "barcode"),
             Find(headers, "ürün adı", "urun adi", "model adı", "ad"),
             Find(headers, "marka"),
             Find(headers, "kategori"),
@@ -519,12 +532,6 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
         return code;
     }
 
-    private static string CreateBarcode(string modelCode, string color, string size)
-    {
-        var barcode = CreateCode($"{modelCode}{color}{size}");
-        return barcode[..Math.Min(barcode.Length, 60)];
-    }
-
     private static ProductImportMapping DeserializeMapping(string mappingJson)
     {
         return JsonSerializer.Deserialize<ProductImportMapping>(mappingJson, JsonOptions) ?? EmptyMapping();
@@ -532,7 +539,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
 
     private static ProductImportMapping EmptyMapping()
     {
-        return new ProductImportMapping(null, null, null, null, null, null, null, null, null, null, null, null);
+        return new ProductImportMapping(null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static ProductImportProfileDto ToDto(ProductImportProfile profile)
@@ -565,6 +572,7 @@ public sealed class ProductImportService(IApplicationDbContext dbContext) : IPro
     {
         public int RowNumber { get; } = rowNumber;
         public string ModelCode { get; set; } = string.Empty;
+        public string Barcode { get; set; } = string.Empty;
         public string ProductName { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;

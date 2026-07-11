@@ -38,6 +38,7 @@ type MappingKey = keyof ProductImportMapping
 
 const emptyMapping: ProductImportMapping = {
   modelCode: null,
+  barcode: null,
   productName: null,
   brand: null,
   category: null,
@@ -53,6 +54,7 @@ const emptyMapping: ProductImportMapping = {
 
 const mappingFields: Array<{ key: MappingKey; label: string; required?: boolean }> = [
   { key: 'modelCode', label: 'Model Kodu', required: true },
+  { key: 'barcode', label: 'Barkod', required: true },
   { key: 'productName', label: 'Ürün Adı', required: true },
   { key: 'brand', label: 'Marka' },
   { key: 'category', label: 'Kategori' },
@@ -141,7 +143,7 @@ export function ProductImportPage() {
     void loadHistory()
   }, [loadHistory])
 
-  const mappingIsValid = Boolean(mapping.modelCode && mapping.productName)
+  const mappingIsValid = Boolean(mapping.modelCode && mapping.barcode && mapping.productName)
 
   const previewColumns = useMemo<GridColDef<ProductImportPreviewRow>[]>(
     () => [
@@ -258,7 +260,7 @@ export function ProductImportPage() {
     }
 
     if (!mappingIsValid) {
-      setError('Model Kodu ve Ürün Adı alanlarını eşleştiriniz.')
+      setError('Model Kodu, Barkod ve Ürün Adı alanlarını eşleştiriniz.')
       return
     }
 

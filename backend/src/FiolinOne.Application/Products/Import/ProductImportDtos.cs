@@ -2,6 +2,7 @@ namespace FiolinOne.Application.Products.Import;
 
 public sealed record ProductImportMapping(
     string? ModelCode,
+    string? Barcode,
     string? ProductName,
     string? Brand,
     string? Category,

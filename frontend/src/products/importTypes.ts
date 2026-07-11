@@ -1,5 +1,6 @@
 export type ProductImportMapping = {
   modelCode: string | null
+  barcode: string | null
   productName: string | null
   brand: string | null
   category: string | null
