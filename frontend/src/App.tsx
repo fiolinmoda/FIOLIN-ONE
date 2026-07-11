@@ -32,11 +32,13 @@ import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import FactoryOutlinedIcon from '@mui/icons-material/FactoryOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
+import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined'
 import MenuOpenOutlinedIcon from '@mui/icons-material/MenuOpenOutlined'
 import MenuOutlinedIcon from '@mui/icons-material/MenuOutlined'
 import PriceCheckOutlinedIcon from '@mui/icons-material/PriceCheckOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
+import ShoppingCartCheckoutOutlinedIcon from '@mui/icons-material/ShoppingCartCheckoutOutlined'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import SyncAltOutlinedIcon from '@mui/icons-material/SyncAltOutlined'
@@ -49,6 +51,7 @@ import { FabricStockPage } from './fabric/FabricStockPage'
 import { ReservationListPage } from './fabric/ReservationListPage'
 import { StockMovementsPage } from './fabric/StockMovementsPage'
 import { MasterDataPage } from './masterData/MasterDataPage'
+import { WorkspaceFoundationPage } from './operations/WorkspaceFoundationPage'
 import { ProductDetailPage } from './products/ProductDetailPage'
 import { ProductImportPage } from './products/ProductImportPage'
 import { ProductListPage } from './products/ProductListPage'
@@ -85,6 +88,7 @@ type NavigationGroup = {
   icon: ReactNode
   path?: string
   roles?: string[]
+  hidden?: boolean
   pages?: NavigationPage[]
   match?: (pathname: string) => boolean
 }
@@ -112,8 +116,26 @@ const navigationGroups: NavigationGroup[] = [
     match: (pathname) => pathname === dashboardPath || pathname === '/production/dashboard',
   },
   {
+    title: 'Operasyon',
+    icon: <WarehouseOutlinedIcon />,
+    pages: [
+      { title: 'Mal Kabul', path: '/operations/goods-receipt', icon: <Inventory2OutlinedIcon /> },
+      { title: 'Depo', path: '/operations/warehouse', icon: <WarehouseOutlinedIcon /> },
+      { title: 'Sipariş Toplama', path: '/operations/order-picking', icon: <ShoppingCartCheckoutOutlinedIcon /> },
+    ],
+  },
+  {
+    title: 'Kanal Yönetimi',
+    icon: <StorefrontOutlinedIcon />,
+    pages: [
+      { title: 'Trendyol', path: '/channels/trendyol', icon: <StorefrontOutlinedIcon /> },
+      { title: 'Web Sitesi', path: '/channels/website', icon: <LanguageOutlinedIcon /> },
+    ],
+  },
+  {
     title: 'Ürün Yönetimi',
     icon: <CategoryOutlinedIcon />,
+    hidden: true,
     pages: [
       { title: 'Ürünler', path: '/products', icon: <CategoryOutlinedIcon /> },
       { title: "Excel'den Ürün Aktar", path: '/products/import', icon: <UploadFileOutlinedIcon />, roles: ['Administrator'] },
@@ -123,6 +145,7 @@ const navigationGroups: NavigationGroup[] = [
   {
     title: 'Satın Alma',
     icon: <ReceiptLongOutlinedIcon />,
+    hidden: true,
     pages: [
       { title: 'Tedarikçiler', path: '/purchasing/suppliers', icon: <DatasetOutlinedIcon /> },
       { title: 'Satın Alma Emirleri', path: '/purchasing/orders', icon: <ReceiptLongOutlinedIcon /> },
@@ -133,6 +156,7 @@ const navigationGroups: NavigationGroup[] = [
   {
     title: 'Üretim',
     icon: <FactoryOutlinedIcon />,
+    hidden: true,
     pages: [
       { title: 'Üretim Emirleri', path: '/production/orders', icon: <FactoryOutlinedIcon /> },
       { title: 'Kesim', path: '/production/cutting', icon: <ContentCutOutlinedIcon /> },
@@ -146,6 +170,7 @@ const navigationGroups: NavigationGroup[] = [
   {
     title: 'Depo',
     icon: <WarehouseOutlinedIcon />,
+    hidden: true,
     pages: [
       { title: 'Kumaş Kartları', path: '/fabric/fabrics', icon: <SpaOutlinedIcon /> },
       { title: 'Kumaş Stoğu', path: '/warehouse/fabric-stock', icon: <Inventory2OutlinedIcon /> },
@@ -160,16 +185,19 @@ const navigationGroups: NavigationGroup[] = [
     title: 'Satış',
     path: '/sales',
     icon: <StorefrontOutlinedIcon />,
+    hidden: true,
   },
   {
     title: 'Raporlar',
     path: '/reports',
     icon: <AssessmentOutlinedIcon />,
+    hidden: true,
   },
   {
     title: 'Sistem Tanımları',
     icon: <DatasetOutlinedIcon />,
     roles: ['Administrator'],
+    hidden: true,
     pages: [
       { title: 'Markalar', path: '/master-data/brands', icon: <DatasetOutlinedIcon />, roles: ['Administrator'] },
       { title: 'Kategoriler', path: '/master-data/categories', icon: <DatasetOutlinedIcon />, roles: ['Administrator'] },
@@ -191,12 +219,25 @@ const navigationGroups: NavigationGroup[] = [
   },
 ]
 
-function getLastPage() {
-  return localStorage.getItem(lastPageStorageKey) || dashboardPath
-}
-
 function getStoredSidebarState() {
   return localStorage.getItem(sidebarStorageKey) === 'true'
+}
+
+function isVisibleNavigationPath(pathname: string) {
+  return navigationGroups
+    .filter((group) => !group.hidden && hasRole(group.roles))
+    .some((group) => {
+      if (group.path && matchPath(pathname, group.path)) {
+        return true
+      }
+
+      return Boolean(group.pages?.some((page) => hasRole(page.roles) && matchPath(pathname, page.path)))
+    })
+}
+
+function getLastPage() {
+  const storedPage = localStorage.getItem(lastPageStorageKey)
+  return storedPage && isVisibleNavigationPath(storedPage) ? storedPage : dashboardPath
 }
 
 function isGroupActive(group: NavigationGroup, pathname: string) {
@@ -274,7 +315,7 @@ function App() {
 
   const routeMeta = useMemo(() => getRouteMeta(location.pathname), [location.pathname])
   const drawerWidth = isSidebarCollapsed ? collapsedDrawerWidth : expandedDrawerWidth
-  const visibleGroups = navigationGroups.filter((group) => hasRole(group.roles))
+  const visibleGroups = navigationGroups.filter((group) => !group.hidden && hasRole(group.roles))
 
   useEffect(() => {
     if (location.pathname !== '/') {
@@ -448,6 +489,56 @@ function App() {
               <Route path="/" element={<Navigate to={getLastPage()} replace />} />
               <Route path={dashboardPath} element={<DashboardPage />} />
               <Route path="/production/dashboard" element={<Navigate to={dashboardPath} replace />} />
+              <Route
+                path="/operations/goods-receipt"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Mal Kabul"
+                    description="FIOLIN ONE V2 mal kabul çalışma alanı hazır. Akış detayları sonraki sprintte eklenecek."
+                    icon={<Inventory2OutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/operations/warehouse"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Depo"
+                    description="Depo operasyonları için V2 çalışma alanı hazır. Stok ve lokasyon akışları bu yapı üzerinden geliştirilecek."
+                    icon={<WarehouseOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/operations/order-picking"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Sipariş Toplama"
+                    description="Sipariş toplama süreci için V2 çalışma alanı hazır. Toplama listesi ve paketleme akışı sonraki adımda kurulacak."
+                    icon={<ShoppingCartCheckoutOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/channels/trendyol"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Trendyol"
+                    description="Trendyol kanal yönetimi için temel sayfa hazır. Entegrasyon bağlantıları ve işlem ekranları sonraki sprintte eklenecek."
+                    icon={<StorefrontOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/channels/website"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Web Sitesi"
+                    description="Web sitesi kanal yönetimi için temel sayfa hazır. Ürün, stok ve sipariş senkronizasyonu burada geliştirilecek."
+                    icon={<LanguageOutlinedIcon color="primary" />}
+                  />
+                }
+              />
               <Route path="/products" element={<ProductListPage />} />
               <Route path="/products/import" element={<ProductImportPage />} />
               <Route path="/products/:id" element={<ProductDetailPage />} />
