@@ -1,3 +1,4 @@
+using FiolinOne.Domain.Commerce;
 using FiolinOne.Domain.Products;
 using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Purchasing;
@@ -42,6 +43,12 @@ public interface IApplicationDbContext
     DbSet<SalesOrder> SalesOrders { get; }
     DbSet<SalesOrderItem> SalesOrderItems { get; }
     DbSet<GoodsReceiptOperation> GoodsReceiptOperations { get; }
+    DbSet<CmsPage> CmsPages { get; }
+    DbSet<CmsMenu> CmsMenus { get; }
+    DbSet<CmsBanner> CmsBanners { get; }
+    DbSet<CmsSlider> CmsSliders { get; }
+    DbSet<CmsSetting> CmsSettings { get; }
+    DbSet<CmsSeoPage> CmsSeoPages { get; }
 
     DatabaseFacade Database { get; }
 

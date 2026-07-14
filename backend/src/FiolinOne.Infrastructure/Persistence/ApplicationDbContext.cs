@@ -1,4 +1,5 @@
 using FiolinOne.Application.Common.Interfaces;
+using FiolinOne.Domain.Commerce;
 using FiolinOne.Domain.Fabric;
 using FiolinOne.Domain.MasterData;
 using FiolinOne.Domain.Operations;
@@ -44,6 +45,12 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<SalesOrderItem> SalesOrderItems => Set<SalesOrderItem>();
     public DbSet<DocumentSequence> DocumentSequences => Set<DocumentSequence>();
     public DbSet<GoodsReceiptOperation> GoodsReceiptOperations => Set<GoodsReceiptOperation>();
+    public DbSet<CmsPage> CmsPages => Set<CmsPage>();
+    public DbSet<CmsMenu> CmsMenus => Set<CmsMenu>();
+    public DbSet<CmsBanner> CmsBanners => Set<CmsBanner>();
+    public DbSet<CmsSlider> CmsSliders => Set<CmsSlider>();
+    public DbSet<CmsSetting> CmsSettings => Set<CmsSetting>();
+    public DbSet<CmsSeoPage> CmsSeoPages => Set<CmsSeoPage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -138,6 +138,22 @@ const navigationGroups: NavigationGroup[] = [
     ],
   },
   {
+    title: 'Web Yönetimi',
+    icon: <LanguageOutlinedIcon />,
+    pages: [
+      { title: 'Ana Sayfa', path: '/web-management/home', icon: <DashboardOutlinedIcon /> },
+      { title: 'Kategoriler', path: '/web-management/categories', icon: <CategoryOutlinedIcon /> },
+      { title: 'Koleksiyonlar', path: '/web-management/collections', icon: <DatasetOutlinedIcon /> },
+      { title: 'Banner Yönetimi', path: '/web-management/banners', icon: <DatasetOutlinedIcon /> },
+      { title: 'Slider Yönetimi', path: '/web-management/sliders', icon: <DatasetOutlinedIcon /> },
+      { title: 'Sayfalar', path: '/web-management/pages', icon: <DatasetOutlinedIcon /> },
+      { title: 'Menüler', path: '/web-management/menus', icon: <MenuOutlinedIcon /> },
+      { title: 'SEO', path: '/web-management/seo', icon: <LanguageOutlinedIcon /> },
+      { title: 'Tema Ayarları', path: '/web-management/theme', icon: <SettingsOutlinedIcon /> },
+      { title: 'Yayın Yönetimi', path: '/web-management/publishing', icon: <StorefrontOutlinedIcon /> },
+    ],
+  },
+  {
     title: 'Ürün Yönetimi',
     icon: <CategoryOutlinedIcon />,
     hidden: true,
@@ -530,6 +546,106 @@ function App() {
                     title="Web Sitesi"
                     description="Web sitesi kanal yönetimi için temel sayfa hazır. Ürün, stok ve sipariş senkronizasyonu burada geliştirilecek."
                     icon={<LanguageOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/home"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Web Ana Sayfa"
+                    description="Web sitesi ana sayfa içerikleri, vitrin blokları ve yayın akışı bu alanda yönetilecek."
+                    icon={<DashboardOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/categories"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Web Kategorileri"
+                    description="ERP kategori verileri web tarafında salt okunur kullanılır. Kategori vitrin ayarları bu alanda geliştirilecek."
+                    icon={<CategoryOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/collections"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Koleksiyonlar"
+                    description="Sezon ve koleksiyon bazlı web vitrinleri için yönetim alanı hazır."
+                    icon={<DatasetOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/banners"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Banner Yönetimi"
+                    description="Kampanya ve vitrin banner içerikleri ilerleyen sprintlerde buradan yönetilecek."
+                    icon={<DatasetOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/sliders"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Slider Yönetimi"
+                    description="Ana sayfa hero slider görselleri ve bağlantıları için yönetim alanı hazır."
+                    icon={<DatasetOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/pages"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Sayfalar"
+                    description="Kurumsal ve bilgi sayfalarının CMS yönetimi için temel ekran hazır."
+                    icon={<DatasetOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/menus"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Menüler"
+                    description="Web sitesi header ve footer menüleri için yönetim alanı hazır."
+                    icon={<MenuOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/seo"
+                element={
+                  <WorkspaceFoundationPage
+                    title="SEO"
+                    description="Meta başlıkları, açıklamalar ve yapılandırılmış veri ayarları bu alanda geliştirilecek."
+                    icon={<LanguageOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/theme"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Tema Ayarları"
+                    description="Renk, tipografi ve vitrin tema ayarları için hazırlık ekranı oluşturuldu."
+                    icon={<SettingsOutlinedIcon color="primary" />}
+                  />
+                }
+              />
+              <Route
+                path="/web-management/publishing"
+                element={
+                  <WorkspaceFoundationPage
+                    title="Yayın Yönetimi"
+                    description="Web yayın durumu, taslak ve canlı içerik akışı ilerleyen sprintlerde buradan yönetilecek."
+                    icon={<StorefrontOutlinedIcon color="primary" />}
                   />
                 }
               />

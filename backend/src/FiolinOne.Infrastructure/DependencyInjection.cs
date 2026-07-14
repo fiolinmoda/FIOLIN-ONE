@@ -1,4 +1,5 @@
 using FiolinOne.Application.Fabric;
+using FiolinOne.Application.Commerce;
 using FiolinOne.Application.Common.Interfaces;
 using FiolinOne.Application.MasterData;
 using FiolinOne.Application.Products;
@@ -6,6 +7,7 @@ using FiolinOne.Application.Products.Variants;
 using FiolinOne.Application.Production;
 using FiolinOne.Application.Purchasing;
 using FiolinOne.Infrastructure.MasterData;
+using FiolinOne.Infrastructure.Commerce;
 using FiolinOne.Infrastructure.Persistence;
 using FiolinOne.Infrastructure.Products;
 using FiolinOne.Infrastructure.Production;
@@ -31,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IDocumentNumberGenerator, DocumentNumberGenerator>();
+        services.AddScoped<ICommerceRepository, CommerceRepository>();
         services.AddScoped<IMasterDataRepository, MasterDataRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
